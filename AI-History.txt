@@ -1,0 +1,218 @@
+
+
+2018-11-08
+	RandomAI created :
+		It just picks random choices. Dumb, but good for randomized testing.
+
+2018-11-16
+	TrialAI created : 
+		It tries every choice for the next action and picks the best option, a bit smarter.
+		Created a scoring algorithm that evaluates the position of a player as a single number.
+	
+2018-11-19
+	TrialAI improved : 
+		It now looks at all actions until another player needs to act. Getting a bit smarter.
+		
+	TrialAI improved : 
+		It now favors defending pyramids over empty territories.
+	
+2018-11-23
+	TrialAI improved : 
+		It now looks at all actions until the end of the turn. 
+		Assuming opponents always picks the best option for them.
+		
+	TrialAI improved : 
+		it now compares its score with opponents, favoring moves that puts it ahead. 
+		
+2018-11-25
+	TrialAI found a bug : 
+		When the attacker won, but got destroyed, and there are no recall option for the defender, 
+		recall was forced even though the defender could stay where they were. Good boy.
+	
+	TrialAI is cheating when defending : 
+		It knows which card the attacker picked as if it had prescience.
+		On attack, it assumes the defender will always pick the best card, a bit of a disadvantage.
+		There's also no logic that hides cards that were discarded.
+		Gotta fix that eventually.
+
+2018-11-27
+	TrialAI defender no longer sees attacker card.
+		It now assumes the attacker will pick the best card it can, no matter what it chooses, 
+		quite a pessimistic view of things.
+
+	TrialAI averages battle possibilities.
+		It now assumes the opponent can't see what it will pick. So it takes the average score of picking each
+		battle card, leading to the most logical, and predictable choice.
+
+	TrialAI assumes discarded battlecards can be used.
+		It's hidden information, so TrialAI no longer knows which cards were discarded, 
+		It just assumes all cards are available.
+
+2018-11-29
+	TrialAI isn't very good at recruiting 
+		Since any army score is worth more than raw prayer points. It recruits puny armies.
+		To fix this, TrialAI will need to try to simulate a few more actions.
+
+2018-12-22
+	deepCacheClone is fast !
+		Implemented the first implementation of deepCacheClone which skips serialization of game state for 
+		simulations and reuses a cache of all objects that were created in previous simulations.
+		While it doesn't reuse all objects( choices are still created every time from the heap), the 
+		simulation speed took a meaningful jump from 6,000 simulated choices per second to 160,000 simulated
+		choices per second. 26.6x faster !
+		
+		But somehow, the AI seems dumber. It picks really odd battle cards. Might be because it tries to pick 
+		many choices in a single simulation. 
+		
+		But gawd is it painful to track all object creation and release like I did in the good old C++ days.
+		
+2018-12-23
+	Such an optimist AI
+		Turns out the simulation caching AI uses the best possible battle outcome to pick its choice, regardless
+		of the odds. Time to ignore the score past the points where we can't guarantee the outcome.
+		
+	Caching Smaching
+		Hmmm... I neutered the cache and now the JVM creates a ton and a half of objects instead of reusing them.
+		Turns out... the cache doesn't change anything in performance, performance even improved a bit from 
+		161,000 simulation per second to 165,000. Damn... that heap allocation &  garbage collection got better over 
+		time. I can even multithread now !
+		
+		Moral of the story : caching objects in Java is pointless, serialization is ~25x slower than straight copy.
+
+2018-12-29
+	Multi-threading is easy.
+		Made the simulation multi threaded by using java streams. My 4 core CPU went from 165,000 simulation per second
+		to 680,000 simulation per second. 4.1x faster ! Speed even reached 769,000 simulation per second in the 
+		later stages, suspect that limiting thread count will help here. Now it only takes 18 minutes for the AI to 
+		pick its initial pyramids after only 568 million simulations... woohoo !
+
+2018-12-30
+	Monte carlo gambling.
+		Reading on alpha go zero :
+		https://www.nature.com/articles/nature24270.epdf?author_access_token=VJXbVjaSHxFoctQQ4p2k4tRgN0jAjWel9jnR3ZoTv0PVW4gB86EEpGqTRDtpIz-2rmo8-KG06gqVobU5NSCFeHILHcVFUeMsbvwS-lxjqQGg98faovwjxeTUgZAUMnRQ
+		quote : 
+			The neural network consists of many residual blocks of convolutional layers 
+			with batch normalization and rectifier nonlinearities (see Methods).
+
+		Easy, right ?
+		
+		So, a few difficult challenge ahead : 
+		1 - Map the board state to a matrix of bytes or floats
+			- how do I do that with some stuff that's variable like the number of armies ? I guess I'll just
+			  assume a maximum number of armies per side to simplify things.
+			
+		2 - Map a neural network that will calculate a board value.
+			How many layers will it need ? What kind of layers ?
+			
+		3 - Map a neural network that will pick the best move based on board value ?
+			Has to start by assigning the same priority to every move so that they get randomly picked.
+			
+		4 - How is feedback sent back to the network ?
+			Games are fully replayable, so we could remember the full sequence of actions, apply a boost to the winner,
+			apply a negative to the loser.
+			
+			- start with ... X layers of blank
+			- but multiple layers, they only make sense when they are somewhat randomized, otherwise, 
+			  where do you you apply boosts on randomized math equations ?
+			- by looking at how the board changed between moves ? 
+			- Good, but what about changes that occur because of past actions ? AKA, get prayer bonus due to temple,
+			  but those would just keep on getting boosted.
+		
+		 Found a good example of the AlphaGo Zero methodology in python here : 
+		 https://web.stanford.edu/~surag/posts/alphazero.html
+		 https://github.com/suragnair/alpha-zero-general
+		 
+		 Should be translateable to my java model.
+		 
+		 Vector of all possible actions : 61 possible choices
+		 	- end action
+		 		1 choice
+		 	- army size pick
+		 		7 choices : 1 to 7
+		 	- pick tile
+		 		13 choices : 2 player game has 13 tiles
+		 	- pick pyramid color
+		 		4 choices : 4 color
+		 	- pick pyramid level
+		 		4 choices
+		 	- pick army
+		 		13 choices : 1 army per tile
+		 	- pick battle card
+		 		8 choices : 1 per card
+		 	- recall army
+		 	    1 choice
+		 	- player token pick
+		 		10 choices - for each token
+
+		
+		Vector of game state: 200 datapoints
+			for game : 37 datapoints
+				public byte roundNumber = 0;
+				One per state : 18 datapoints ( 1 for current player, -1 for oponent player, 0 for inactive state )
+					- recruit state
+					- move state
+					- battle state
+					- upgrade pyramid state
+					- pick action token
+					- pick attack battle card
+					- pick attack discard
+					- pick defense battle card
+					- pick defense discard
+					- pick army size
+					- pick tile
+					- pick pyramid color
+					- pick pyramid level
+					- pick army
+					- pick attacker recall
+					- pick defender recall
+					- pick attacker retreat
+					- pick defender retreat
+
+				One per ongoing selected data : 7 datapoints 
+					- 6 datapoints : battle attack/defense strength/shield/damage
+					- picked size
+				
+				Battle stats to help nudge things ? 2x2x3 = 12 datapoints
+					- min/max attack/defense strength/shield/damage
+	
+			for each power : 0 x 1 = 0 datapoint
+				owning player index
+
+			for each tile : 13 X 9 =  117 datapoints
+				2 datapoints : army strength per player
+				is picked
+				2 datapoints : pyramid level per player
+				4 datapoints : is pyramid of color X
+				
+			
+			for each player : 23 datapoints X 2 = 46 datapoints
+				public byte victoryPoints = 0;
+				public byte battlePoints = 0;
+				private byte prayerPoints = 5;
+				public byte availableArmyTokens = 12;			
+				public boolean rowOneMoveUsed = false;
+				public boolean rowOneRecruitUsed = false;
+				public boolean rowTwoMoveUsed = false;
+				public boolean rowTwoUpgradePyramidUsed = false;
+				public boolean rowTwoPrayUsed = false;
+				public boolean rowThreePrayUsed = false;
+				public boolean rowThreeBuildWhiteUsed = false;
+				public boolean rowThreeBuildRedUsed = false;
+				public boolean rowThreeBuildBlueUsed = false;
+				public boolean rowThreeBuildBlackUsed = false;
+				public byte actionTokenLeft = 5;
+				for each battle card : is available ( 8 datapoints )
+
+
+2019-01-01
+	Canonical form
+		The whole game state and choice list is now canonical & hopefully ready for neural network training. Happy new year !
+
+2019-01-03
+	Monte-Carlo simulation
+		Recoding MTSC in Java really helps to understand how this thing really works. Left todo : Neural Net & Coach.
+	
+	
+TODO : 
+	- TrialAI isn't very good at recruiting since any army score is worth more than raw prayer points.
+	To fix this, TrialAI will need to try to simulate a few more actions.

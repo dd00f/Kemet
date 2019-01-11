@@ -1,0 +1,25 @@
+
+
+- Trial AI : 
+	- Remember best choice path to avoid recalculations
+	- Battle trial, calculate odds instead of playing out every scenario
+	- factor in other player decisions instead of planning for the best outcome.
+
+- Game cloning code using preallocated objects to speed things up
+
+
+
+- dawn phase
+	- initiative
+
+- DI Cards
+- Power cards
+	- silver token
+	- gold token
+	
+
+- Beasts
+- Ta-Seti path
+
+
+- AI - Machine learning

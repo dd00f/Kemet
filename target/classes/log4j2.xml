@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" monitorInterval="30"  >
+	<Properties>
+		<Property name="baseDir">logs</Property>
+		<Property name="filePatternOld">[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1.} %l %X - %msg%n</Property>
+		<Property name="filePattern">[%-5level] %msg%n</Property>
+	</Properties>
+	<Appenders>
+	
+		<!--
+			Console output for development purpose.
+			Should not be used in production.
+		-->
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="${filePattern}" />
+		</Console>
+
+		<RollingRandomAccessFile name="textFile"
+			fileName="${baseDir}/application.log" filePattern="${baseDir}/application-%i.log"
+			append="false">
+			<PatternLayout pattern="${filePattern}" />
+			<Policies>
+				<OnStartupTriggeringPolicy minSize="45000000" />
+				<SizeBasedTriggeringPolicy size="50MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="4">
+				<Delete basePath="${baseDir}" maxDepth="1">
+					<IfFileName glob="*/application-*.log" />
+					<IfLastModified age="60d" />
+				</Delete>
+			</DefaultRolloverStrategy>
+		</RollingRandomAccessFile>
+        		
+	</Appenders>
+	<Loggers>
+		
+		<!-- 
+			All loggers should enable INFO level logs and above.
+			Filter 3rd party loggers if they are too verbose.
+		-->
+		<Root level="INFO" includeLocation="false">
+
+			<AppenderRef ref="Console" />
+
+			<AppenderRef ref="textFile" />
+		</Root>
+	</Loggers>
+
+</Configuration>
