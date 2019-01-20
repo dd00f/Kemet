@@ -92,4 +92,6 @@ public interface Game {
 	 */
 	public String stringRepresentation();
 
+	public void describeGame();
+
 }

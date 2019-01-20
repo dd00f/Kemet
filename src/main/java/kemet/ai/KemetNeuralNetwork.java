@@ -1,6 +1,10 @@
 
 package kemet.ai;
 
+import java.util.List;
+import java.util.Random;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.deeplearning4j.arbiter.MultiLayerSpace;
 import org.deeplearning4j.arbiter.layers.DenseLayerSpace;
 import org.deeplearning4j.arbiter.layers.OutputLayerSpace;
@@ -14,9 +18,15 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
+import kemet.util.ByteCanonicalForm;
+import kemet.util.NeuralNet;
+import kemet.util.PolicyVector;
+import kemet.util.TrainExample;
 
-public class KemetNeuralNetwork {
+public class KemetNeuralNetwork implements NeuralNet{
 	
+	private MultiLayerSpace hyperparameterSpace;
+
 	public void create() {
 		
 		int boardX = BoardInventory.TOTAL_STATE_COUNT;
@@ -29,7 +39,7 @@ public class KemetNeuralNetwork {
         ParameterSpace<Double> learningRateHyperparam = new ContinuousParameterSpace(0.0001, 0.1);  //Values will be generated uniformly at random between 0.0001 and 0.1 (inclusive)
         ParameterSpace<Integer> layerSizeHyperparam = new IntegerParameterSpace(16,256);            //Integer values will be generated uniformly at random between 16 and 256 (inclusive)
 
-        MultiLayerSpace hyperparameterSpace = new MultiLayerSpace.Builder()
+        hyperparameterSpace = new MultiLayerSpace.Builder()
             //These next few options: fixed values for all models
             .weightInit(WeightInit.XAVIER)
             .regularization(true)
@@ -38,19 +48,124 @@ public class KemetNeuralNetwork {
             .learningRate(learningRateHyperparam)
             .addLayer( new DenseLayerSpace.Builder()
                     //Fixed values for this layer:
-                    .nIn(784)  //Fixed input: 28x28=784 pixels for MNIST
+                    .nIn(boardX)  //Fixed input: 28x28=784 pixels for MNIST
                     .activation(Activation.LEAKYRELU)
                     //One hyperparameter to infer: layer size
                     .nOut(layerSizeHyperparam)
                     .build())
             .addLayer( new OutputLayerSpace.Builder()
-                .nOut(10)
+                .nOut(actionSize)
                 .activation(Activation.SOFTMAX)
                 .lossFunction(LossFunctions.LossFunction.MCXENT)
                 .build())
             .build();
+        
+        
 
 		
+	}
+	
+	public int epochs = 10;
+	public int batchSize = 10;
+
+	@Override
+	public void train(List<TrainExample> examples) {
+		
+		for( int i=0; i< epochs; ++i) {
+			trainEpoch( i, examples );
+			
+		}
+	}
+
+	private void trainEpoch(int i, List<TrainExample> examples) {
+      print("EPOCH ::: " + i);
+      long dataTime = 0;
+      long batchTime = 0;
+      long piLosses = 0;
+      long vLosses = 0;
+      long endTime = System.currentTimeMillis();
+
+      int batchIndex = 0;
+      while( batchIndex < (examples.size() / batchSize)) {
+    	  int[] sampleIds = createSamples(examples.size(), batchSize);
+    	  
+      }
+      //
+//      # self.sess.run(tf.local_variables_initializer())
+//      while batch_idx < int(len(examples)/args.batch_size):
+//          sample_ids = np.random.randint(len(examples), size=args.batch_size)
+//          boards, pis, vs = list(zip(*[examples[i] for i in sample_ids]))
+//
+//          # predict and compute gradient and do SGD step
+//          input_dict = {
+//      self.nnet.input_boards: boards, 
+//      self.nnet.target_pis: pis, 
+//      self.nnet.target_vs: vs, 
+//      self.nnet.dropout: args.dropout, 
+//      self.nnet.isTraining: True}
+//
+//          # measure data loading time
+//          data_time.update(time.time() - end)
+//
+//          # record loss
+//          self.sess.run(self.nnet.train_step, feed_dict=input_dict)
+//          pi_loss, v_loss = self.sess.run([self.nnet.loss_pi, self.nnet.loss_v], feed_dict=input_dict)
+//          pi_losses.update(pi_loss, len(boards))
+//          v_losses.update(v_loss, len(boards))
+//
+//          # measure elapsed time
+//          batch_time.update(time.time() - end)
+//          end = time.time()
+//          batch_idx += 1
+//
+//          # plot progress
+//          bar.suffix  = '({batch}/{size}) Data: {data:.3f}s | Batch: {bt:.3f}s | Total: {total:} | ETA: {eta:} | Loss_pi: {lpi:.4f} | Loss_v: {lv:.3f}'.format(
+//                      batch=batch_idx,
+//                      size=int(len(examples)/args.batch_size),
+//                      data=data_time.avg,
+//                      bt=batch_time.avg,
+//                      total=bar.elapsed_td,
+//                      eta=bar.eta_td,
+//                      lpi=pi_losses.avg,
+//                      lv=v_losses.avg,
+//                      )
+//          bar.next()
+//      bar.finish()
+	}
+	
+	public Random random = new Random();
+
+	private int[] createSamples(int size, int batchSize2) {
+		int[] retVal = new int[batchSize];
+		for (int i = 0; i < retVal.length; i++) {
+			retVal[i] = random.nextInt(size);
+		}
+		return retVal;
+		
+	}
+
+	private void print(String string) {
+		System.out.println(string);
+	}
+
+	@Override
+	public Pair<PolicyVector, Float> predict(ByteCanonicalForm gameCanonicalForm) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void saveCheckpoint(String folder, String filename) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void loadCheckpoint(String folder, String filename) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NeuralNet clone() {
+		throw new UnsupportedOperationException();
 	}
 	
 	

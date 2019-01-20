@@ -1,6 +1,8 @@
 package kemet.util;
 
-public class ByteCanonicalForm {
+import java.io.Serializable;
+
+public class ByteCanonicalForm implements Serializable{
 	
 	private byte[] canonicalForm;
 	

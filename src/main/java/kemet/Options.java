@@ -1,6 +1,12 @@
 package kemet;
 
 public class Options {
+	
+	static {
+		int switcha;
+	}
+	// TODO switch that to false
+	public static final boolean ARENA_VALIDATE_MOVES = true;
 
 	// option run the simulation in multiple threads
 	public static final boolean SIMULATION_MULTI_THREAD = true;

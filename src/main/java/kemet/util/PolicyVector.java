@@ -1,6 +1,8 @@
 package kemet.util;
 
-public class PolicyVector {
+import java.io.Serializable;
+
+public class PolicyVector implements Serializable {
 	
 	public float[] vector;
 	
@@ -43,6 +45,19 @@ public class PolicyVector {
 			retVal += f;
 		}
 		return retVal;
+	}
+
+	public int getMaximumMove() {
+		int max = 0;
+		float maxF = 0;
+		for (int i = 0; i < vector.length; i++) {
+			float f = vector[i];
+			if( f > maxF ) {
+				maxF = f;
+				max = i;
+			}
+		}
+		return max;
 	}
 
 	

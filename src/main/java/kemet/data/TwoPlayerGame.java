@@ -24,6 +24,13 @@ public class TwoPlayerGame
         twoPlayerGame.initializeGame();
         twoPlayerGame.runGame();
     }
+    
+    public static KemetGame createGame() {
+        TwoPlayerGame twoPlayerGame = new TwoPlayerGame();
+        twoPlayerGame.initializeGame();
+        return twoPlayerGame.game;
+    	
+    }
 
     public void runGame()
     {

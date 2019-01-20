@@ -1,5 +1,7 @@
 package kemet.util;
 
+import java.util.List;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -20,7 +22,7 @@ public interface NeuralNet {
 	 *                 given board, and v is its value. The examples has board in
 	 *                 its canonical form.
 	 */
-	public void train(Example[] examples);
+	public void train(List<TrainExample> examples);
 
 	/**
 	 * 
@@ -46,5 +48,7 @@ public interface NeuralNet {
 	 * @param filename
 	 */
 	public void loadCheckpoint(String folder, String filename);
+	
+	public NeuralNet clone();
 
 }
