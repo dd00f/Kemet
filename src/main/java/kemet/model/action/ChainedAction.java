@@ -22,13 +22,13 @@ public class ChainedAction implements Action {
 	private Action parent;
 
 	public static Cache<ChainedAction> CACHE = new Cache<ChainedAction>(() -> new ChainedAction());
-	
+
 	public void initialize() {
 		game = null;
-		parent= null;
+		parent = null;
 		actionChain.clear();
 	}
-	
+
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
 		currentGame.validate(game);
@@ -36,12 +36,12 @@ public class ChainedAction implements Action {
 		for (Action action : actionChain) {
 			action.validate(this, currentGame);
 		}
-		
-		if( expectedParent != parent ) {
+
+		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
 	}
-	
+
 	@Override
 	public ChainedAction deepCacheClone() {
 		// create the object
@@ -92,7 +92,6 @@ public class ChainedAction implements Action {
 			action.relink(clone);
 		}
 	}
-
 
 	private ChainedAction() {
 
@@ -146,9 +145,11 @@ public class ChainedAction implements Action {
 	public void clear() {
 		actionChain.clear();
 	}
-	
+
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		actionChain.get(0).fillCanonicalForm(cannonicalForm, playerIndex);
+		if (actionChain.size() > 0) {
+			actionChain.get(0).fillCanonicalForm(cannonicalForm, playerIndex);
+		}
 	}
 
 }

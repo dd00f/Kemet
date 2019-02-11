@@ -444,9 +444,16 @@ public class KemetGame implements Model, Game {
 		boolean[] retVal = new boolean[ChoiceInventory.TOTAL_CHOICE];
 
 		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
-		List<Choice> choiceList = nextPlayerChoicePick.choiceList;
-		for (Choice choice : choiceList) {
-			retVal[choice.getIndex()] = true;
+
+		if (nextPlayerChoicePick != null) {
+			List<Choice> choiceList = nextPlayerChoicePick.choiceList;
+			for (Choice choice : choiceList) {
+				retVal[choice.getIndex()] = true;
+			}
+		}
+		else {
+			int x = 0;
+			x++;
 		}
 
 		return retVal;

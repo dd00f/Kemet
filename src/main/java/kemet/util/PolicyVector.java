@@ -2,9 +2,20 @@ package kemet.util;
 
 import java.io.Serializable;
 
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.cpu.nativecpu.NDArray;
+
 public class PolicyVector implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4843132931066392140L;
 	public float[] vector;
+	
+	public INDArray toINDArray() {
+		return new NDArray(vector);
+	}
 	
 	public void activateAllValidMoves( boolean[] validMoves) {
 		for (int i = 0; i < validMoves.length; i++) {

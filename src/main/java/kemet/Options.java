@@ -2,23 +2,21 @@ package kemet;
 
 public class Options {
 	
-	static {
-		int switcha;
-	}
-	// TODO switch that to false
+	
+	// option to validate move index before execution
 	public static final boolean ARENA_VALIDATE_MOVES = true;
 
 	// option run the simulation in multiple threads
 	public static final boolean SIMULATION_MULTI_THREAD = true;
 
-	// turn on object creation caching & reuse, only useful if USE_COPY_OVER_STREAMING is true
-	public static boolean USE_CACHE = true && ! SIMULATION_MULTI_THREAD;
+	// turn on object creation caching & reuse, only useful if SIMULATION_USE_COPY_OVER_STREAMING is true
+	public static final boolean USE_CACHE = false && ! SIMULATION_MULTI_THREAD;
 	
 	// print object creation count from the creators
 	public static boolean PRINT_CREATION_COUNT = false;
 	
 	// print object creation interval
-	public static final int CREATION_PRINT_COUNT = 100;
+	public static int CREATION_PRINT_COUNT = 100;
 	
 	// doesn't change anything in performance based on benchmark.
 	public static final boolean GAME_SKIP_RELEASE = true && ! USE_CACHE;
@@ -30,7 +28,7 @@ public class Options {
 	public static final boolean SIMULATION_VALIDATE_GAME_AFTER_CLONE = false;
 
 	// simulate a full turn instead of a single action, leads to exponentially more choices.
-	public static final boolean SIMULATE_FULL_TURN = true;
+	public static final boolean SIMULATE_FULL_TURN = false;
 
 	// option to use copy instead of java streaming for replication. Copy is about 25x faster
 	public static final boolean SIMULATION_USE_COPY_OVER_STREAMING  = true;

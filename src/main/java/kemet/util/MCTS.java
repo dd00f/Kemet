@@ -35,6 +35,13 @@ public class MCTS {
 		this.neuralNet = neuralNet;
 		this.cPuct = cPuct;
 		this.simulationCount = simulationCount;
+		
+		valueAtBoardActionQsa = new HashMap<>();
+		boardActionHitCountNsa = new HashMap<>();
+		boardHitCountNs = new HashMap<>();
+		choiceValuePredictionForBoardPs = new HashMap<>();
+		isBoardEndedEs = new HashMap<>();
+		validMovesForBoardVs = new HashMap<>();
 
 	}
 

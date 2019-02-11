@@ -25,6 +25,7 @@ public class Cache<T> {
 		release(create);
 	}
 
+	@SuppressWarnings("unused")
 	public T create() {
 		createCount++;
 		if( Options.USE_CACHE ) {

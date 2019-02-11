@@ -100,28 +100,28 @@ public class TwoPlayerGame
     {
     	int indexer = 0;
 
-        Tile midObelisk = Tile.create(indexer++);
+        Tile midObelisk = createTile(indexer++);
         midObelisk.name = MIDDLE_OBELISK;
         midObelisk.hasObelisk = true;
 
-        Tile smallTemple = Tile.create(indexer++);
+        Tile smallTemple = createTile(indexer++);
         smallTemple.name = SMALL_TEMPLE;
         smallTemple.hasTemple = true;
         smallTemple.templeBonusPrayer = 2;
         smallTemple.templePaireable = true;
         smallTemple.hasObelisk = true;
 
-        Tile mediumTemple = Tile.create(indexer++);
+        Tile mediumTemple = createTile(indexer++);
         mediumTemple.name = MEDIUM_TEMPLE;
         mediumTemple.hasTemple = true;
         mediumTemple.templeBonusPrayer = 3;
         mediumTemple.templePaireable = true;
         mediumTemple.hasObelisk = true;
 
-        Tile mediumTempleEntrance = Tile.create(indexer++);
+        Tile mediumTempleEntrance = createTile(indexer++);
         mediumTempleEntrance.name = MEDIUM_TEMPLE_ENTRANCE;
 
-        Tile islandTemple = Tile.create(indexer++);
+        Tile islandTemple = createTile(indexer++);
         islandTemple.name = ISLAND_TEMPLE;
         islandTemple.hasTemple = true;
         islandTemple.templeBonusPrayer = 5;
@@ -142,22 +142,22 @@ public class TwoPlayerGame
         for (Player player : game.playerByInitiativeList)
         {
 
-            Tile district1 = Tile.create(indexer++);
+            Tile district1 = createTile(indexer++);
             district1.name = player.name + " district 1";
             district1.isWalled = true;
             district1.owningPlayer = player;
 
-            Tile district2 = Tile.create(indexer++);
+            Tile district2 = createTile(indexer++);
             district2.name = player.name + " district 2";
             district2.isWalled = true;
             district2.owningPlayer = player;
 
-            Tile district3 = Tile.create(indexer++);
+            Tile district3 = createTile(indexer++);
             district3.name = player.name + " district 3";
             district3.isWalled = true;
             district3.owningPlayer = player;
 
-            Tile cityFront = Tile.create(indexer++);
+            Tile cityFront = createTile(indexer++);
             cityFront.name = player.name + " city front";
             cityFront.owningPlayer = player;
 
@@ -199,7 +199,13 @@ public class TwoPlayerGame
 
     }
 
-    private void connectTiles(Tile firstTile, Tile secondTile)
+    private Tile createTile(int i) {
+		Tile create = Tile.create(i);
+		create.game = game;
+		return create;
+	}
+
+	private void connectTiles(Tile firstTile, Tile secondTile)
     {
         firstTile.connectedTiles.add(secondTile);
         secondTile.connectedTiles.add(firstTile);

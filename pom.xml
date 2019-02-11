@@ -36,11 +36,15 @@
 
 
         <java.version>1.8</java.version>
+        <!-- 
         <nd4j.version>0.9.1</nd4j.version>
         <dl4j.version>0.9.1</dl4j.version>
-        <datavec.version>0.9.1</datavec.version>
-        <arbiter.version>0.9.1</arbiter.version>
-        <rl4j.version>0.9.1</rl4j.version>
+         -->
+        <nd4j.version>1.0.0-beta3</nd4j.version>
+        <dl4j.version>1.0.0-beta3</dl4j.version>
+        <datavec.version>1.0.0-beta3</datavec.version>
+        <arbiter.version>1.0.0-beta3</arbiter.version>
+        <rl4j.version>1.0.0-beta3</rl4j.version>
 
         <!-- For Spark examples: change the _1 to _2 to switch between Spark 1 and Spark 2 -->
         <dl4j.spark.version>0.9.1_spark_1</dl4j.spark.version>
@@ -64,7 +68,7 @@
         <scala.plugin.version>3.2.2</scala.plugin.version>
 		
 	</properties>
-
+<!-- 
     <dependencyManagement>
         <dependencies>
            <dependency>
@@ -84,7 +88,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
+-->
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -134,22 +138,22 @@
             <version>${dl4j.version}</version>
         </dependency>
 
-        <!-- deeplearning4j-ui is used for HistogramIterationListener + visualization: see http://deeplearning4j.org/visualization -->
+        <!-- deeplearning4j-ui is used for HistogramIterationListener + visualization: see http://deeplearning4j.org/visualization
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-ui_${scala.binary.version}</artifactId>
             <version>${dl4j.version}</version>
         </dependency>
-
-        <!-- ParallelWrapper & ParallelInference live here -->
+ -->
+        <!-- ParallelWrapper & ParallelInference live here 
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>deeplearning4j-parallel-wrapper_${scala.binary.version}</artifactId>
             <version>${dl4j.version}</version>
         </dependency>
+-->
 
-
-        <!-- Arbiter - used for hyperparameter optimization (grid/random search) -->
+        <!-- Arbiter - used for hyperparameter optimization (grid/random search)
         <dependency>
             <groupId>org.deeplearning4j</groupId>
             <artifactId>arbiter-deeplearning4j</artifactId>
@@ -160,15 +164,15 @@
             <artifactId>arbiter-ui_2.11</artifactId>
             <version>${arbiter.version}</version>
         </dependency>
-
-        <!-- datavec-data-codec: used only in video example for loading video data -->
+ -->
+        <!-- datavec-data-codec: used only in video example for loading video data 
         <dependency>
             <artifactId>datavec-data-codec</artifactId>
             <groupId>org.datavec</groupId>
             <version>${datavec.version}</version>
         </dependency>
-
-        <!-- Used in the feedforward/classification/MLP* and feedforward/regression/RegressionMathFunctions example -->
+-->
+        <!-- Used in the feedforward/classification/MLP* and feedforward/regression/RegressionMathFunctions example 
         <dependency>
             <groupId>jfree</groupId>
             <artifactId>jfreechart</artifactId>
@@ -179,8 +183,8 @@
             <artifactId>jcommon</artifactId>
             <version>${jcommon.version}</version>
         </dependency>
-
-        <!-- Used for downloading data in some of the examples -->
+-->
+        <!-- Used for downloading data in some of the examples
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -192,7 +196,7 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
         </dependency>
-
+ -->
 
 		<!-- <dependency> <groupId>com.ibm.saas</groupId> <artifactId>saas-log-log4j</artifactId> 
 			<version>TRUNK-SNAPSHOT</version> </dependency> <dependency> <groupId>com.fasterxml.jackson.core</groupId> 
