@@ -96,7 +96,7 @@ class DL4JAlphaKemetZeroBuilder {
 
 		conf.addLayer(denseName, new DenseLayer.Builder().nIn(LAYER_SIZE).nOut(LAYER_SIZE).build(), inName);
 
-		OutputLayer outputLayer = new OutputLayer.Builder().nIn(LAYER_SIZE).activation(Activation.SIGMOID)
+		OutputLayer outputLayer = new OutputLayer.Builder().nIn(LAYER_SIZE).activation(Activation.TANH)
 				.lossFunction(LossFunctions.LossFunction.MEAN_ABSOLUTE_ERROR).nOut(1).build();
 		conf.addLayer(outputName, outputLayer, denseName);
 		return outputName;

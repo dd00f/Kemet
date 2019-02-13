@@ -263,19 +263,18 @@ public class Army implements Model {
 
 	}
 
-	public void describeArmy() {
-		if (isPrintEnabled()) {
-			String beastStr = "";
-			if (beast != null) {
-				beastStr = " with beast " + beast.name;
-			}
-			String tileName = null;
-			if (tile != null) {
-				tileName = tile.describe();
-			}
-
-			printEvent("\t Army : " + name + " of size " + armySize + beastStr + " on tile : " + tileName);
+	public void describeArmy(StringBuilder builder) {
+		String beastStr = "";
+		if (beast != null) {
+			beastStr = " with beast " + beast.name;
 		}
+		String tileName = null;
+		if (tile != null) {
+			tileName = tile.describe();
+		}
+
+		builder.append("\t Army : " + name + " of size " + armySize + beastStr + " on tile : " + tileName);
+		builder.append("\n");
 	}
 
 	public void validate(KemetGame currentGame) {

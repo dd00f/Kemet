@@ -440,7 +440,7 @@ public class BattleAction implements Action {
 
 		@Override
 		public int getIndex() {
-			return destinationTile.getPickChoiceIndex();
+			return destinationTile.getPickChoiceIndex(player.index);
 		}
 
 	}

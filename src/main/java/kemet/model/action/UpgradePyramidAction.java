@@ -173,7 +173,7 @@ public class UpgradePyramidAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickTile.getPickChoiceIndex();
+			return pickTile.getPickChoiceIndex( player.index );
 		}
 
 	}

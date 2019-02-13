@@ -265,8 +265,8 @@ public class Tile implements Model {
 		}
 	}
 
-	public int getPickChoiceIndex() {
-		return ChoiceInventory.PICK_TILE_CHOICE + index;
+	public int getPickChoiceIndex(int playerIndex) {
+		return ChoiceInventory.PICK_TILE_CHOICE + getTileCanonicalIndex(playerIndex);
 	}
 
 	public void setSelected(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {

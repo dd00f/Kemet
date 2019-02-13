@@ -18,6 +18,7 @@ import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 import kemet.util.Game;
+import kemet.util.Utilities;
 
 public class KemetGame implements Model, Game {
 
@@ -175,15 +176,19 @@ public class KemetGame implements Model, Game {
 		}
 	}
 
-	public void describeGame() {
+	public void describeGame(StringBuilder builder) {
+
+		builder.append("Game turn ");
+		builder.append(this.roundNumber);
+		builder.append("\n");		
 		for (Player player : playerByInitiativeList) {
-			player.describePlayer();
+			player.describePlayer(builder);
 		}
 	}
 
 	public void findWinner() {
 
-		describeGame();
+		printDescribeGame();
 
 		List<Player> playerList = new ArrayList<>(playerByInitiativeList);
 		byte vp = playerList.stream().max(Comparator.comparing(ft -> ft.victoryPoints)).get().victoryPoints;
@@ -283,7 +288,7 @@ public class KemetGame implements Model, Game {
 
 			winner = player;
 
-			describeGame();
+			printDescribeGame();
 			if (printActivations) {
 				printEvent(player.name + " won the game at the beginning of his turn with " + player.victoryPoints
 						+ " victory points.");
@@ -293,8 +298,18 @@ public class KemetGame implements Model, Game {
 		return false;
 	}
 
+	public void printDescribeGame() {
+		if (printActivations) {
+			printEvent(toString());
+		}
+	}
+
 	public boolean hasWinner() {
 		return winner != null;
+	}
+
+	public void setPrintActivations(boolean printActivations) {
+		this.printActivations = printActivations;
 	}
 
 	public byte incrementTurnCount() {
@@ -416,8 +431,14 @@ public class KemetGame implements Model, Game {
 	public Game getNextState(int player, int actionIndex) {
 
 		KemetGame deepCacheClone = deepCacheClone();
+		deepCacheClone.activateAction(player, actionIndex);
+		return deepCacheClone;
+	}
 
-		PlayerChoicePick nextPlayerChoicePick = deepCacheClone.action.getNextPlayerChoicePick();
+	@Override
+	public void activateAction(int player, int actionIndex) {
+
+		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
 		if (nextPlayerChoicePick.player.index != player) {
 			LOGGER.warn("Next player index for action doesn't match");
 		}
@@ -425,18 +446,50 @@ public class KemetGame implements Model, Game {
 		for (Choice choice : nextPlayerChoicePick.choiceList) {
 			if (choice.getIndex() == actionIndex) {
 				choice.activate();
-				return deepCacheClone;
+				return;
 			}
 		}
 
-		LOGGER.error("Unable to find action that matches index : " + actionIndex);
+		String message = "Unable to find action that matches index : " + actionIndex;
+		LOGGER.error(message);
+		throw new IllegalArgumentException(message);
+	}
 
-		return null;
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		describeGame(builder);
+		return builder.toString();
+	}
+
+	@Override
+	public String describeAction(int i) {
+		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+
+		for (Choice choice : nextPlayerChoicePick.choiceList) {
+			if (choice.getIndex() == i) {
+				return choice.describe();
+			}
+		}
+		return "invalid choice index " + i;
+	}
+	
+	@Override
+	public void printChoiceList() {
+		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+
+		for (Choice choice : nextPlayerChoicePick.choiceList) {
+			printEvent(choice.toString());
+		}
 	}
 
 	@Override
 	public int getNextPlayer() {
-		return action.getNextPlayerChoicePick().player.index;
+		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+		if( nextPlayerChoicePick == null ) {
+			return -1;
+		}
+		return nextPlayerChoicePick.player.index;
 	}
 
 	@Override
@@ -450,10 +503,8 @@ public class KemetGame implements Model, Game {
 			for (Choice choice : choiceList) {
 				retVal[choice.getIndex()] = true;
 			}
-		}
-		else {
-			int x = 0;
-			x++;
+		} else {
+			LOGGER.error("No next player choices for getValidMoves(), game must be ended.");
 		}
 
 		return retVal;
@@ -504,7 +555,12 @@ public class KemetGame implements Model, Game {
 	@Override
 	public String stringRepresentation() {
 		byte[] canonicalForm = getCanonicalForm(0).getCanonicalForm();
-		return canonicalForm.toString();
+		String canonicalString = Utilities.bytesToHex(canonicalForm);
+		return canonicalString;
 	}
 
+	@Override
+	public Game clone() {
+		return deepCacheClone();
+	}
 }

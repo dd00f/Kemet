@@ -9,6 +9,8 @@ package kemet.util;
  */
 public interface Player {
 	
-	int getActionProbability(ByteCanonicalForm gameCanonicalForm);
+	int getActionProbability(Game game);
+
+	void printStats();
 
 }

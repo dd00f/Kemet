@@ -212,7 +212,18 @@
 	Monte-Carlo simulation
 		Recoding MTSC in Java really helps to understand how this thing really works. Left todo : Neural Net & Coach.
 	
-	
+2019-02-10
+	Neural network is plugged in !
+		It's probably full of bugs, but at least it compiles. Took longer than expected to learn ND4J, Neural Network, 
+		regression functions, why MTSC works, TD Lambda, all that stuff.
+
+2019-02-12
+	Neural network is a dumbass
+		First round of bugs fixed. The neural network can now play a full game without crashing, but boy is it dumb.
+		Takes about 28 seconds to play a full game with 25 MCTS trial per move. Need more stats about where time is spent.
+		Had to limit the game to 20 turns otherwise the AI sometimes just twiddled its thumbs forever.
+		
+
 TODO : 
 	- TrialAI isn't very good at recruiting since any army score is worth more than raw prayer points.
 	To fix this, TrialAI will need to try to simulate a few more actions.

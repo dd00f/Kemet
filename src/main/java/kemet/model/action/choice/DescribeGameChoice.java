@@ -24,7 +24,7 @@ public class DescribeGameChoice extends PlayerChoice {
 
 	@Override
 	public void choiceActivate() {
-		game.describeGame();
+		game.printEvent(game.toString());
 	}
 
 	@Override

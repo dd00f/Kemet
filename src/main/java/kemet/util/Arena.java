@@ -6,7 +6,7 @@ import kemet.Options;
 public class Arena {
 	private Player player2;
 	private Player player1;
-	private Game game;
+	private GameFactory gameFactory;
 
 	/**
 	 * An Arena class where any 2 agents can be pit against each other.
@@ -21,10 +21,10 @@ public class Arena {
 	 *
 	 */
 
-	public Arena(Player player1, Player player2, Game game) {
+	public Arena(Player player1, Player player2, GameFactory gameFactory) {
 		this.player1 = player1;
 		this.player2 = player2;
-		this.game = game;
+		this.gameFactory = gameFactory;
 
 	}
 
@@ -38,20 +38,33 @@ public class Arena {
 	 */
 	public int playGame(boolean verbose) {
 
+		Game game = gameFactory.createGame();
+		
 		int currentPlayerIndex = game.getNextPlayer();
 		int it = 0;
 		while (game.getGameEnded(currentPlayerIndex) == 0) {
 			it++;
 			if (verbose) {
 				print("Turn " + it + "Player " + currentPlayerIndex);
-				game.describeGame();
+				game.printDescribeGame();
 			}
 
 			Player currentPlayer = player2;
-			if (currentPlayerIndex == 1) {
-				currentPlayer = player1;
+			if( swapped )
+			{
+				if (currentPlayerIndex == 1) {
+					currentPlayer = player1;
+				}
 			}
-			int actionIndex = currentPlayer.getActionProbability(game.getCanonicalForm(currentPlayerIndex));
+			else {
+				if (currentPlayerIndex == 0) {
+					currentPlayer = player1;
+				}
+			}
+			
+
+			
+			int actionIndex = currentPlayer.getActionProbability(game);
 
 			if (Options.ARENA_VALIDATE_MOVES) {
 				boolean[] validMoves = game.getValidMoves();
@@ -70,7 +83,11 @@ public class Arena {
 		if (verbose) {
 			String print = "Game over : Turn " + it + " result " + game.getGameEnded(1);
 			print(print);
-			game.describeGame();
+			game.printDescribeGame();
+			
+			player1.printStats();
+			
+			player2.printStats();
 		}
 
 		return game.getGameEnded(1);
@@ -95,6 +112,7 @@ public class Arena {
 	public int oneWon = 0;
 	public int twoWon = 0;
 	public int draw = 0;
+	private boolean swapped;
 
 	/**
 	 * Plays num games in which player1 starts num/2 games and player2 starts num/2
@@ -111,7 +129,7 @@ public class Arena {
 		long currentStart = System.currentTimeMillis();
 		long endTime = 0;
 		int maxeps = arenaCompare;
-		boolean swapped = false;
+		swapped = false;
 
 		oneWon = 0;
 		twoWon = 0;

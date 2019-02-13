@@ -107,9 +107,9 @@ public class NightAction implements Action {
 		game.provideNightDiCards();
 
 		game.activateNightPowers();
-
-		game.describeGame();
-
+		
+		game.printDescribeGame();
+		
 		return null;
 	}
 

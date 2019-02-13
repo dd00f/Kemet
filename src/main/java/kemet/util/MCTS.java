@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import kemet.Options;
+
 /**
  * 
  * Monte Carlo Tree Search
@@ -15,9 +17,10 @@ public class MCTS {
 
 	// constant to increase the rate at which the algorithm will explore n
 	public static final float EPSILON = 0.00000001f;
-	
+
 	private Game game;
 	private NeuralNet neuralNet;
+
 	private float cPuct; // C? P? upper confidence T?
 
 	private Map<String, Map<Integer, Float>> valueAtBoardActionQsa; // stores Q values for s,a (as defined in the paper)
@@ -29,13 +32,21 @@ public class MCTS {
 	private Map<String, Integer> isBoardEndedEs; // stores game.getGameEnded ended for board s
 	private Map<String, boolean[]> validMovesForBoardVs; // stores game.getValidMoves for board s
 	private int simulationCount;
+	
+	
+	private long getActionProbabilityTotalCount = 0;
+	private long getActionProbabilityTotalTimeNano=0;
+	private long simulationTotalCount = 0;
+	private long simulationTotalTimeNano = 0;
+	private long neuralNetTotalCount = 0;
+	private long neuralNetTotalTimeNano = 0;
 
 	public MCTS(Game game, NeuralNet neuralNet, float cPuct, int simulationCount) {
 		this.game = game;
 		this.neuralNet = neuralNet;
 		this.cPuct = cPuct;
 		this.simulationCount = simulationCount;
-		
+
 		valueAtBoardActionQsa = new HashMap<>();
 		boardActionHitCountNsa = new HashMap<>();
 		boardHitCountNs = new HashMap<>();
@@ -59,18 +70,35 @@ public class MCTS {
 	 * @return a policy vector where the probability of the ith action is
 	 *         proportional to Nsa[(s,a)]**(1./temperature)
 	 */
-	public PolicyVector getActionProbability(ByteCanonicalForm gameCanonicalForm, int temperature, int playerIndex) {
+	public PolicyVector getActionProbability(int temperature) {
 
+	
+
+		
+		long starProbNano = System.nanoTime();
+		
 		// run the requested simulation count
 		for (int i = 0; i < simulationCount; ++i) {
-			search(gameCanonicalForm, playerIndex);
+			long starSimNano = System.nanoTime(); 
+			Game clone = game.clone();
+			clone.setPrintActivations(Options.PRINT_MCTS_SEARCH_ACTIONS);
+			search(clone);
+			
+			simulationTotalCount++;
+			simulationTotalTimeNano += System.nanoTime() - starSimNano;
 		}
+		
 
 		String gameString = game.stringRepresentation();
 
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
-		Set<Entry<Integer, Integer>> actionIndexCount = boardActionHitCountNsa.get(gameString).entrySet();
+		Map<Integer, Integer> map = boardActionHitCountNsa.get(gameString);
+		if (map == null) {
+			map = new HashMap<>();
+			boardActionHitCountNsa.put(gameString, map);
+		}
+		Set<Entry<Integer, Integer>> actionIndexCount = map.entrySet();
 		for (Entry<Integer, Integer> entry : actionIndexCount) {
 			actionHitCounts[entry.getKey()] = entry.getValue();
 		}
@@ -88,16 +116,26 @@ public class MCTS {
 			probabilitiesOfAllActions.normalize();
 		}
 
+		getActionProbabilityTotalCount++;
+		getActionProbabilityTotalTimeNano += System.nanoTime() - starProbNano;
+
+		
 		return probabilitiesOfAllActions;
 	}
 
 	private float[] adjustActionHitCountTemperature(int temperature, int[] actionHitCounts) {
 		float[] countsFloat = new float[actionHitCounts.length];
 		if (temperature != 1) {
+			int power = 1 / temperature;
 			for (int i = 0; i < actionHitCounts.length; i++) {
-				countsFloat[i] = (float) Math.pow(actionHitCounts[i], 1 / temperature);
+				countsFloat[i] = (float) Math.pow(actionHitCounts[i], power);
+			}
+		} else {
+			for (int i = 0; i < actionHitCounts.length; i++) {
+				countsFloat[i] = (float) actionHitCounts[i];
 			}
 		}
+
 		return countsFloat;
 	}
 
@@ -127,12 +165,12 @@ public class MCTS {
 	 * @param canonicalBoard
 	 * @returns the negative of the value of the current canonicalBoard
 	 */
-	public float search(ByteCanonicalForm canonicalBoard, int playerIndex) {
+	public float search(Game currentGame) {
 
-		String boardS = game.stringRepresentation();
+		String boardS = currentGame.stringRepresentation();
 
 		if (!isBoardEndedEs.containsKey(boardS)) {
-			isBoardEndedEs.put(boardS, game.getGameEnded(1));
+			isBoardEndedEs.put(boardS, currentGame.getGameEnded(1));
 		}
 
 		Integer gameFinishedState = isBoardEndedEs.get(boardS);
@@ -141,30 +179,44 @@ public class MCTS {
 		if (gameFinishedState != 0) {
 			boardValueV = gameFinishedState;
 		} else if (!choiceValuePredictionForBoardPs.containsKey(boardS)) {
-			boardValueV = predictValueWithNeuralNet(canonicalBoard, boardS);
+			boardValueV = predictValueWithNeuralNet(currentGame, boardS);
 		} else {
 
 			int actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS);
 
 			// Possible optimization : cache the game to reuse it.
-			Game nextState = game.getNextState(1, actionIndexOfNextSimulationA);
-			int nextPlayerIndex = nextState.getNextPlayer();
+			try {
+				
+				int playerIndex = currentGame.getNextPlayer();
+				currentGame.activateAction(playerIndex, actionIndexOfNextSimulationA);
+				int nextPlayerIndex = currentGame.getNextPlayer();
 
-			ByteCanonicalForm nextBoardS = nextState.getCanonicalForm(nextPlayerIndex);
+				boardValueV = search(currentGame);
+				if( nextPlayerIndex == -1 ) {
+					// game ended, check if the current player won
+					boardValueV = currentGame.getGameEnded(playerIndex);
+				}
+				else if (nextPlayerIndex != playerIndex) {
+					// swap the board value as we switch players
+					boardValueV = -boardValueV;
+				}
 
-			boardValueV = search(nextBoardS, nextPlayerIndex);
-			
-			if( nextPlayerIndex != playerIndex ) {
-				// swap the board value as we switch players
-				boardValueV = -boardValueV;
+				updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV);
+
+				incrementBoardHitCount(boardS);
+				incrementBoardActionHitCount(boardS, actionIndexOfNextSimulationA);
+			} catch (Exception ex) {
+				currentGame.setPrintActivations(true);
+				currentGame.printDescribeGame();
+				currentGame.printChoiceList();
+
+				throw ex;
 			}
 
-			updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV);
-
-			incrementBoardHitCount(boardS);
 		}
 
-		// search always reverts the board value, likely assuming the player switches between actions.
+		// search always reverts the board value, likely assuming the player switches
+		// between actions.
 		return -boardValueV;
 
 	}
@@ -190,15 +242,45 @@ public class MCTS {
 		}
 		return bestActionIndex;
 	}
+	
+	public void printStats() {
+		
+		if( Options.PRINT_MCTS_STATS ) {
+			
+			print("getActionProbabilityTotalCount = " + getActionProbabilityTotalCount);
+			print("simulationTotalCount = " + simulationTotalCount);
+			print("neuralNetTotalCount = " + neuralNetTotalCount);
+			print("getActionProbabilityTotalTimeNano = " + getActionProbabilityTotalTimeNano);
+			print("simulationTotalTimeNano = " + simulationTotalTimeNano);
+			print("neuralNetTotalTimeNano = " + neuralNetTotalTimeNano);
 
-	private float predictValueWithNeuralNet(ByteCanonicalForm canonicalBoard, String boardS) {
-		Pair<PolicyVector, Float> predictActionAndValue = neuralNet.predict(canonicalBoard);
+			print("avg getActionProbabilityTimeNano = " + getActionProbabilityTotalTimeNano / getActionProbabilityTotalCount);
+			print("avg simulationTimeNano = " + simulationTotalTimeNano / simulationTotalCount);
+			print("avg neuralNetTimeNano = " + neuralNetTotalTimeNano / neuralNetTotalCount);
+
+
+			
+		}
+	}
+
+	private float predictValueWithNeuralNet(Game currentGame, String boardS) {
+		ByteCanonicalForm canonicalForm = currentGame.getCanonicalForm(currentGame.getNextPlayer());
+		
+		
+		long starNano = System.nanoTime(); 
+
+		
+		Pair<PolicyVector, Float> predictActionAndValue = neuralNet.predict(canonicalForm);
+
+		neuralNetTotalCount++;
+		neuralNetTotalTimeNano += System.nanoTime() - starNano;
+
 		PolicyVector allActionProbability = predictActionAndValue.getLeft();
 		float boardValueV = predictActionAndValue.getRight();
 
 		choiceValuePredictionForBoardPs.put(boardS, allActionProbability);
 
-		boolean[] validMoves = game.getValidMoves();
+		boolean[] validMoves = currentGame.getValidMoves();
 		allActionProbability.maskInvalidMoves(validMoves);
 
 		float sum = allActionProbability.sum();
@@ -217,9 +299,26 @@ public class MCTS {
 		}
 		allActionProbability.normalize();
 
+		printActionProbabilities(allActionProbability, boardValueV, currentGame);
+
 		validMovesForBoardVs.put(boardS, validMoves);
 		boardHitCountNs.put(boardS, 0);
 		return boardValueV;
+	}
+
+	public void printActionProbabilities(PolicyVector allActionProbability, float value, Game currentGame) {
+		if (Options.PRINT_MCTS_SEARCH_PROBABILITIES) {
+			print("Current board value : " + value);
+
+			allActionProbability.printActionProbabilities(currentGame);
+
+		}
+
+	}
+
+	private void print(String format) {
+		System.out.println(format);
+
 	}
 
 	private void updateBoardActionValue(String boardS, int actoinIndexA, float newBoardActionValueV) {
@@ -241,7 +340,7 @@ public class MCTS {
 		if (preExists) {
 			// update the value of the current board+action
 			Integer currentBoardActionHitCountNsa = boardActionHitCountNsa.get(boardS).get(actoinIndexA);
-			
+
 			// merge the new board value with the old one proportionally
 			newValue = (currentBoardActionHitCountNsa * previousBoardActionValueQ + newBoardActionValueV)
 					/ (currentBoardActionHitCountNsa + 1);
@@ -284,20 +383,28 @@ public class MCTS {
 		float cpuct = getCPuct();
 		float currentActionValueU;
 
+		PolicyVector policyVectorValuePrediction = choiceValuePredictionForBoardPs.get(boardS);
+		Integer boardHitCount = boardHitCountNs.get(boardS);
+		float actionValuePredictionFromPolicy = policyVectorValuePrediction.vector[actionIndexA];
 		if (preExists) {
-			currentActionValueU = (float) (previousActionValue
-					+ cpuct * choiceValuePredictionForBoardPs.get(boardS).vector[actionIndexA]
-							* Math.sqrt(boardHitCountNs.get(boardS))
-							/ (1 + boardActionHitCountNsa.get(boardS).get(actionIndexA)));
+			Map<Integer, Integer> boardActionHitCounter = boardActionHitCountNsa.get(boardS);
+			Integer boardAndActionHitCounter = boardActionHitCounter.get(actionIndexA);
+
+			currentActionValueU = (float) (previousActionValue + cpuct * actionValuePredictionFromPolicy
+					* Math.sqrt(boardHitCount) / (1 + boardAndActionHitCounter));
 		} else {
-			currentActionValueU = (float) (cpuct * choiceValuePredictionForBoardPs.get(boardS).vector[actionIndexA]
-					* Math.sqrt(boardHitCountNs.get(boardS) + EPSILON)); // Q = 0 ?
+			currentActionValueU = (float) (cpuct * actionValuePredictionFromPolicy
+					* Math.sqrt(boardHitCount + EPSILON)); // Q = 0 ?
 		}
 		return currentActionValueU;
 	}
 
 	private float getCPuct() {
 		return cPuct;
+	}
+
+	public void setGame(Game game2) {
+		this.game = game2;
 	}
 
 }

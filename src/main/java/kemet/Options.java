@@ -2,6 +2,22 @@ package kemet;
 
 public class Options {
 	
+	// force the game to end after a number of turns
+	public static int GAME_TURN_LIMIT = 20;
+	
+	// option to print the probability of every option searched during MTCS evaluation
+	public static final boolean PRINT_MCTS_SEARCH_PROBABILITIES = false;
+	
+	// option to print the every action activated during MTCS evaluation
+	public static final boolean PRINT_MCTS_SEARCH_ACTIONS = false;
+	
+	
+	// option to print the probability of every option during move selection
+	public static final boolean PRINT_COACH_SEARCH_ACTIONS = false;
+	
+	// option to print the probability of every option during move selection
+	public static final boolean PRINT_COACH_SEARCH_PROBABILITIES = false;
+	
 	
 	// option to validate move index before execution
 	public static final boolean ARENA_VALIDATE_MOVES = true;
@@ -47,6 +63,9 @@ public class Options {
 
 	// validate the game between player picks.
 	public static final boolean VALIDATE_GAME_BETWEEN_PICKS = false;
+
+	// option to print statistics about the MCTS after a game is finished
+	public static final boolean PRINT_MCTS_STATS = true;
 
 
 

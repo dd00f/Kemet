@@ -1,5 +1,6 @@
 package kemet.model.action;
 
+import kemet.Options;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.Validation;
@@ -106,6 +107,12 @@ public class GameAction implements Action {
 
 
             game.incrementTurnCount();
+            
+            if( game.roundNumber > Options.GAME_TURN_LIMIT ) {
+            	game.victoryConditionTriggered = true;
+            	game.findWinner();
+                return null;
+            }
         	
             chainedActions.add(NightAction.create(game, this));
             if (!game.isFirstTurn()) {

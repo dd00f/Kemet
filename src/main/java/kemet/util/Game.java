@@ -40,9 +40,16 @@ public interface Game {
 	 * 
 	 * @param player      the player index
 	 * @param actionIndex the action index
-	 * @return the new game state
+	 * @return the new game state, the current game remains untouched.
 	 */
 	public Game getNextState(int player, int actionIndex);
+	
+	/**
+	 * Activate a specific action in the current game.
+	 * @param player the player index
+	 * @param actionIndex the action index.
+	 */
+	public void activateAction(int player, int actionIndex);
 
 	/**
 	 * 
@@ -92,6 +99,16 @@ public interface Game {
 	 */
 	public String stringRepresentation();
 
-	public void describeGame();
+	public void describeGame(StringBuilder builder);
+	
+	public void setPrintActivations(boolean printActivations);
+
+	public Game clone();
+
+	public String describeAction(int i);
+
+	public void printDescribeGame();
+
+	public void printChoiceList();
 
 }

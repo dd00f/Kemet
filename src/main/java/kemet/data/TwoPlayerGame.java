@@ -7,8 +7,9 @@ import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.Tile;
 import kemet.model.action.PlayerChoicePick;
+import kemet.util.GameFactory;
 
-public class TwoPlayerGame
+public class TwoPlayerGame implements GameFactory
 {
 
     public static final String ISLAND_TEMPLE = "Island Temple";
@@ -25,7 +26,7 @@ public class TwoPlayerGame
         twoPlayerGame.runGame();
     }
     
-    public static KemetGame createGame() {
+    public KemetGame createGame() {
         TwoPlayerGame twoPlayerGame = new TwoPlayerGame();
         twoPlayerGame.initializeGame();
         return twoPlayerGame.game;
@@ -69,6 +70,7 @@ public class TwoPlayerGame
         player.name = name;
         player.game = game;
         player.actor = new HumanPlayer(player, game);
+        player.index =  game.playerByInitiativeList.size();
         game.playerByInitiativeList.add(player);
 
         return player;
@@ -80,6 +82,7 @@ public class TwoPlayerGame
         player.name = name;
         player.game = game;
         player.actor = new TrialPlayerAI(player, game);
+        player.index =  game.playerByInitiativeList.size();
         game.playerByInitiativeList.add(player);
 
         return player;
@@ -91,6 +94,7 @@ public class TwoPlayerGame
         player.name = name;
         player.game = game;
         player.actor = new RandomPlayerAI(player, game);
+        player.index =  game.playerByInitiativeList.size();
         game.playerByInitiativeList.add(player);
 
         return player;

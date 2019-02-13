@@ -27,7 +27,7 @@ public abstract class PlayerChoice implements Choice {
 
 	@Override
 	public String toString() {
-		return "Player \"" + player.name + "\" : " + describe();
+		return "Player \"" + player.name + "\" : "  + getIndex() + " : "+ describe();
 	}
 
 	public Player getPlayer() {

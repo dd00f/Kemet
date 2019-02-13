@@ -1,15 +1,14 @@
 package kemet.data;
 
 import kemet.ai.KemetNeuralNetwork;
-import kemet.model.KemetGame;
 import kemet.util.Coach;
-import kemet.util.Game;
+import kemet.util.GameFactory;
 import kemet.util.NeuralNet;
 
 public class KemetLearn {
 
 	public static void main(String[] args) {
-	    Game game = KemetGame.create();
+	    GameFactory gameFactory = new TwoPlayerGame();
 	    
 	    NeuralNet neuralNet = new KemetNeuralNetwork();
 	    
@@ -18,7 +17,7 @@ public class KemetLearn {
 	    	neuralNet.loadCheckpoint("./", "neuralnet.storage");
 	    }
 	    
-	    Coach coach = new Coach(game, neuralNet);
+	    Coach coach = new Coach(gameFactory, neuralNet);
 	    
 	    if( loadModel ) {
 	    	coach.loadTrainExamples();

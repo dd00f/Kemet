@@ -595,20 +595,26 @@ public class Player implements Model {
 
 	}
 
-	public void describePlayer() {
-		if (game.printActivations) {
-			game.printEvent("Player : " + name);
-			game.printEvent("\t" + prayerPoints + " prayer points.");
-			game.printEvent("\t" + victoryPoints + " victory points.");
-			game.printEvent("\t" + templeOccupationPoints + " temple occupation points.");
-			game.printEvent("\t" + templePermanentPoints + " temple permanent points.");
-			game.printEvent("\t" + battlePoints + " battle points.");
-			game.printEvent("\t" + highLevelPyramidOccupationPoints + " high level pyramid occupation points.");
-			game.printEvent("\t" + initiativeTokens + " initiative tokens.");
+	public void describePlayer(StringBuilder builder) {
+		builder.append("Player : " + name);
+		builder.append("\n");
+		builder.append("\t" + prayerPoints + " prayer points.");
+		builder.append("\n");
+		builder.append("\t" + victoryPoints + " victory points.");
+		builder.append("\n");
+		builder.append("\t" + templeOccupationPoints + " temple occupation points.");
+		builder.append("\n");
+		builder.append("\t" + templePermanentPoints + " temple permanent points.");
+		builder.append("\n");
+		builder.append("\t" + battlePoints + " battle points.");
+		builder.append("\n");
+		builder.append("\t" + highLevelPyramidOccupationPoints + " high level pyramid occupation points.");
+		builder.append("\n");
+		builder.append("\t" + initiativeTokens + " initiative tokens.");
+		builder.append("\n");
 
-			for (Army army : armyList) {
-				army.describeArmy();
-			}
+		for (Army army : armyList) {
+			army.describeArmy(builder);
 		}
 
 	}
@@ -680,7 +686,13 @@ public class Player implements Model {
 
 		// otherwise, increment our own index, unless we are bigger than the target
 		// player index.
-
+		
+		// 2 player game
+		// target : 0, current 0 - return 0
+		// target : 0, current 1 - return 1
+		// target : 1, current 0 - return 1
+		// target : 1, current 1 - return 0
+		
 		// 3 player game example,
 		// target : 0, current 0 - return 0
 		// target : 0, current 1 - return 1
@@ -695,7 +707,7 @@ public class Player implements Model {
 		if (targetPlayerIndex > index) {
 			return index;
 		}
-		return index + 1;
+		return targetPlayerIndex + 1;
 
 	}
 

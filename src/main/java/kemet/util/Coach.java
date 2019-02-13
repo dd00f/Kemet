@@ -14,7 +14,7 @@ import java.util.Random;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 
-import kemet.data.TwoPlayerGame;
+import kemet.Options;
 
 /**
  * Coach
@@ -23,13 +23,42 @@ import kemet.data.TwoPlayerGame;
  */
 public class Coach {
 
+	/**
+	 * Number of iterations to coach. In each iteration, {@link #numEps} games are
+	 * played and then used to train the neural network.
+	 */
 	public int numIters = 1000;
+
+	/**
+	 * Number of games to play before training the neural network.
+	 */
 	public int numEps = 100;
+
+	/**
+	 * Number of steps at the beginning of a training game where the algorithm will
+	 * try to explore more options.
+	 */
 	public int temperatureThreshold = 15;
+
+	/**
+	 * Win percentage required to consider a neural network better than the
+	 * precedent.
+	 */
 	public float updateThreshold = 0.6f;
+
 	public int maxlenOfQueue = 200000;
+
+	/**
+	 * Number of simulated steps in MCTS for each move.
+	 */
 	public int simulationCount = 25;
+
+	/**
+	 * Number of games to play in the arena to compare whether or not a new neural
+	 * network is better than the previous one.
+	 */
 	public int arenaCompare = 40;
+
 	public static float cpuct = 1;
 
 	public String checkpoint = "./temp/";
@@ -39,22 +68,18 @@ public class Coach {
 
 	public int numItersForTrainExamplesHistory = 20;
 
-	public Game game;
-
 	public NeuralNet nnet;
 	public NeuralNet pnet;
-	public MCTS mcts;
 
 	public boolean skipFirstSelfPlay = false;
 	public ArrayList<TrainExample> trainExamplesHistory = new ArrayList<>();
-	public int currentPlayer;
+	private GameFactory gameFactory;
 
-	public Coach(Game game, NeuralNet nnet) {
+	public Coach(GameFactory gameFactory, NeuralNet nnet) {
 		super();
-		this.game = game;
+		this.gameFactory = gameFactory;
 		this.nnet = nnet;
 		pnet = nnet.clone();
-		mcts = new MCTS(game, nnet, cpuct, simulationCount);
 	}
 
 	/**
@@ -73,47 +98,77 @@ public class Coach {
 	 * @return
 	 */
 	public List<TrainExample> executeEpisode() {
+
+
+		MCTS mcts = new MCTS(null, nnet, cpuct, simulationCount); // reset the search tree
+
 		List<TrainExample> trainExamples = new ArrayList<>();
-		game = TwoPlayerGame.createGame();
-		currentPlayer = game.getNextPlayer();
+		Game game = gameFactory.createGame();
+		game.setPrintActivations(Options.PRINT_COACH_SEARCH_ACTIONS);
+		mcts.setGame(game);
+		int currentPlayer = game.getNextPlayer();
 		int episodeStep = 0;
 
 		while (true) {
 
 			episodeStep += 1;
 
-			ByteCanonicalForm canonicalBoard = game.getCanonicalForm(currentPlayer);
+			// At temperature zero, do more exploration
 			int temperature = 0;
 			if (episodeStep < temperatureThreshold) {
+
+				// At temperature 1, do less exploration after the first few moves in the
+				// episode.
 				temperature = 1;
 			}
 
-			PolicyVector actionProbabilityPi = mcts.getActionProbability(canonicalBoard, temperature, currentPlayer);
-
-			trainExamples.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0));
-
-			int actionIndex = pickRandomAction(actionProbabilityPi);
-
-			game.getNextState(currentPlayer, actionIndex);
-			currentPlayer = game.getNextPlayer();
+			currentPlayer = activateNextAction(game, mcts, trainExamples, temperature, currentPlayer);
 
 			int gameEnded = game.getGameEnded(currentPlayer);
+
 			if (gameEnded != 0) {
-				for (TrainExample trainExample : trainExamples) {
-
-					int currentPlayerMod = 1;
-					if (trainExample.currentPlayer != currentPlayer) {
-						currentPlayerMod = -1;
-					}
-					trainExample.valueV = gameEnded * currentPlayerMod;
-				}
+				adjustAllTrainingExampleValue(trainExamples, currentPlayer, gameEnded);
 				break;
-
 			}
 
 		}
+		
+		mcts.printStats();
+		
 		return trainExamples;
 
+	}
+
+	private void adjustAllTrainingExampleValue(List<TrainExample> trainExamples, int currentPlayer,
+			int isCurrentPlayerWinner) {
+		for (TrainExample trainExample : trainExamples) {
+
+			int currentPlayerMod = 1;
+			if (trainExample.currentPlayer != currentPlayer) {
+				currentPlayerMod = -1;
+			}
+			trainExample.valueV = isCurrentPlayerWinner * currentPlayerMod;
+		}
+	}
+
+	private int activateNextAction(Game game, MCTS mcts, List<TrainExample> trainExamples, int temperature,
+			int currentPlayer) {
+
+		ByteCanonicalForm canonicalBoard = game.getCanonicalForm(currentPlayer);
+
+		PolicyVector actionProbabilityPi = mcts.getActionProbability(temperature);
+
+		trainExamples.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0));
+		
+		if( Options.PRINT_COACH_SEARCH_PROBABILITIES ) {
+			actionProbabilityPi.printActionProbabilities(game);
+		}
+
+		int actionIndex = pickRandomAction(actionProbabilityPi);
+
+		game.activateAction(currentPlayer, actionIndex);
+		currentPlayer = game.getNextPlayer();
+		return currentPlayer;
 	}
 
 	public Random random = new Random();
@@ -165,22 +220,21 @@ public class Coach {
 			long end = System.currentTimeMillis();
 			long start = end;
 			for (int k = 1; k <= numEps; k++) {
-				mcts = new MCTS(game, nnet, cpuct, simulationCount); // reset the search tree
-				iterationTrainExamples.addAll(executeEpisode());
+				List<TrainExample> executeEpisode = executeEpisode();
+				iterationTrainExamples.addAll(executeEpisode);
 
 				// bookkeeping + plot progress
 				long now = System.currentTimeMillis();
 				// eps_time.update(now - end);
-				
+
 				end = now;
 				long duration = end - start;
 				totalTime += duration;
 				long average = totalTime / k;
 				long timeLeft = average * (numEps - k);
 
-				print(k + "/" + numEps + " | eps time " + duration + "ms | total " + totalTime + "ms | ETA "
-						+ timeLeft + "ms");
-				
+				print(k + "/" + numEps + " | eps time " + duration + "ms | total " + totalTime + "ms | ETA " + timeLeft
+						+ "ms");
 
 				start = now;
 
@@ -191,8 +245,7 @@ public class Coach {
 		}
 
 		if (trainExamplesHistory.size() > numItersForTrainExamplesHistory) {
-			print("len(trainExamplesHistory) =" + trainExamplesHistory.size()
-					+ " => remove the oldest trainExamples");
+			print("len(trainExamplesHistory) =" + trainExamplesHistory.size() + " => remove the oldest trainExamples");
 			trainExamplesHistory.remove(0);
 
 		}
@@ -209,37 +262,50 @@ public class Coach {
 		// training new network, keeping a copy of the old one
 		nnet.saveCheckpoint(this.checkpoint, "temp.pth.tar");
 		pnet.loadCheckpoint(this.checkpoint, "temp.pth.tar");
-		MCTS pmcts = new MCTS(this.game, this.pnet, cpuct, simulationCount);
 
+		MCTS pmcts = new MCTS(null, pnet, cpuct, simulationCount);
 		this.nnet.train(trainExamples);
-		MCTS nmcts = new MCTS(this.game, this.nnet, cpuct, simulationCount);
+		MCTS nmcts = new MCTS(null, nnet, cpuct, simulationCount);
 
 		print("PITTING AGAINST PREVIOUS VERSION");
 
 		Player previousPlayer = new Player() {
 			@Override
-			public int getActionProbability(ByteCanonicalForm gameCanonicalForm) {
-				return pmcts.getActionProbability(gameCanonicalForm, 0, 1).getMaximumMove();
+			public int getActionProbability(Game game) {
+				pmcts.setGame(game);
+				return pmcts.getActionProbability(0).getMaximumMove();
+			}
+
+			@Override
+			public void printStats() {
+				pmcts.printStats();
+				
 			}
 		};
 
 		Player newPlayer = new Player() {
 			@Override
-			public int getActionProbability(ByteCanonicalForm gameCanonicalForm) {
-				return nmcts.getActionProbability(gameCanonicalForm, 0, 1).getMaximumMove();
+			public int getActionProbability(Game game) {
+				nmcts.setGame(game);
+				return nmcts.getActionProbability(0).getMaximumMove();
+			}
+
+			@Override
+			public void printStats() {
+				nmcts.printStats();
+				
 			}
 
 		};
 
-		Arena arena = new Arena(previousPlayer, newPlayer, game);
+		Arena arena = new Arena(previousPlayer, newPlayer, gameFactory);
 
 		arena.playGames(this.arenaCompare);
 
 		int newWinCount = arena.getNewWinCount();
 		int previousWinCount = arena.getPreviousWinCount();
 		int drawCount = arena.getDrawCount();
-		print(
-				String.format("NEW/PREV WINS : %d / %d ; DRAWS : %d", newWinCount, previousWinCount, drawCount));
+		print(String.format("NEW/PREV WINS : %d / %d ; DRAWS : %d", newWinCount, previousWinCount, drawCount));
 		if (newWinCount + previousWinCount > 0
 				&& newWinCount / (newWinCount + previousWinCount) < this.updateThreshold) {
 			print("REJECTING NEW MODEL");

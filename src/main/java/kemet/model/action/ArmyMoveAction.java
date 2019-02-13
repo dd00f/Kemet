@@ -234,7 +234,7 @@ public class ArmyMoveAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickDestinationTile.getPickChoiceIndex();
+			return pickDestinationTile.getPickChoiceIndex(player.index);
 		}
 
 	}
@@ -314,7 +314,7 @@ public class ArmyMoveAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return armyPick.tile.getPickChoiceIndex();
+			return armyPick.tile.getPickChoiceIndex(player.index);
 		}
 
 	}

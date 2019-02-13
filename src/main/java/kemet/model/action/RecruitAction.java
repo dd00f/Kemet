@@ -53,6 +53,11 @@ public class RecruitAction extends EndableAction {
 			return;
 
 		}
+		
+		for (Tile tile : pickedTiles) {
+			// reverse selection for tiles that were already picked
+			tile.setSelected(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
+		}
 
 		if (tile == null) {
 			// pick tile
@@ -510,7 +515,7 @@ public class RecruitAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickTile.getPickChoiceIndex();
+			return pickTile.getPickChoiceIndex( player.index );
 		}
 	}
 
