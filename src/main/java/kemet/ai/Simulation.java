@@ -482,7 +482,7 @@ public class Simulation {
 
 	private boolean simulationContinues(PlayerChoicePick nextPick) {
 
-		if (nextPick.game.roundNumber != originalGame.roundNumber) {
+		if (nextPick == null || nextPick.game.roundNumber != originalGame.roundNumber) {
 			// round number changed, stop the simulation.
 			return false;
 		}

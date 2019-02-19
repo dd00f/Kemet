@@ -59,8 +59,8 @@ public class TwoPlayerGame implements GameFactory
         // createAIPlayer("red");
         createTrialAIPlayer("red");
         
-        createTrialAIPlayer("blue");
-        //createHumanPlayer("blue");
+        //createTrialAIPlayer("blue");
+        createHumanPlayer("blue");
 
     }
 

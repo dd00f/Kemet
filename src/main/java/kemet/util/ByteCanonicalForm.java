@@ -3,8 +3,12 @@ package kemet.util;
 import java.io.Serializable;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.cpu.nativecpu.NDArray;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+
+@EqualsAndHashCode
 public class ByteCanonicalForm implements Serializable{
 	
 	/**
@@ -12,6 +16,8 @@ public class ByteCanonicalForm implements Serializable{
 	 */
 	private static final long serialVersionUID = -7173237257258957668L;
 	
+	@Getter
+	@Setter
 	private byte[] canonicalForm;
 	
 	public ByteCanonicalForm( int size ) {
@@ -22,9 +28,9 @@ public class ByteCanonicalForm implements Serializable{
 		canonicalForm[index] = value;
 	}
 	
-	public byte[] getCanonicalForm() {
-		return canonicalForm;
-	}
+//	public byte[] getCanonicalForm() {
+//		return canonicalForm;
+//	}
 
 	public float[] getFloatCanonicalForm() {
 		
@@ -41,7 +47,7 @@ public class ByteCanonicalForm implements Serializable{
 	
 	
 	public INDArray getINDArray() {
-		INDArray array = new NDArray(getFloatCanonicalForm());
+		INDArray array = Utilities.createArray(getFloatCanonicalForm());
 		return array;
 		
 	}

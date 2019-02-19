@@ -2,8 +2,8 @@
 <Configuration status="INFO" monitorInterval="30"  >
 	<Properties>
 		<Property name="baseDir">logs</Property>
-		<Property name="filePatternOld">[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1.} %l %X - %msg%n</Property>
-		<Property name="filePattern">[%-5level] %msg%n</Property>
+		<Property name="filePatternDetailed">[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1.} %l %X - %msg%n</Property>
+		<Property name="filePattern">%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %msg%n</Property>
 	</Properties>
 	<Appenders>
 	
@@ -18,7 +18,7 @@
 		<RollingRandomAccessFile name="textFile"
 			fileName="${baseDir}/application.log" filePattern="${baseDir}/application-%i.log"
 			append="false">
-			<PatternLayout pattern="${filePattern}" />
+			<PatternLayout pattern="${filePatternDetailed}" />
 			<Policies>
 				<OnStartupTriggeringPolicy minSize="45000000" />
 				<SizeBasedTriggeringPolicy size="50MB" />
@@ -35,15 +35,23 @@
 	<Loggers>
 		
 		<!-- 
+		<Logger name="org.nd4j.imports.converters.DifferentialFunctionClassHolder" level="info" additivity="false" includeLocation="false">
+			<AppenderRef ref="textFile" />
+			<AppenderRef ref="Console" />
+		</Logger>
+		-->
+
+		
+		<!-- 
 			All loggers should enable INFO level logs and above.
 			Filter 3rd party loggers if they are too verbose.
 		-->
-		<Root level="INFO" includeLocation="false">
+		<asyncRoot level="info" includeLocation="false">
 
 			<AppenderRef ref="Console" />
 
 			<AppenderRef ref="textFile" />
-		</Root>
+		</asyncRoot>
 	</Loggers>
 
 </Configuration>

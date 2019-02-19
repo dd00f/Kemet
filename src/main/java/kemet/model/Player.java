@@ -10,12 +10,19 @@ import kemet.util.Cache;
 
 public class Player implements Model {
 
+	public static final int ACTION_TOKEN_COUNT = 5;
+
+	private static final int INITIAL_ARMY_TOKEN = 12;
+
+	public static final int MAXIMUM_PRAYER_POINTS = 11;
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 233743569229589016L;
 
 	public static final Logger LOGGER = Logger.getLogger(Player.class.getName());
+
 
 	public String name;
 
@@ -39,7 +46,7 @@ public class Player implements Model {
 	public byte bloodBonus = 0;
 	public byte shieldBonus = 0;
 	public byte moveCapacity = 1;
-	public byte availableArmyTokens = 12;
+	public byte availableArmyTokens = INITIAL_ARMY_TOKEN;
 	public byte teleportCost = 2;
 	public short armyCounter = 1;
 	public boolean canTeleportFromObelisk = false;
@@ -63,7 +70,7 @@ public class Player implements Model {
 	public boolean rowThreeBuildBlueUsed = false;
 	public boolean rowThreeBuildBlackUsed = false;
 
-	public byte actionTokenLeft = 5;
+	public byte actionTokenLeft = ACTION_TOKEN_COUNT;
 	public boolean goldTokenUsed = false;
 	public boolean goldTokenAvailable = false;
 	public boolean silverTokenUsed = false;
@@ -319,8 +326,8 @@ public class Player implements Model {
 
 		byte initial = prayerPoints;
 		prayerPoints += modification;
-		if (prayerPoints > 11) {
-			prayerPoints = 11;
+		if (prayerPoints > MAXIMUM_PRAYER_POINTS) {
+			prayerPoints = MAXIMUM_PRAYER_POINTS;
 		}
 		if (prayerPoints < 0) {
 			LOGGER.warning("Player " + name + " managed to reach " + prayerPoints + " prayer points.");
@@ -613,6 +620,28 @@ public class Player implements Model {
 		builder.append("\t" + initiativeTokens + " initiative tokens.");
 		builder.append("\n");
 
+		builder.append("\tUsed Battle Cards  : ");
+		for (BattleCard used: usedBattleCards) {
+			builder.append(" ");
+			builder.append(used.index);
+		}
+		builder.append("\n");
+
+		builder.append("\tDiscard Battle Cards  : ");
+		for (BattleCard used: discardedBattleCards) {
+			builder.append(" ");
+			builder.append(used.index);
+		}
+		builder.append("\n");
+
+		builder.append("\tAvailable Battle Cards  : ");
+		for (BattleCard used: availableBattleCards) {
+			builder.append(" ");
+			builder.append(used.index);
+		}
+		builder.append("\n");
+
+		
 		for (Army army : armyList) {
 			army.describeArmy(builder);
 		}
@@ -704,10 +733,10 @@ public class Player implements Model {
 		// target : 2, current 1 - return 2
 		// target : 2, current 2 - return 0
 
-		if (targetPlayerIndex > index) {
+		if (targetPlayerIndex < index) {
 			return index;
 		}
-		return targetPlayerIndex + 1;
+		return index + 1;
 
 	}
 
@@ -733,11 +762,11 @@ public class Player implements Model {
 		canonicalForm.set(BoardInventory.PLAYER_TEMPLE_COUNT + canonicalPlayerIndex, templeOccupationPoints);
 		
 		for (BattleCard card : availableBattleCards) {
-			canonicalForm.set(BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index, (byte) 1);
+			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) 1);
 		}
 		
 		for (BattleCard card : usedBattleCards) {
-			canonicalForm.set(BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index, (byte) -1);
+			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
 		}
 		
 		byte discardCardStatus = -1;
@@ -747,7 +776,7 @@ public class Player implements Model {
 			discardCardStatus = 1;
 		}
 		for (BattleCard card : discardedBattleCards) {
-			canonicalForm.set(BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index, discardCardStatus);
+			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), discardCardStatus);
 		}
 
 //		public byte templePermanentPoints = 0;
@@ -771,6 +800,10 @@ public class Player implements Model {
 //		public boolean silverTokenUsed = false;
 //		public boolean silverTokenAvailable = false;
 
+	}
+
+	public static int getCardStatusIndex(int canonicalPlayerIndex, BattleCard card) {
+		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index;
 	}
 
 }

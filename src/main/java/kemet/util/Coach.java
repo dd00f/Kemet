@@ -15,65 +15,65 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 
 import kemet.Options;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * Coach
  * 
  * @author Steve McDuff
  */
+@Log4j2
 public class Coach {
 
 	/**
 	 * Number of iterations to coach. In each iteration, {@link #numEps} games are
 	 * played and then used to train the neural network.
 	 */
-	public int numIters = 1000;
+	public int numIters = Options.COACH_NUMBER_OF_NN_TRAINING_ITERATIONS;
 
 	/**
 	 * Number of games to play before training the neural network.
 	 */
-	public int numEps = 100;
+	public int numEps = Options.COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT;
 
 	/**
 	 * Number of steps at the beginning of a training game where the algorithm will
 	 * try to explore more options.
 	 */
-	public int temperatureThreshold = 15;
+	public int temperatureThreshold = Options.COACH_HIGH_EXPLORATION_MOVE_COUNT;
 
 	/**
 	 * Win percentage required to consider a neural network better than the
 	 * precedent.
 	 */
-	public float updateThreshold = 0.6f;
+	public float updateThreshold = 0.55f;
 
 	public int maxlenOfQueue = 200000;
 
 	/**
 	 * Number of simulated steps in MCTS for each move.
 	 */
-	public int simulationCount = 25;
+	public int simulationCount = Options.COACH_MCTS_SIMULATION_COUNT_PER_MOVE;
 
 	/**
 	 * Number of games to play in the arena to compare whether or not a new neural
 	 * network is better than the previous one.
 	 */
-	public int arenaCompare = 40;
+	public int arenaCompare = Options.COACH_ARENA_COMPARE_MATCH_COUNT;
 
-	public static float cpuct = 1;
+	public static float cpuct = Options.COACH_CPUCT;
 
 	public String checkpoint = "./temp/";
 	public boolean load_model = false;
 	public String loadFolder = "/dev/models/8x100x50/";
 	public String loadFile = "best.pth.tar";
 
-	public int numItersForTrainExamplesHistory = 20;
-
 	public NeuralNet nnet;
 	public NeuralNet pnet;
 
 	public boolean skipFirstSelfPlay = false;
 	public ArrayList<TrainExample> trainExamplesHistory = new ArrayList<>();
-	private GameFactory gameFactory;
+	public GameFactory gameFactory;
 
 	public Coach(GameFactory gameFactory, NeuralNet nnet) {
 		super();
@@ -99,7 +99,6 @@ public class Coach {
 	 */
 	public List<TrainExample> executeEpisode() {
 
-
 		MCTS mcts = new MCTS(null, nnet, cpuct, simulationCount); // reset the search tree
 
 		List<TrainExample> trainExamples = new ArrayList<>();
@@ -113,12 +112,11 @@ public class Coach {
 
 			episodeStep += 1;
 
-			// At temperature zero, do more exploration
+			// At temperature zero, do less exploration
 			int temperature = 0;
 			if (episodeStep < temperatureThreshold) {
 
-				// At temperature 1, do less exploration after the first few moves in the
-				// episode.
+				// At temperature 1, do more exploration during the first few moves
 				temperature = 1;
 			}
 
@@ -132,14 +130,14 @@ public class Coach {
 			}
 
 		}
-		
+
 		mcts.printStats();
-		
+
 		return trainExamples;
 
 	}
 
-	private void adjustAllTrainingExampleValue(List<TrainExample> trainExamples, int currentPlayer,
+	public void adjustAllTrainingExampleValue(List<TrainExample> trainExamples, int currentPlayer,
 			int isCurrentPlayerWinner) {
 		for (TrainExample trainExample : trainExamples) {
 
@@ -151,16 +149,17 @@ public class Coach {
 		}
 	}
 
-	private int activateNextAction(Game game, MCTS mcts, List<TrainExample> trainExamples, int temperature,
+	public int activateNextAction(Game game, MCTS mcts, List<TrainExample> trainExamples, int temperature,
 			int currentPlayer) {
 
 		ByteCanonicalForm canonicalBoard = game.getCanonicalForm(currentPlayer);
 
 		PolicyVector actionProbabilityPi = mcts.getActionProbability(temperature);
 
-		trainExamples.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0));
-		
-		if( Options.PRINT_COACH_SEARCH_PROBABILITIES ) {
+		trainExamples
+				.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0, game.getValidMoves()));
+
+		if (Options.PRINT_COACH_SEARCH_PROBABILITIES) {
 			actionProbabilityPi.printActionProbabilities(game);
 		}
 
@@ -173,7 +172,7 @@ public class Coach {
 
 	public Random random = new Random();
 
-	private int pickRandomAction(PolicyVector actionProbabilityPi) {
+	public int pickRandomAction(PolicyVector actionProbabilityPi) {
 		float nextFloat = random.nextFloat();
 		int action = 0;
 		float[] vector = actionProbabilityPi.vector;
@@ -202,53 +201,40 @@ public class Coach {
 	 */
 	public void learn() {
 
+		long totalTime = 0;
+		long end = System.currentTimeMillis();
+		long start = end;
+
 		for (int j = 1; j < numIters + 1; j++) {
 			runTrainingIteration(j);
+
+			// bookkeeping + plot progress
+			long now = System.currentTimeMillis();
+			// eps_time.update(now - end);
+
+			end = now;
+			long duration = end - start;
+			totalTime += duration;
+			long average = totalTime / j;
+			long timeLeft = average * (numIters - j);
+
+			log.info(j + "/" + numIters + " | coach learn time " + duration + "ms | total " + totalTime + "ms | ETA "
+					+ timeLeft + "ms");
+
+			start = now;
 		}
 
 	}
 
-	private void runTrainingIteration(int j) {
-		print("------ITER " + j + "------");
+	public void runTrainingIteration(int j) {
+		log.info("------ITER " + j + "------");
 		// examples of the iteration
 
 		if (!skipFirstSelfPlay || j > 1) {
-			List<TrainExample> iterationTrainExamples = new ArrayList<>(); // = deque([],
-																			// maxlen=this.args.maxlenOfQueue)
-
-			long totalTime = 0;
-			long end = System.currentTimeMillis();
-			long start = end;
-			for (int k = 1; k <= numEps; k++) {
-				List<TrainExample> executeEpisode = executeEpisode();
-				iterationTrainExamples.addAll(executeEpisode);
-
-				// bookkeeping + plot progress
-				long now = System.currentTimeMillis();
-				// eps_time.update(now - end);
-
-				end = now;
-				long duration = end - start;
-				totalTime += duration;
-				long average = totalTime / k;
-				long timeLeft = average * (numEps - k);
-
-				print(k + "/" + numEps + " | eps time " + duration + "ms | total " + totalTime + "ms | ETA " + timeLeft
-						+ "ms");
-
-				start = now;
-
-			}
-
-			// save the iteration examples to the history
-			trainExamplesHistory.addAll(iterationTrainExamples);
+			runSelfTraining();
 		}
 
-		if (trainExamplesHistory.size() > numItersForTrainExamplesHistory) {
-			print("len(trainExamplesHistory) =" + trainExamplesHistory.size() + " => remove the oldest trainExamples");
-			trainExamplesHistory.remove(0);
-
-		}
+		trimTrainingExamples();
 
 		// backup history to a file
 		// NB! the examples were collected using the model from the previous iteration,
@@ -263,15 +249,85 @@ public class Coach {
 		nnet.saveCheckpoint(this.checkpoint, "temp.pth.tar");
 		pnet.loadCheckpoint(this.checkpoint, "temp.pth.tar");
 
-		MCTS pmcts = new MCTS(null, pnet, cpuct, simulationCount);
+		MCTS previousMcts = new MCTS(null, pnet, cpuct, simulationCount);
 		this.nnet.train(trainExamples);
-		MCTS nmcts = new MCTS(null, nnet, cpuct, simulationCount);
+		MCTS newMcts = new MCTS(null, nnet, cpuct, simulationCount);
 
-		print("PITTING AGAINST PREVIOUS VERSION");
+		Arena arena = playArenaGames(previousMcts, newMcts);
+
+		pickArenaWinner(j, arena);
+	}
+
+	private void runSelfTraining() {
+		List<TrainExample> iterationTrainExamples = new ArrayList<>(); // = deque([],
+																		// maxlen=this.args.maxlenOfQueue)
+
+		long totalTime = 0;
+		long end = System.currentTimeMillis();
+		long start = end;
+		for (int k = 1; k <= numEps; k++) {
+			List<TrainExample> executeEpisode = executeEpisode();
+			iterationTrainExamples.addAll(executeEpisode);
+
+			// bookkeeping + plot progress
+			long now = System.currentTimeMillis();
+			// eps_time.update(now - end);
+
+			end = now;
+			long duration = end - start;
+			totalTime += duration;
+			long average = totalTime / k;
+			long timeLeft = average * (numEps - k);
+
+			log.info(k + "/" + numEps + " | eps time " + duration + "ms | total " + totalTime + "ms | ETA " + timeLeft
+					+ "ms");
+
+			start = now;
+
+		}
+
+		// save the iteration examples to the history
+		trainExamplesHistory.addAll(iterationTrainExamples);
+	}
+
+	private void trimTrainingExamples() {
+		if (trainExamplesHistory.size() > maxlenOfQueue) {
+			log.info("len(trainExamplesHistory) =" + trainExamplesHistory.size() + " bigger than " + maxlenOfQueue
+					+ " => remove the oldest trainExamples");
+			int toIndex = trainExamplesHistory.size() - 1;
+			int fromIndex = trainExamplesHistory.size() - maxlenOfQueue;
+			trainExamplesHistory = new ArrayList<>(trainExamplesHistory.subList(fromIndex, toIndex));
+
+		}
+	}
+
+	private void pickArenaWinner(int j, Arena arena) {
+		float newWinCountfloat = arena.getNewWinCount();
+		float previousWinCountfloat = arena.getPreviousWinCount();
+		int drawCount = arena.getDrawCount();
+		log.info("NEW/PREV WINS : {} / {} ; DRAWS : {}", arena.getNewWinCount(), arena.getPreviousWinCount(), drawCount);
+		if (newWinCountfloat + previousWinCountfloat > 0
+				&& newWinCountfloat / (newWinCountfloat + previousWinCountfloat) < this.updateThreshold) {
+			log.info("REJECTING NEW MODEL");
+			this.nnet.loadCheckpoint(this.checkpoint, "temp.pth.tar");
+		} else {
+			log.info("ACCEPTING NEW MODEL");
+			this.nnet.saveCheckpoint(this.checkpoint, this.getCheckpointFile(j));
+			this.nnet.saveCheckpoint(this.checkpoint, "best.pth.tar");
+		}
+	}
+
+	private Arena playArenaGames(MCTS pmcts, MCTS nmcts) {
+		log.info("PITTING AGAINST PREVIOUS VERSION");
 
 		Player previousPlayer = new Player() {
+
+			public String name = "old";
+
 			@Override
 			public int getActionProbability(Game game) {
+				validatePlayer(game, name);
+
 				pmcts.setGame(game);
 				return pmcts.getActionProbability(0).getMaximumMove();
 			}
@@ -279,13 +335,18 @@ public class Coach {
 			@Override
 			public void printStats() {
 				pmcts.printStats();
-				
+
 			}
 		};
 
 		Player newPlayer = new Player() {
+
+			public String name = "new";
+
 			@Override
 			public int getActionProbability(Game game) {
+				validatePlayer(game, name);
+
 				nmcts.setGame(game);
 				return nmcts.getActionProbability(0).getMaximumMove();
 			}
@@ -293,7 +354,7 @@ public class Coach {
 			@Override
 			public void printStats() {
 				nmcts.printStats();
-				
+
 			}
 
 		};
@@ -301,24 +362,16 @@ public class Coach {
 		Arena arena = new Arena(previousPlayer, newPlayer, gameFactory);
 
 		arena.playGames(this.arenaCompare);
-
-		int newWinCount = arena.getNewWinCount();
-		int previousWinCount = arena.getPreviousWinCount();
-		int drawCount = arena.getDrawCount();
-		print(String.format("NEW/PREV WINS : %d / %d ; DRAWS : %d", newWinCount, previousWinCount, drawCount));
-		if (newWinCount + previousWinCount > 0
-				&& newWinCount / (newWinCount + previousWinCount) < this.updateThreshold) {
-			print("REJECTING NEW MODEL");
-			this.nnet.loadCheckpoint(this.checkpoint, "temp.pth.tar");
-		} else {
-			print("ACCEPTING NEW MODEL");
-			this.nnet.saveCheckpoint(this.checkpoint, this.getCheckpointFile(j));
-			this.nnet.saveCheckpoint(this.checkpoint, "best.pth.tar");
-		}
+		return arena;
 	}
 
-	private void print(String string) {
-		System.out.println(string);
+	private void validatePlayer(Game game, String expectedName) {
+		if (Options.COACH_VALIDATE_PLAYER_NAME) {
+			String playerName = game.getPlayerName(game.getNextPlayer());
+			if (!playerName.equals(expectedName)) {
+				throw new IllegalArgumentException("player name = " + playerName + ", expected " + expectedName);
+			}
+		}
 	}
 
 	public String getCheckpointFile(int iteration) {
@@ -331,7 +384,7 @@ public class Coach {
 			folder.mkdir();
 		}
 
-		File inputFile = new File(folder + getCheckpointFile(iteration) + ".examples");
+		File inputFile = new File(folder + "/" + getCheckpointFile(iteration) + ".examples");
 		FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(inputFile);
@@ -348,12 +401,10 @@ public class Coach {
 		File examplesFile = new File(modelFile.getAbsolutePath() + ".examples");
 
 		if (!examplesFile.exists()) {
-			print("File with train example not found.");
-			// r = input("File with trainExamples not found. Continue? [y|n]")
-			// if r != "y":
-			// sys.exit()
+			log.warn("File with train example not found : " + examplesFile.getAbsolutePath());
+
 		} else {
-			print("File with trainExamples found. Read it.");
+			log.info("File with trainExamples found. Read it.");
 			FileInputStream fileInputStream;
 			try {
 				fileInputStream = new FileInputStream(examplesFile);

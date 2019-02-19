@@ -1,8 +1,9 @@
 package kemet.util;
 
 import kemet.Options;
+import lombok.extern.log4j.Log4j2;
 
-
+@Log4j2
 public class Arena {
 	private Player player2;
 	private Player player1;
@@ -39,13 +40,22 @@ public class Arena {
 	public int playGame(boolean verbose) {
 
 		Game game = gameFactory.createGame();
+		game.setPrintActivations(Options.PRINT_ARENA_GAME_EVENTS);
+		if(swapped) {
+			game.setPlayerName(0, "new");
+			game.setPlayerName(1, "old");
+		}
+		else {
+			game.setPlayerName(0, "old");
+			game.setPlayerName(1, "new");
+		}
 		
 		int currentPlayerIndex = game.getNextPlayer();
 		int it = 0;
 		while (game.getGameEnded(currentPlayerIndex) == 0) {
 			it++;
 			if (verbose) {
-				print("Turn " + it + "Player " + currentPlayerIndex);
+				log.debug("Turn {} Player {}", it, currentPlayerIndex);
 				game.printDescribeGame();
 			}
 
@@ -69,20 +79,21 @@ public class Arena {
 			if (Options.ARENA_VALIDATE_MOVES) {
 				boolean[] validMoves = game.getValidMoves();
 				if (validMoves[actionIndex] == false) {
-					print("Invalid move selected " + actionIndex);
-					System.exit(-1);
+					log.error("Invalid move selected {}", actionIndex);
+					game.printChoiceList();
+					actionIndex = Utilities.getFirstValidMoveIndex(game.getValidMoves());
 				}
 
 			}
 
-			game.getNextState(currentPlayerIndex, actionIndex);
+			game.activateAction(currentPlayerIndex, actionIndex);
 			currentPlayerIndex = game.getNextPlayer();
 
 		}
 
-		if (verbose) {
-			String print = "Game over : Turn " + it + " result " + game.getGameEnded(1);
-			print(print);
+		if (Options.PRINT_ARENA_GAME_END) {
+			log.info( "Game over : Turn " + it + " result " + game.getGameEnded(1) + " swapped " + swapped );
+			game.setPrintActivations(true);
 			game.printDescribeGame();
 			
 			player1.printStats();
@@ -90,23 +101,20 @@ public class Arena {
 			player2.printStats();
 		}
 
-		return game.getGameEnded(1);
+		return game.getGameEnded(0);
 	}
 
-	private void print(String print) {
-		System.out.println(print);
-	}
 
 	public int getNewWinCount() {
-		throw new UnsupportedOperationException();
+		return twoWon;
 	}
 
 	public int getPreviousWinCount() {
-		throw new UnsupportedOperationException();
+		return oneWon;
 	}
 
 	public int getDrawCount() {
-		throw new UnsupportedOperationException();
+		return draw;
 	}
 
 	public int oneWon = 0;
@@ -160,13 +168,11 @@ public class Arena {
 			long averageTime = epsTime / eps;
 			long timeLeft = averageTime * (maxeps - eps);
 
-			print(eps + "/" + maxeps + " | eps time " + epsDuration + "ms | total " + epsTime + "ms | ETA "
+			log.info(eps + "/" + maxeps + " | eps time " + epsDuration + "ms | total " + epsTime + "ms | ETA "
 					+ timeLeft + "ms");
 
 			currentStart = endTime;
-			Player swap = player1;
-			player1 = player2;
-			player2 = swap;
+
 			swapped = !swapped;
 
 		}

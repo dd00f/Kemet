@@ -1,10 +1,13 @@
 package kemet.util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.cpu.nativecpu.NDArray;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 public class PolicyVector implements Serializable {
 
 	/**
@@ -14,7 +17,7 @@ public class PolicyVector implements Serializable {
 	public float[] vector;
 
 	public INDArray toINDArray() {
-		return new NDArray(vector);
+		return Utilities.createArray(vector);
 	}
 
 	public void activateAllValidMoves(boolean[] validMoves) {
@@ -77,14 +80,14 @@ public class PolicyVector implements Serializable {
 		for (int i = 0; i < vector.length; i++) {
 			float probability = vector[i];
 			if( probability > 0 ) {
-				print( String.format("%2.2f chance of action : %s", probability*100.0, currentGame.describeAction(i)));
+				log.info( String.format("%2.2f chance of action : %s", probability*100.0, currentGame.describeAction(i)));
 			}
 		}
 	}
 
-	private void print(String format) {
-		System.out.println(format);
-		
+
+	public void printProbabilityVector() {
+		log.info("All Probabilities : " +  Arrays.toString(vector));
 	}
 
 }

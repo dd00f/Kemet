@@ -1,72 +1,132 @@
 package kemet;
 
 public class Options {
-	
-	// force the game to end after a number of turns
-	public static int GAME_TURN_LIMIT = 20;
-	
-	// option to print the probability of every option searched during MTCS evaluation
-	public static final boolean PRINT_MCTS_SEARCH_PROBABILITIES = false;
-	
+
+	static {
+		// keep this as long as there are TODO notice.
+		int junk;
+	}
+
+	/**
+	 * Number of steps at the beginning of a training game where the algorithm will
+	 * try to explore more options. Used to end games quickly if there is a clear
+	 * winner after X moves on average.
+	 */
+	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 1000;
+
+	// TODO reset this to 1000
+	/**
+	 * Number of iterations to coach. In each iteration, games are played and then
+	 * used to train the neural network.
+	 */
+	public static int COACH_NUMBER_OF_NN_TRAINING_ITERATIONS = 10;
+
+	// TO DO reset GAME_TURN_LIMIT to 20
+	// Number of turns before the game ends.
+	public static int GAME_TURN_LIMIT = 15;
+
+	// TODO reset this to 40
+	// Number of matches used to compare 2 generations of the neural network
+	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 10;
+
+	// TODO reset this to 100
+	// number of games to play when training the neural network
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 10;
+
+	// TODO reset this to 25+
+	// number of move simulations to do in MCTS between moves while coaching a
+	// neural network
+	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 30;
+
+	// option to print the probability of every option searched during MTCS
+	// evaluation
+	public static boolean PRINT_MCTS_SEARCH_PROBABILITIES = false;
+
 	// option to print the every action activated during MTCS evaluation
-	public static final boolean PRINT_MCTS_SEARCH_ACTIONS = false;
-	
-	
+	public static boolean PRINT_MCTS_SEARCH_ACTIONS = false;
+
 	// option to print the probability of every option during move selection
-	public static final boolean PRINT_COACH_SEARCH_ACTIONS = false;
-	
+	public static boolean PRINT_COACH_SEARCH_ACTIONS = false;
+
 	// option to print the probability of every option during move selection
-	public static final boolean PRINT_COACH_SEARCH_PROBABILITIES = false;
-	
-	
+	public static boolean PRINT_COACH_SEARCH_PROBABILITIES = false;
+
 	// option to validate move index before execution
-	public static final boolean ARENA_VALIDATE_MOVES = true;
+	public static boolean ARENA_VALIDATE_MOVES = true;
 
 	// option run the simulation in multiple threads
-	public static final boolean SIMULATION_MULTI_THREAD = true;
+	public static boolean SIMULATION_MULTI_THREAD = true;
 
-	// turn on object creation caching & reuse, only useful if SIMULATION_USE_COPY_OVER_STREAMING is true
-	public static final boolean USE_CACHE = false && ! SIMULATION_MULTI_THREAD;
-	
+	// turn on object creation caching & reuse, only useful if
+	// SIMULATION_USE_COPY_OVER_STREAMING is true
+	@SuppressWarnings("unused")
+	public static boolean USE_CACHE = false && !SIMULATION_MULTI_THREAD;
+
 	// print object creation count from the creators
 	public static boolean PRINT_CREATION_COUNT = false;
-	
+
 	// print object creation interval
 	public static int CREATION_PRINT_COUNT = 100;
-	
+
 	// doesn't change anything in performance based on benchmark.
-	public static final boolean GAME_SKIP_RELEASE = true && ! USE_CACHE;
+	public static boolean GAME_SKIP_RELEASE = true && !USE_CACHE;
 
 	// maximum action depth that simulation can go for trial AI.
-	public static final int SIMULATION_MAX_SIMULATION_DEPTH = 30;
+	public static int SIMULATION_MAX_SIMULATION_DEPTH = 30;
 
-	// option to validate the simulation data after every clone 
-	public static final boolean SIMULATION_VALIDATE_GAME_AFTER_CLONE = false;
+	// option to validate the simulation data after every clone
+	public static boolean SIMULATION_VALIDATE_GAME_AFTER_CLONE = false;
 
-	// simulate a full turn instead of a single action, leads to exponentially more choices.
-	public static final boolean SIMULATE_FULL_TURN = false;
+	// simulate a full turn instead of a single action, leads to exponentially more
+	// choices.
+	public static boolean SIMULATE_FULL_TURN = false;
 
-	// option to use copy instead of java streaming for replication. Copy is about 25x faster
-	public static final boolean SIMULATION_USE_COPY_OVER_STREAMING  = true;
+	// option to use copy instead of java streaming for replication. Copy is about
+	// 25x faster
+	public static boolean SIMULATION_USE_COPY_OVER_STREAMING = true;
 
 	// interval at which to print the number of simulated choices executed
-	public static final long SIMULATION_CHOICE_COUNT_PRINT_INTERVAL = 1000000;
+	public static long SIMULATION_CHOICE_COUNT_PRINT_INTERVAL = 1000000;
 
 	// option to print every simulation step entry
-	public static final boolean SIMULATION_PRINT_STEP_ENTRY = false;
+	public static boolean SIMULATION_PRINT_STEP_ENTRY = false;
 
 	// option to print every simulation step exit
-	public static final boolean SIMULATION_PRINT_STEP_EXIT = false;
+	public static boolean SIMULATION_PRINT_STEP_EXIT = false;
 
 	// end the simulation after a battle is over
-	public static final boolean SIMULATION_END_AFTER_BATTLE = true;
+	public static boolean SIMULATION_END_AFTER_BATTLE = true;
 
 	// validate the game between player picks.
-	public static final boolean VALIDATE_GAME_BETWEEN_PICKS = false;
+	public static boolean VALIDATE_GAME_BETWEEN_PICKS = false;
 
 	// option to print statistics about the MCTS after a game is finished
-	public static final boolean PRINT_MCTS_STATS = true;
+	public static boolean PRINT_MCTS_STATS = true;
 
+	public static float COACH_CPUCT = 1;
 
+	public static boolean PRINT_MCTS_FULL_PROBABILITY_VECTOR = false;
+
+	// number of times to run the test data to fit the neural network
+	public static int NEURAL_NET_TRAIN_EPOCH = 10;
+
+	public static boolean PRINT_ARENA_GAME_EVENTS = false;
+
+	public static boolean PRINT_ARENA_GAME_END = true;
+
+	public static boolean COACH_VALIDATE_PLAYER_NAME = false;
+
+	// TODO default was true
+	public static boolean NEURAL_NET_RESIDUAL_ACTIVATED = false;
+
+	// TODO default was true
+	public static boolean NEURAL_NET_TRAIN_WITH_MASK = false;
+
+	// TODO default was true
+	public static boolean NEURAL_NET_RELU_INTERNAL_LAYERS = true;
+
+	// TODO reset back to 10 or 20
+	// Number of residual blocks in the neural network.
+	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;
 
 }

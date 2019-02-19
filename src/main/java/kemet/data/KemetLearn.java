@@ -8,18 +8,32 @@ import kemet.util.NeuralNet;
 public class KemetLearn {
 
 	public static void main(String[] args) {
+		
+//		Logger log = LogManager.getLogger("hello.world");
+//		log.error("error");
+//		log.warn("warn");
+//		log.info("info");
+//		log.debug("debug");
+//		log.trace("trace");
+//		log.fatal("fatal");
+		
+		
 	    GameFactory gameFactory = new TwoPlayerGame();
 	    
 	    NeuralNet neuralNet = new KemetNeuralNetwork();
 	    
-	    boolean loadModel = false;
+	    neuralNet.saveCheckpoint("./temp", "initial.nn");
+	    neuralNet.loadCheckpoint("./temp", "initial.nn");
+	    
+	    boolean loadModel = true;
+	    boolean loadTrainingExamples = false;
 	    if( loadModel ) {
-	    	neuralNet.loadCheckpoint("./", "neuralnet.storage");
+	    	neuralNet.loadCheckpoint("./temp", "best.pth.tar");
 	    }
 	    
 	    Coach coach = new Coach(gameFactory, neuralNet);
 	    
-	    if( loadModel ) {
+	    if( loadTrainingExamples ) {
 	    	coach.loadTrainExamples();
 	    }
 	    

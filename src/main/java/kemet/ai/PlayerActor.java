@@ -7,50 +7,43 @@ import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.action.PlayerChoicePick;
 import kemet.model.action.choice.Choice;
+import lombok.extern.log4j.Log4j2;
 
-public abstract class PlayerActor implements Serializable
-{
+@Log4j2
+public abstract class PlayerActor implements Serializable {
 
-    /**
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -4607835022667859217L;
 	public Player player;
-    public KemetGame game;
+	public KemetGame game;
+	public boolean print = true;
 
-    public PlayerActor(Player player, KemetGame game)
-    {
-        this.player = player;
-        this.game = game;
+	public PlayerActor(Player player, KemetGame game) {
+		this.player = player;
+		this.game = game;
 
-    }
+	}
 
-    
-    public void printChoiceList(List<kemet.model.action.choice.Choice> choiceList)
-    {
-        printPlayerStatus();
-        int count = 1;
-        for (kemet.model.action.choice.Choice choice : choiceList)
-        {
-            System.out.println("  " + count++ + " " + choice);
-        }
-    }
+	public void printChoiceList(List<kemet.model.action.choice.Choice> choiceList) {
+		printPlayerStatus();
 
+		PlayerChoicePick.print(choiceList);
+	}
 
-    public void printPlayerStatus()
-    {
-        System.out.println("");
-        System.out.println(player.name + " with " + player.actionTokenLeft + " actions left and " +
-            player.getPrayerPoints() + " prayer points. Pick Choice : ");
-    }
+	public void printPlayerStatus() {
+		if (print) {
+			log.info("");
+			log.info(player.name + " with " + player.actionTokenLeft + " actions left and "
+					+ player.getPrayerPoints() + " prayer points. Pick Choice : ");
+		}
+	}
 
-   
-    public abstract Choice pickAction(PlayerChoicePick pick);
+	public abstract Choice pickAction(PlayerChoicePick pick);
 
-
-    public void pickActionAndActivate(PlayerChoicePick pick)
-    {
-        pickAction(pick).activate();
-    }
+	public void pickActionAndActivate(PlayerChoicePick pick) {
+		pickAction(pick).activate();
+	}
 
 }

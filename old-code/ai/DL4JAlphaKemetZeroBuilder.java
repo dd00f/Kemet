@@ -1,7 +1,10 @@
 package kemet.ai;
 
+import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
+import org.deeplearning4j.nn.conf.GradientNormalization;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
+import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex.Op;
 import org.deeplearning4j.nn.conf.inputs.InputType;
@@ -14,19 +17,27 @@ import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Sgd;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
+import kemet.Options;
 import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
+import lombok.val;
 
-class DL4JAlphaKemetZeroBuilder {
+public class DL4JAlphaKemetZeroBuilder {
 
-	private static final int LAYER_SIZE = 256;
+	private static final int LAYER_SIZE = 1024;
 
-	ComputationGraphConfiguration.GraphBuilder conf = new NeuralNetConfiguration.Builder().updater(new Sgd())
-			.weightInit(WeightInit.LECUN_NORMAL).graphBuilder().setInputTypes(InputType.feedForward(BoardInventory.TOTAL_STATE_COUNT));
+	ComputationGraphConfiguration.GraphBuilder conf = new NeuralNetConfiguration.Builder()
+			.seed(123)
+			// .gradientNormalization(GradientNormalization.RenormalizeL2PerLayer)
+			// .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+			.updater(Updater.SGD.getIUpdaterWithDefaultConfig())
+			.weightInit(WeightInit.LECUN_NORMAL)
+			.graphBuilder()
+			.setInputTypes(InputType.feedForward(BoardInventory.TOTAL_STATE_COUNT));
 
 	private void addInputs(String name) {
-		
 
 		conf.addInputs(name);
 	}
@@ -43,17 +54,17 @@ class DL4JAlphaKemetZeroBuilder {
 
 	private String addBatchNormBlock(String blockName, String inName, int nIn, boolean useActivation) {
 		String denseName = "dense_" + blockName;
-		String bnName = "batch_norm_" + blockName;
+		// String bnName = "batch_norm_" + blockName;
 		String actName = "relu_" + blockName;
 
 		conf.addLayer(denseName, new DenseLayer.Builder().nIn(nIn).nOut(LAYER_SIZE).build(), inName);
 
-		conf.addLayer(bnName, new BatchNormalization.Builder().nOut(LAYER_SIZE).build(), denseName);
+//		conf.addLayer(bnName, new BatchNormalization.Builder().nOut(LAYER_SIZE).build(), denseName);
 		if (useActivation) {
-			conf.addLayer(actName, new ActivationLayer.Builder().activation(Activation.RELU).build(), bnName);
+			conf.addLayer(actName, new ActivationLayer.Builder().activation(Activation.RELU).build(), denseName);
 			return actName;
 		} else {
-			return bnName;
+			return denseName;
 		}
 	}
 
@@ -64,7 +75,12 @@ class DL4JAlphaKemetZeroBuilder {
 		String mergeBlock = "add_" + blockNumber;
 		String actBlock = "relu_" + blockNumber;
 
-		String firstBnOut = addBatchNormBlock(firstBlock, inName, LAYER_SIZE, true);
+		String firstBnOut = addBatchNormBlock(firstBlock, inName, LAYER_SIZE, Options.NEURAL_NET_RELU_INTERNAL_LAYERS);
+		
+		if(!  Options.NEURAL_NET_RESIDUAL_ACTIVATED ) {
+			return firstBnOut;
+		}
+		
 		String secondBnOut = addBatchNormBlock(secondBlock, firstOut, LAYER_SIZE, false);
 		conf.addVertex(mergeBlock, new ElementWiseVertex(Op.Add), firstBnOut, secondBnOut);
 		conf.addLayer(actBlock, new ActivationLayer.Builder().activation(Activation.RELU).build(), mergeBlock);
@@ -83,10 +99,13 @@ class DL4JAlphaKemetZeroBuilder {
 
 		String denseName = "policy_head_output_";
 
-		conf.addLayer(denseName, new OutputLayer.Builder().nIn(LAYER_SIZE).nOut(ChoiceInventory.TOTAL_CHOICE).build(),
+		conf.addLayer(denseName,
+				new OutputLayer.Builder().nIn(LAYER_SIZE).lossFunction(LossFunction.MEAN_SQUARED_LOGARITHMIC_ERROR)
+						.activation(Activation.SOFTMAX).nOut(ChoiceInventory.TOTAL_CHOICE).build(),
 				inName);
 
 		return denseName;
+
 	}
 
 	private String addValueHead(String inName) {
@@ -108,7 +127,7 @@ class DL4JAlphaKemetZeroBuilder {
 		addInputs(input);
 		String initBlock = "init";
 
-		String denseOut = addBatchNormBlock(initBlock, input, BoardInventory.TOTAL_STATE_COUNT, true);
+		String denseOut = addBatchNormBlock(initBlock, input, BoardInventory.TOTAL_STATE_COUNT, Options.NEURAL_NET_RELU_INTERNAL_LAYERS);
 		String towerOut = addResidualTower(blocks, denseOut);
 		String policyOut = addPolicyHead(towerOut);
 		String valueOut = addValueHead(towerOut);
@@ -123,8 +142,8 @@ class DL4JAlphaKemetZeroBuilder {
 
 	public static ComputationGraph build() {
 		DL4JAlphaKemetZeroBuilder build = new DL4JAlphaKemetZeroBuilder();
-		// return build.apply(20, 1);
-		return build.apply(10);
+
+		return build.apply(Options.NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT);
 
 	}
 

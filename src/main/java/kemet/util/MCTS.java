@@ -1,5 +1,6 @@
 package kemet.util;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -8,11 +9,13 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import kemet.Options;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * 
  * Monte Carlo Tree Search
  */
+@Log4j2
 public class MCTS {
 
 	// constant to increase the rate at which the algorithm will explore n
@@ -23,23 +26,24 @@ public class MCTS {
 
 	private float cPuct; // C? P? upper confidence T?
 
-	private Map<String, Map<Integer, Float>> valueAtBoardActionQsa; // stores Q values for s,a (as defined in the paper)
-	private Map<String, Map<Integer, Integer>> boardActionHitCountNsa; // stores #times edge s (game CF) a (choice
+	public Map<String, Map<Integer, Float>> valueAtBoardActionQsa; // stores Q values for s,a (as defined in the paper)
+	public Map<String, Map<Integer, Integer>> boardActionHitCountNsa; // stores #times edge s (game CF) a (choice
 																		// Index) was visited
-	private Map<String, Integer> boardHitCountNs; // stores #times board s (game CF) was visited
-	private Map<String, PolicyVector> choiceValuePredictionForBoardPs; // stores initial policy (returned by neural net)
+	public Map<String, Integer> boardHitCountNs; // stores #times board s (game CF) was visited
+	public Map<String, PolicyVector> choiceValuePredictionForBoardPs; // stores initial policy (returned by neural net)
 
-	private Map<String, Integer> isBoardEndedEs; // stores game.getGameEnded ended for board s
-	private Map<String, boolean[]> validMovesForBoardVs; // stores game.getValidMoves for board s
+	public Map<String, Integer> isBoardEndedEs; // stores game.getGameEnded ended for board s
+	public Map<String, boolean[]> validMovesForBoardVs; // stores game.getValidMoves for board s
 	private int simulationCount;
-	
-	
+
 	private long getActionProbabilityTotalCount = 0;
-	private long getActionProbabilityTotalTimeNano=0;
+	private long getActionProbabilityTotalTimeNano = 0;
 	private long simulationTotalCount = 0;
 	private long simulationTotalTimeNano = 0;
 	private long neuralNetTotalCount = 0;
 	private long neuralNetTotalTimeNano = 0;
+
+	private int allMovesMaskedCount;
 
 	public MCTS(Game game, NeuralNet neuralNet, float cPuct, int simulationCount) {
 		this.game = game;
@@ -72,22 +76,18 @@ public class MCTS {
 	 */
 	public PolicyVector getActionProbability(int temperature) {
 
-	
-
-		
 		long starProbNano = System.nanoTime();
-		
+
 		// run the requested simulation count
 		for (int i = 0; i < simulationCount; ++i) {
-			long starSimNano = System.nanoTime(); 
+			long starSimNano = System.nanoTime();
 			Game clone = game.clone();
 			clone.setPrintActivations(Options.PRINT_MCTS_SEARCH_ACTIONS);
 			search(clone);
-			
+
 			simulationTotalCount++;
 			simulationTotalTimeNano += System.nanoTime() - starSimNano;
 		}
-		
 
 		String gameString = game.stringRepresentation();
 
@@ -119,7 +119,6 @@ public class MCTS {
 		getActionProbabilityTotalCount++;
 		getActionProbabilityTotalTimeNano += System.nanoTime() - starProbNano;
 
-		
 		return probabilitiesOfAllActions;
 	}
 
@@ -183,35 +182,41 @@ public class MCTS {
 		} else {
 
 			int actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS);
+			int playerIndex = currentGame.getNextPlayer();
 
 			// Possible optimization : cache the game to reuse it.
 			try {
-				
-				int playerIndex = currentGame.getNextPlayer();
+
 				currentGame.activateAction(playerIndex, actionIndexOfNextSimulationA);
-				int nextPlayerIndex = currentGame.getNextPlayer();
 
-				boardValueV = search(currentGame);
-				if( nextPlayerIndex == -1 ) {
-					// game ended, check if the current player won
-					boardValueV = currentGame.getGameEnded(playerIndex);
-				}
-				else if (nextPlayerIndex != playerIndex) {
-					// swap the board value as we switch players
-					boardValueV = -boardValueV;
-				}
-
-				updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV);
-
-				incrementBoardHitCount(boardS);
-				incrementBoardActionHitCount(boardS, actionIndexOfNextSimulationA);
 			} catch (Exception ex) {
 				currentGame.setPrintActivations(true);
 				currentGame.printDescribeGame();
 				currentGame.printChoiceList();
 
-				throw ex;
+				ex.printStackTrace();
+
+				// patch the valid moves and redo another action
+				validMovesForBoardVs.put(boardS, currentGame.getValidMoves());
+				actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS);
+				currentGame.activateAction(playerIndex, actionIndexOfNextSimulationA);
 			}
+
+			int nextPlayerIndex = currentGame.getNextPlayer();
+
+			boardValueV = search(currentGame);
+			if (nextPlayerIndex == -1) {
+				// game ended, check if the current player won
+				boardValueV = currentGame.getGameEnded(playerIndex);
+			} else if (nextPlayerIndex != playerIndex) {
+				// swap the board value as we switch players
+				boardValueV = -boardValueV;
+			}
+
+			updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV);
+
+			incrementBoardHitCount(boardS);
+			incrementBoardActionHitCount(boardS, actionIndexOfNextSimulationA);
 
 		}
 
@@ -240,42 +245,53 @@ public class MCTS {
 				}
 			}
 		}
+
+		if (bestActionIndex == -1) {
+			log.error("findBestActionIndexFromPreviousSimulations return -1 index, valuid moves : {}",
+					Arrays.toString(validMoves));
+		}
+
 		return bestActionIndex;
 	}
-	
+
 	public void printStats() {
-		
-		if( Options.PRINT_MCTS_STATS ) {
-			
-			print("getActionProbabilityTotalCount = " + getActionProbabilityTotalCount);
-			print("simulationTotalCount = " + simulationTotalCount);
-			print("neuralNetTotalCount = " + neuralNetTotalCount);
-			print("getActionProbabilityTotalTimeNano = " + getActionProbabilityTotalTimeNano);
-			print("simulationTotalTimeNano = " + simulationTotalTimeNano);
-			print("neuralNetTotalTimeNano = " + neuralNetTotalTimeNano);
 
-			print("avg getActionProbabilityTimeNano = " + getActionProbabilityTotalTimeNano / getActionProbabilityTotalCount);
-			print("avg simulationTimeNano = " + simulationTotalTimeNano / simulationTotalCount);
-			print("avg neuralNetTimeNano = " + neuralNetTotalTimeNano / neuralNetTotalCount);
+		if (Options.PRINT_MCTS_STATS) {
 
+			log.info(
+					"action count = {}, nnet call count = {}, average nnet call time micro = {}, all move masked count : {}",
+					getActionProbabilityTotalCount, neuralNetTotalCount,
+					neuralNetTotalTimeNano / (neuralNetTotalCount * 1000), allMovesMaskedCount);
+			log.debug("simulationTotalCount = {}", simulationTotalCount);
+			log.debug("neuralNetTotalCount = {}", neuralNetTotalCount);
+			log.debug("getActionProbabilityTotalTimeNano = {}", getActionProbabilityTotalTimeNano);
+			log.debug("simulationTotalTimeNano = {}", simulationTotalTimeNano);
+			log.debug("neuralNetTotalTimeNano = {}", neuralNetTotalTimeNano);
 
-			
+			log.debug("avg getActionProbabilityTime Micro = {}",
+					getActionProbabilityTotalTimeNano / (getActionProbabilityTotalCount * 1000));
+			log.debug("avg simulationTime Micro = {}", simulationTotalTimeNano / (simulationTotalCount * 1000));
+			log.debug("avg neuralNetTime Micro = {}", neuralNetTotalTimeNano / (neuralNetTotalCount * 1000));
+
 		}
 	}
 
 	private float predictValueWithNeuralNet(Game currentGame, String boardS) {
 		ByteCanonicalForm canonicalForm = currentGame.getCanonicalForm(currentGame.getNextPlayer());
-		
-		
-		long starNano = System.nanoTime(); 
 
-		
+		long starNano = System.nanoTime();
+
 		Pair<PolicyVector, Float> predictActionAndValue = neuralNet.predict(canonicalForm);
 
 		neuralNetTotalCount++;
 		neuralNetTotalTimeNano += System.nanoTime() - starNano;
 
 		PolicyVector allActionProbability = predictActionAndValue.getLeft();
+
+		if (Options.PRINT_MCTS_FULL_PROBABILITY_VECTOR) {
+			allActionProbability.printProbabilityVector();
+		}
+
 		float boardValueV = predictActionAndValue.getRight();
 
 		choiceValuePredictionForBoardPs.put(boardS, allActionProbability);
@@ -293,7 +309,8 @@ public class MCTS {
 			 * dozens or hundreds of these messages you should pay attention to your NNet
 			 * and/or training process.
 			 */
-			System.out.println("All valid moves were masked, do workaround.");
+			log.debug("All valid moves were masked, do workaround where all actions get equal probability.");
+			allMovesMaskedCount++;
 
 			allActionProbability.activateAllValidMoves(validMoves);
 		}
@@ -308,16 +325,11 @@ public class MCTS {
 
 	public void printActionProbabilities(PolicyVector allActionProbability, float value, Game currentGame) {
 		if (Options.PRINT_MCTS_SEARCH_PROBABILITIES) {
-			print("Current board value : " + value);
+			log.debug("Current board value : {}", value);
 
 			allActionProbability.printActionProbabilities(currentGame);
 
 		}
-
-	}
-
-	private void print(String format) {
-		System.out.println(format);
 
 	}
 

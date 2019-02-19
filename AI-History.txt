@@ -224,6 +224,73 @@
 		Had to limit the game to 20 turns otherwise the AI sometimes just twiddled its thumbs forever.
 		
 
+2019-02-18
+	Good neural network, here's a candy
+		There are so many things that causes a neural network to collapse over training. Layers too small, layers too big, 
+		too many layers, not enough layers, wrong loss function, wrong activation function, wrong learning value.
+		Ran a mini test with 10 inputs 10 policy output. turns out 6 dense layers at 60 neurons worked best. Recurrent layers didn't add much.
+		Time to try it at the simple kemet size.
+		
+		Later that day : Good news bad news 
+		
+		The good - We have our first iteration of a Neural Net that actually learned something after 2 hours ! Building level 4 pyramids = good !
+		
+		The bad news - It takes a while to learn. 
+		
+			- per game
+				- 30 moves per MTCS search
+				- 3.6ms per Neural Network predict calls
+				- 12000 Neural Network predict calls per game
+				- time per game 45 seconds ( should get lower once the AI can reach 8 points to end the game faster )
+				- 10 games learning
+				- 8 minutes to play games
+			
+			- per training
+				- 10 epoch
+				- 20,000 moves to train
+				- 8m45s to train one epoch
+				- 1h17m30s to train one arena
+			 
+			 - Coach cycle : 
+			 	- 8 minutes to self play 10 games
+			 	- 1 hour to train a new neural net
+			 	- 8 minutes to pit the old vs the new in the arena
+			 	
+			 	- 1h16m per coach cycle.
+				
+		
+		Lets say that we always learn at 10 games per hour if everything is perfect. 
+		- 10 game per hour
+		- 240 game per day
+		- 1680 game per week, doesn't sound like much
+		
+		Ugh... and they trained AlphaGoZero in 40 days.
+		
+			
+		GPU-CUDA based implementations do not seem to make much of a change to this. I guess CPUs are pretty good at large matrix
+		calculations.
+		
+		Also, comparing a few stats from the game of go or chess : 
+		
+		Average number of moves per game : 
+			- Chess 40
+			- Go 40
+			- Mini Kemet 400 micro decisions ( a single army move is 3 decision : source tile, size to move, destination tile )
+		
+		Input vector
+			- Chess 1152 ( 8*8*18 )
+			- Go : 6137 ( 19*19*17 )
+			- Mini-Kemet : 150
+		
+		Output vector
+			- Chess 1152 ( 8*8*18 )
+			- Go : 381 ( 19*19 )
+			- Mini-Kemet : 90
+		
+		
+
+
+
 TODO : 
 	- TrialAI isn't very good at recruiting since any army score is worth more than raw prayer points.
 	To fix this, TrialAI will need to try to simulate a few more actions.

@@ -232,6 +232,11 @@ public class UpgradePyramidAction extends EndableAction {
 			startLevel = pickStartLevel;
 			endLevel = pickEndLevel;
 			powerCost = pickCost;
+			
+			if( color != Color.NONE ) {
+				// upgrading existing pyramid
+				activateAction();
+			}
 		}
 
 		@Override
@@ -282,7 +287,6 @@ public class UpgradePyramidAction extends EndableAction {
 
 		} else if (endLevel == -1) {
 			// pick level
-			// pick tile
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 			createAllColorPyramidChoices(tile.getPyramidLevel(), pick.choiceList);
@@ -292,7 +296,7 @@ public class UpgradePyramidAction extends EndableAction {
 			return pick.validate();
 
 		} else if (color == Color.NONE) {
-			// pick tile
+			// pick color
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 			if (!player.hasPyramid(Color.BLACK)) {

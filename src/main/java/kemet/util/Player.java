@@ -12,5 +12,5 @@ public interface Player {
 	int getActionProbability(Game game);
 
 	void printStats();
-
+	
 }

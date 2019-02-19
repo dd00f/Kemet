@@ -1,9 +1,12 @@
 package kemet.model;
 
+import lombok.extern.log4j.Log4j2;
+
+@Log4j2
 public class Validation {
 	
 	public static void validationFailed(String reason) {
-		System.out.println(reason);
+		log.error(reason);
 		
 		try {
 			IllegalArgumentException ex  = new IllegalArgumentException(reason);

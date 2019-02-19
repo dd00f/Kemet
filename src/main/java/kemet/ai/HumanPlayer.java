@@ -8,7 +8,9 @@ import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.action.PlayerChoicePick;
 import kemet.model.action.choice.Choice;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class HumanPlayer extends PlayerActor {
 
 	/**
@@ -37,7 +39,7 @@ public class HumanPlayer extends PlayerActor {
             String choice = null;
             try {
                 choice = reader.readLine();
-                System.out.println("You entered : " + choice);
+                log.info("You entered : " + choice);
 
                 int parseInt = Integer.parseInt(choice);
                 if( parseInt > 0 && parseInt <= choiceList.size() ) {
@@ -53,11 +55,11 @@ public class HumanPlayer extends PlayerActor {
                     break;
                 }
                 else {
-                    System.out.println("Invalid choice, try again.");
+                    log.error("Invalid choice, try again.");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                System.out.println("Invalid choice, try again.");
+                log.error("Invalid choice, try again.");
             }
         }
         return retVal;

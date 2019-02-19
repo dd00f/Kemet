@@ -10,6 +10,7 @@ import kemet.model.Tile;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
+import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 
@@ -106,7 +107,12 @@ public class InitializationPlayerPyramidAction implements Action {
 	}
 	
 
-	public class InitialPyramidLevelChoice implements Choice {
+	public class InitialPyramidLevelChoice extends PlayerChoice {
+		
+		public InitialPyramidLevelChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
 		public byte endLevel;
 		public Tile tile;
 
@@ -116,27 +122,23 @@ public class InitializationPlayerPyramidAction implements Action {
 		}
 
 		@Override
-		public String toString() {
-			return "Player \"" + player.name + "\" : " + describe();
-		}
-
-		@Override
-		public void activate() {
-			if (game.printActivations) {
-				game.printEvent("Activated : " + toString());
-			}
-			
-			targetLevel = endLevel;
-		}
-
-		@Override
 		public int getIndex() {
 			return ChoiceInventory.PICK_PYRAMID_LEVEL_CHOICE + endLevel -1;
 		}
 
+		@Override
+		public void choiceActivate() {
+		
+			targetLevel = endLevel;
+		}
+
 	}	
 
-	public class InitialPyramidColorChoice implements Choice {
+	public class InitialPyramidColorChoice extends PlayerChoice {
+		public InitialPyramidColorChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
 		public Color color;
 		public byte endLevel;
 		public Tile tile;
@@ -147,15 +149,7 @@ public class InitializationPlayerPyramidAction implements Action {
 		}
 
 		@Override
-		public String toString() {
-			return "Player \"" + player.name + "\" : " + describe();
-		}
-
-		@Override
-		public void activate() {
-			if (game.printActivations) {
-				game.printEvent("Activated : " + toString());
-			}
+		public void choiceActivate() {
 
 			tile.pyramidColor = color;
 			tile.setPyramidLevel(endLevel);
@@ -168,6 +162,7 @@ public class InitializationPlayerPyramidAction implements Action {
 		public int getIndex() {
 			return ChoiceInventory.PICK_COLOR_CHOICE + color.ordinal();
 		}
+
 
 	}
 
@@ -193,14 +188,14 @@ public class InitializationPlayerPyramidAction implements Action {
 
 	
 	private void createInitialPyramidLevel(Tile tile,  byte level, List<Choice> choiceList) {
-		InitialPyramidLevelChoice choice = new InitialPyramidLevelChoice();
+		InitialPyramidLevelChoice choice = new InitialPyramidLevelChoice(game, player);
 		choice.endLevel = level;
 		choice.tile = tile;
 		choiceList.add(choice);
 	}
 	
 	private void createInitialPyramid(Tile tile, Color color, byte level, List<Choice> choiceList) {
-		InitialPyramidColorChoice choice = new InitialPyramidColorChoice();
+		InitialPyramidColorChoice choice = new InitialPyramidColorChoice(game, player);
 		choice.color = color;
 		choice.endLevel = level;
 		choice.tile = tile;

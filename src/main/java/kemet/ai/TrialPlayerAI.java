@@ -21,7 +21,7 @@ public class TrialPlayerAI extends PlayerActor {
 	// Logger initialization example
 	private static final Logger LOGGER = LogManager.getLogger(TrialPlayerAI.class);
 
-	private List<Integer> plannedChoices = new ArrayList<>();
+	public List<Integer> plannedChoices = new ArrayList<>();
 	
 	private boolean printChoices = false;
 

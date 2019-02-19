@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import kemet.Options;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class Cache<T> {
 
 	private List<T> cache = new ArrayList<>();
@@ -36,7 +38,7 @@ public class Cache<T> {
 		}
 		createNewCount++;
 		if (Options.PRINT_CREATION_COUNT && createNewCount % Options.CREATION_PRINT_COUNT == 0) {
-			System.out.println("Cache created " + createNewCount + " of " + className + ", released " + releaseCount
+			log.debug("Cache created " + createNewCount + " of " + className + ", released " + releaseCount
 					+ " reused " + reuseCount + " of " + createCount + " calls");
 		}		
 		return creator.create();

@@ -1,8 +1,10 @@
 package kemet.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -22,7 +24,11 @@ import kemet.util.Utilities;
 
 public class KemetGame implements Model, Game {
 
+	public static final int VICTORY_POINTS_OBJECTIVE = 8;
+
 	private static final long serialVersionUID = 6738783849669850313L;
+
+	public static final int MAX_ACTION_COUNT = 1024;
 
 	private static final Logger LOGGER = LogManager.getLogger(KemetGame.class);
 
@@ -33,11 +39,14 @@ public class KemetGame implements Model, Game {
 	public List<Power> availablePowerList = new ArrayList<>();
 	public byte roundNumber = 0;
 	public boolean victoryConditionTriggered = false;
-	public byte victoryPointObjective = 8;
+	public byte victoryPointObjective = VICTORY_POINTS_OBJECTIVE;
 	public Player winner = null;
 	public GameAction action = null;
 	public boolean printActivations = true;
 	public int battleCount = 0;
+
+	public int recordActionIndex = 0;
+	public int[] actions = new int[MAX_ACTION_COUNT];
 
 	private static Cache<KemetGame> GAME_CACHE = new Cache<KemetGame>(() -> new KemetGame());
 
@@ -66,6 +75,9 @@ public class KemetGame implements Model, Game {
 		availableDiCardList.clear();
 		discardedDiCardList.clear();
 		availablePowerList.clear();
+
+		recordActionIndex = 0;
+		Arrays.fill(actions, -1);
 	}
 
 	@Override
@@ -100,6 +112,9 @@ public class KemetGame implements Model, Game {
 
 		clone.action = (GameAction) action.deepCacheClone();
 		clone.action.relink(clone);
+
+		clone.recordActionIndex = recordActionIndex;
+		clone.actions = actions.clone();
 
 		// relink the structure
 		for (Tile tile : clone.tileList) {
@@ -180,7 +195,10 @@ public class KemetGame implements Model, Game {
 
 		builder.append("Game turn ");
 		builder.append(this.roundNumber);
-		builder.append("\n");		
+		builder.append("\n");
+		builder.append("Actions : ");
+		builder.append(Arrays.toString(actions));
+		builder.append("\n");
 		for (Player player : playerByInitiativeList) {
 			player.describePlayer(builder);
 		}
@@ -275,6 +293,10 @@ public class KemetGame implements Model, Game {
 			}
 		}
 		return null;
+	}
+
+	public void playbackGame(int[] actions) {
+
 	}
 
 	public boolean didPlayerWin(Player player) {
@@ -435,6 +457,17 @@ public class KemetGame implements Model, Game {
 		return deepCacheClone;
 	}
 
+	public int[] getActivatedActions() {
+		return actions;
+	}
+
+	public void replayMultipleActions(int[] actions) {
+		for (int i = 0; i < actions.length; i++) {
+			int j = actions[i];
+			activateAction(getNextPlayer(), j);
+		}
+	}
+
 	@Override
 	public void activateAction(int player, int actionIndex) {
 
@@ -445,7 +478,13 @@ public class KemetGame implements Model, Game {
 
 		for (Choice choice : nextPlayerChoicePick.choiceList) {
 			if (choice.getIndex() == actionIndex) {
+
+				if (recordActionIndex < MAX_ACTION_COUNT) {
+					actions[recordActionIndex++] = actionIndex;
+				}
+
 				choice.activate();
+
 				return;
 			}
 		}
@@ -468,12 +507,12 @@ public class KemetGame implements Model, Game {
 
 		for (Choice choice : nextPlayerChoicePick.choiceList) {
 			if (choice.getIndex() == i) {
-				return choice.describe();
+				return choice.toString();
 			}
 		}
 		return "invalid choice index " + i;
 	}
-	
+
 	@Override
 	public void printChoiceList() {
 		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
@@ -486,7 +525,7 @@ public class KemetGame implements Model, Game {
 	@Override
 	public int getNextPlayer() {
 		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
-		if( nextPlayerChoicePick == null ) {
+		if (nextPlayerChoicePick == null) {
 			return -1;
 		}
 		return nextPlayerChoicePick.player.index;
@@ -527,7 +566,7 @@ public class KemetGame implements Model, Game {
 		action.getNextPlayerChoicePick();
 
 		// GAME
-		ByteCanonicalForm canonicalForm = new ByteCanonicalForm(BoardInventory.TOTAL_STATE_COUNT);
+		ByteCanonicalForm canonicalForm = new KemetByteCanonicalForm(BoardInventory.TOTAL_STATE_COUNT);
 		canonicalForm.set(BoardInventory.ROUND_NUMBER, roundNumber);
 
 		// ACTION STATE
@@ -563,4 +602,13 @@ public class KemetGame implements Model, Game {
 	public Game clone() {
 		return deepCacheClone();
 	}
+
+	public String getPlayerName(int playerIndex) {
+		return getPlayerByIndex(playerIndex).name;
+	}
+
+	public void setPlayerName(int playerIndex, String name) {
+		getPlayerByIndex(playerIndex).name = name;
+	}
+
 }

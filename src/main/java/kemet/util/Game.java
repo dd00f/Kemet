@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import kemet.model.Player;
+
 public interface Game {
 	/*
 	 * This class specifies the base Game class. To define your own game, subclass
@@ -98,6 +100,8 @@ public interface Game {
 	 *         by MCTS for hashing.
 	 */
 	public String stringRepresentation();
+	
+	public void playbackGame(int[] actions);
 
 	public void describeGame(StringBuilder builder);
 	
@@ -110,5 +114,15 @@ public interface Game {
 	public void printDescribeGame();
 
 	public void printChoiceList();
+
+	
+	public String getPlayerName(int playerIndex);
+	
+	public void setPlayerName(int playerIndex, String name);
+	
+	public int[] getActivatedActions();
+	
+	public void replayMultipleActions(int[] actions);
+
 
 }
