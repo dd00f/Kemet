@@ -52,4 +52,10 @@ public class ByteCanonicalForm implements Serializable{
 		
 	}
 
+	public String toCanonicalString() {
+		String canonicalString = Utilities.bytesToHex(canonicalForm);
+
+		return canonicalString;
+	}
+
 }

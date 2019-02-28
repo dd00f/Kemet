@@ -58,6 +58,7 @@ public class TrialPlayerAI extends PlayerActor {
 		}
 
 		Simulation simulation = new Simulation(player);
+		simulation.print = print;
 		simulation.pickNextAction(pick);
 		simulation.populateBestActionStack(plannedChoices);
 

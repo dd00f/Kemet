@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import kemet.data.TwoPlayerGame;
 import kemet.util.ByteCanonicalForm;
+import lombok.EqualsAndHashCode;
 
 class KemetGameTest {
 
@@ -72,5 +73,6 @@ class KemetGameTest {
 		assertEquals(initForm12, initForm11);
 
 	}
+	
 
 }

@@ -39,19 +39,28 @@
 			<AppenderRef ref="textFile" />
 			<AppenderRef ref="Console" />
 		</Logger>
+
+		<Logger name="kemet.util.MCTS" level="debug" additivity="false" includeLocation="false">
+			<AppenderRef ref="textFile" />
+			<AppenderRef ref="Console" />
+		</Logger>
+
 		-->
 
 		
 		<!-- 
 			All loggers should enable INFO level logs and above.
 			Filter 3rd party loggers if they are too verbose.
+			
+			asyncRoot
+			
 		-->
-		<asyncRoot level="info" includeLocation="false">
+		<Root level="info" includeLocation="false">
 
 			<AppenderRef ref="Console" />
 
 			<AppenderRef ref="textFile" />
-		</asyncRoot>
+		</Root>
 	</Loggers>
 
 </Configuration>

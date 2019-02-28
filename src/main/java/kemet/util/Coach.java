@@ -15,6 +15,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SerializationUtils;
 
 import kemet.Options;
+import kemet.ai.TrialPlayerAI;
+import kemet.model.KemetGame;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -155,40 +157,52 @@ public class Coach {
 		ByteCanonicalForm canonicalBoard = game.getCanonicalForm(currentPlayer);
 
 		PolicyVector actionProbabilityPi = mcts.getActionProbability(temperature);
+		
+		int actionIndex = actionProbabilityPi.pickRandomAction();
+		if( Options.COACH_USE_MANUAL_AI ) {
+			KemetGame kg = (KemetGame) game;
+			TrialPlayerAI ai = new TrialPlayerAI(kg.getPlayerByIndex(currentPlayer), kg);
+			ai.print = false;
+			actionIndex = ai.pickAction(kg.action.getNextPlayerChoicePick()).getIndex();
+			
+			actionProbabilityPi.boostActionIndex(actionIndex);
+		}
+		
 
+		boolean[] validMoves = game.getValidMoves();
 		trainExamples
-				.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0, game.getValidMoves()));
+				.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0, validMoves));
 
 		if (Options.PRINT_COACH_SEARCH_PROBABILITIES) {
 			actionProbabilityPi.printActionProbabilities(game);
 		}
 
-		int actionIndex = pickRandomAction(actionProbabilityPi);
 
-		game.activateAction(currentPlayer, actionIndex);
-		currentPlayer = game.getNextPlayer();
+
+		try {
+			game.activateAction(currentPlayer, actionIndex);
+			currentPlayer = game.getNextPlayer();
+		} catch (Exception ex) {
+			log.error("Activate action failed", ex);
+			
+			activateFirstValidMoveOnError(game, currentPlayer, validMoves);
+		}
 		return currentPlayer;
 	}
 
-	public Random random = new Random();
-
-	public int pickRandomAction(PolicyVector actionProbabilityPi) {
-		float nextFloat = random.nextFloat();
-		int action = 0;
-		float[] vector = actionProbabilityPi.vector;
-		for (int i = 0; i < vector.length; i++) {
-			float f = vector[i];
-			if (f > 0) {
-				nextFloat -= f;
-				if (nextFloat <= 0) {
-					action = i;
-					break;
-				}
+	private void activateFirstValidMoveOnError(Game game, int currentPlayer, boolean[] validMoves) {
+		int actionIndex;
+		for (int i = 0; i < validMoves.length; i++) {
+			boolean valid = validMoves[i];
+			if( valid ) {
+				actionIndex = i;
+				log.error("Activated action index {} as a temporary fix.", actionIndex);
+				game.activateAction(currentPlayer, actionIndex);
 			}
 		}
-		return action;
-
 	}
+
+
 
 	/**
 	 * Performs numIters iterations with numEps episodes of this.play in each
@@ -314,7 +328,16 @@ public class Coach {
 			log.info("ACCEPTING NEW MODEL");
 			this.nnet.saveCheckpoint(this.checkpoint, this.getCheckpointFile(j));
 			this.nnet.saveCheckpoint(this.checkpoint, "best.pth.tar");
+			
+			
+			File modelFile = new File(loadFolder + loadFile);
+
+			saveTrainExamples(getBestExampleFileName());
 		}
+	}
+
+	private String getBestExampleFileName() {
+		return this.checkpoint + "best.pth.tar" + ".examples";
 	}
 
 	private Arena playArenaGames(MCTS pmcts, MCTS nmcts) {
@@ -384,7 +407,12 @@ public class Coach {
 			folder.mkdir();
 		}
 
-		File inputFile = new File(folder + "/" + getCheckpointFile(iteration) + ".examples");
+		String filePath = folder + "/" + getCheckpointFile(iteration) + ".examples";
+		saveTrainExamples(filePath);
+	}
+
+	private void saveTrainExamples(String filePath) {
+		File inputFile = new File(filePath);
 		FileOutputStream fos;
 		try {
 			fos = new FileOutputStream(inputFile);
@@ -396,9 +424,8 @@ public class Coach {
 	}
 
 	public void loadTrainExamples() {
-		File modelFile = new File(loadFolder + loadFile);
 
-		File examplesFile = new File(modelFile.getAbsolutePath() + ".examples");
+		File examplesFile = new File(getBestExampleFileName());
 
 		if (!examplesFile.exists()) {
 			log.warn("File with train example not found : " + examplesFile.getAbsolutePath());
@@ -410,7 +437,7 @@ public class Coach {
 				fileInputStream = new FileInputStream(examplesFile);
 				trainExamplesHistory = SerializationUtils.deserialize(fileInputStream);
 				IOUtils.closeQuietly(fileInputStream);
-				skipFirstSelfPlay = true;
+				// skipFirstSelfPlay = true;
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				System.exit(-1);

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import kemet.Options;
 import kemet.model.Army;
@@ -21,11 +19,10 @@ import kemet.model.action.PlayerActionTokenPick;
 import kemet.model.action.PlayerChoicePick;
 import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.EndTurnChoice;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class Simulation {
-
-	// Logger initialization example
-	private static final Logger LOGGER = LogManager.getLogger(Simulation.class);
 
 	private static final int WIN_SCORE = 1000000;
 
@@ -282,7 +279,7 @@ public class Simulation {
 		}
 
 		if (choiceList.size() == 0) {
-			LOGGER.warn("no choice supplied in list.");
+			log.warn("no choice supplied in list.");
 			try {
 				NullPointerException ex = new NullPointerException();
 				throw ex;
@@ -352,6 +349,11 @@ public class Simulation {
 	private long lastPrintTime = 0;
 
 	private void printExploredCount() {
+		
+		if( ! print ) {
+			return;
+		}
+		
 		long nanoTime = System.nanoTime();
 		long durationMs = (nanoTime - startTimeNano) / 1000000;
 		long recentDurationMs = (nanoTime - lastPrintTime) / 1000000;
@@ -376,7 +378,7 @@ public class Simulation {
 		String format = String.format("Explored %1$,d choices in %2$02dh%3$02dm%4$02ds , recent speed : %5$,d choice per second. Best Outcome : %6$s",
 				totalChoiceCount , hours, minutes , seconds, choicePerSecond , bestOutcome);
 		
-		print( format );
+		log.info( format );
 		//print("Explored " + exploredChoiceCount + " choices in " + hours + "h" + minutes + "m" + seconds
 		///			+ "s , recent speed : " + choicePerSecond + " choice per second. Best Outcome : " + bestOutcome);
 	}
@@ -454,12 +456,9 @@ public class Simulation {
 		build.append(newScore);
 		build.append(" : ");
 		build.append(nextPick.choiceList.get(i));
-		print(build.toString());
+		log.info(build.toString());
 	}
 
-	private void print(String string) {
-		LOGGER.info(string);
-	}
 
 	@SuppressWarnings("unused")
 	private String printChoiceEntry(int depthLeft, String prefix, PlayerChoicePick nextPick, int i) {
@@ -474,7 +473,7 @@ public class Simulation {
 				build.append(newPrefix);
 				build.append(" : ");
 				build.append(nextPick.choiceList.get(i));
-				print(build.toString());
+				log.info(build.toString());
 			}
 		}
 		return newPrefix;
@@ -538,6 +537,8 @@ public class Simulation {
 
 	private long startTimeNano;
 
+	public boolean print;
+
 	static {
 		indent[0] = "  ";
 		for (int i = 1; i < 100; ++i) {
@@ -578,7 +579,7 @@ public class Simulation {
 		return playerScore;
 	}
 
-	private float calculatePlayerScore(Player playerToScore) {
+	public static float calculatePlayerScore(Player playerToScore) {
 		float retVal = 0;
 		// VP
 		retVal += playerToScore.victoryPoints * 1000;

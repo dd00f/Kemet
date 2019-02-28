@@ -5,8 +5,8 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class Arena {
-	private Player player2;
-	private Player player1;
+	private Player newPlayer;
+	private Player oldPlayer;
 	private GameFactory gameFactory;
 
 	/**
@@ -22,9 +22,9 @@ public class Arena {
 	 *
 	 */
 
-	public Arena(Player player1, Player player2, GameFactory gameFactory) {
-		this.player1 = player1;
-		this.player2 = player2;
+	public Arena(Player oldPlayer, Player newPlayer, GameFactory gameFactory) {
+		this.oldPlayer = oldPlayer;
+		this.newPlayer = newPlayer;
 		this.gameFactory = gameFactory;
 
 	}
@@ -50,7 +50,7 @@ public class Arena {
 			game.setPlayerName(1, "new");
 		}
 		
-		int currentPlayerIndex = game.getNextPlayer();
+		int currentPlayerIndex =  game.getNextPlayer();
 		int it = 0;
 		while (game.getGameEnded(currentPlayerIndex) == 0) {
 			it++;
@@ -58,36 +58,17 @@ public class Arena {
 				log.debug("Turn {} Player {}", it, currentPlayerIndex);
 				game.printDescribeGame();
 			}
-
-			Player currentPlayer = player2;
-			if( swapped )
-			{
-				if (currentPlayerIndex == 1) {
-					currentPlayer = player1;
-				}
-			}
-			else {
-				if (currentPlayerIndex == 0) {
-					currentPlayer = player1;
-				}
-			}
 			
+			Player currentPlayer = getCurrentPlayerFromIndex(currentPlayerIndex);
 
-			
 			int actionIndex = currentPlayer.getActionProbability(game);
 
-			if (Options.ARENA_VALIDATE_MOVES) {
-				boolean[] validMoves = game.getValidMoves();
-				if (validMoves[actionIndex] == false) {
-					log.error("Invalid move selected {}", actionIndex);
-					game.printChoiceList();
-					actionIndex = Utilities.getFirstValidMoveIndex(game.getValidMoves());
-				}
-
-			}
+			actionIndex = validateMoveIndex(game, actionIndex);
 
 			game.activateAction(currentPlayerIndex, actionIndex);
+			
 			currentPlayerIndex = game.getNextPlayer();
+
 
 		}
 
@@ -96,29 +77,69 @@ public class Arena {
 			game.setPrintActivations(true);
 			game.printDescribeGame();
 			
-			player1.printStats();
+			oldPlayer.printStats();
 			
-			player2.printStats();
+			newPlayer.printStats();
 		}
 
 		return game.getGameEnded(0);
 	}
 
+	private int validateMoveIndex(Game game, int actionIndex) {
+		if (Options.ARENA_VALIDATE_MOVES) {
+			boolean[] validMoves = game.getValidMoves();
+			if (validMoves[actionIndex] == false) {
+				log.error("Invalid move selected {}", actionIndex);
+				game.printChoiceList();
+				actionIndex = Utilities.getFirstValidMoveIndex(game.getValidMoves());
+			}
+		}
+		return actionIndex;
+	}
+
+	private Player getCurrentPlayerFromIndex(int currentPlayerIndex) {
+		Player currentPlayer = newPlayer;
+		if( swapped )
+		{
+			if (currentPlayerIndex == 0) {
+				currentPlayer = newPlayer;
+			}
+			else if (currentPlayerIndex == 1) {
+				currentPlayer = oldPlayer;
+			}
+			else {
+				throw new IllegalStateException();
+			}
+		}
+		else {
+			if (currentPlayerIndex == 0) {
+				currentPlayer = oldPlayer;
+			}
+			else if (currentPlayerIndex == 1) {
+				currentPlayer = newPlayer;
+			}
+			else {
+				throw new IllegalStateException();
+			}
+		}
+		return currentPlayer;
+	}
+
 
 	public int getNewWinCount() {
-		return twoWon;
+		return newWon;
 	}
 
 	public int getPreviousWinCount() {
-		return oneWon;
+		return oldWon;
 	}
 
 	public int getDrawCount() {
 		return draw;
 	}
 
-	public int oneWon = 0;
-	public int twoWon = 0;
+	public int oldWon = 0;
+	public int newWon = 0;
 	public int draw = 0;
 	private boolean swapped;
 
@@ -139,23 +160,23 @@ public class Arena {
 		int maxeps = arenaCompare;
 		swapped = false;
 
-		oneWon = 0;
-		twoWon = 0;
+		oldWon = 0;
+		newWon = 0;
 		draw = 0;
 
 		for (int i = 0; i < maxeps; i++) {
 			int playGame = playGame(false);
 			if (playGame == 1) {
 				if (swapped) {
-					twoWon++;
+					newWon++;
 				} else {
-					oneWon++;
+					oldWon++;
 				}
 			} else if (playGame == -1) {
 				if (swapped) {
-					oneWon++;
+					oldWon++;
 				} else {
-					twoWon++;
+					newWon++;
 				}
 			} else {
 				draw++;

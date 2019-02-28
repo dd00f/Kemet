@@ -9,6 +9,8 @@ import java.util.Set;
 import org.apache.commons.lang3.tuple.Pair;
 
 import kemet.Options;
+import kemet.ai.TrialPlayerAI;
+import kemet.model.KemetGame;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -34,6 +36,7 @@ public class MCTS {
 
 	public Map<String, Integer> isBoardEndedEs; // stores game.getGameEnded ended for board s
 	public Map<String, boolean[]> validMovesForBoardVs; // stores game.getValidMoves for board s
+	public Map<String, int[]> movesToReachBoard; // stores game.getValidMoves for board s
 	private int simulationCount;
 
 	private long getActionProbabilityTotalCount = 0;
@@ -57,6 +60,7 @@ public class MCTS {
 		choiceValuePredictionForBoardPs = new HashMap<>();
 		isBoardEndedEs = new HashMap<>();
 		validMovesForBoardVs = new HashMap<>();
+		movesToReachBoard = new HashMap<>();
 
 	}
 
@@ -74,7 +78,7 @@ public class MCTS {
 	 * @return a policy vector where the probability of the ith action is
 	 *         proportional to Nsa[(s,a)]**(1./temperature)
 	 */
-	public PolicyVector getActionProbability(int temperature) {
+	public PolicyVector getActionProbability(float temperature) {
 
 		long starProbNano = System.nanoTime();
 
@@ -83,13 +87,16 @@ public class MCTS {
 			long starSimNano = System.nanoTime();
 			Game clone = game.clone();
 			clone.setPrintActivations(Options.PRINT_MCTS_SEARCH_ACTIONS);
-			search(clone);
+
+			log.debug("---------- Search {} starting ----------------", i);
+			search(clone, 1);
+			log.debug("---------- Search {} finished ----------------", i);
 
 			simulationTotalCount++;
 			simulationTotalTimeNano += System.nanoTime() - starSimNano;
 		}
 
-		String gameString = game.stringRepresentation();
+		String gameString = game.stringRepresentation(game.getNextPlayer());
 
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
@@ -105,7 +112,7 @@ public class MCTS {
 
 		PolicyVector probabilitiesOfAllActions = new PolicyVector();
 
-		if (temperature == 0) {
+		if (temperature == 0.0) {
 			int bestActionIndexA = getMaxIndex(actionHitCounts);
 			probabilitiesOfAllActions.vector = new float[actionSize];
 			probabilitiesOfAllActions.vector[bestActionIndexA] = 1;
@@ -122,10 +129,10 @@ public class MCTS {
 		return probabilitiesOfAllActions;
 	}
 
-	private float[] adjustActionHitCountTemperature(int temperature, int[] actionHitCounts) {
+	private float[] adjustActionHitCountTemperature(float temperature, int[] actionHitCounts) {
 		float[] countsFloat = new float[actionHitCounts.length];
 		if (temperature != 1) {
-			int power = 1 / temperature;
+			float power = 1.0f / temperature;
 			for (int i = 0; i < actionHitCounts.length; i++) {
 				countsFloat[i] = (float) Math.pow(actionHitCounts[i], power);
 			}
@@ -164,56 +171,75 @@ public class MCTS {
 	 * @param canonicalBoard
 	 * @returns the negative of the value of the current canonicalBoard
 	 */
-	public float search(Game currentGame) {
+	public float search(Game currentGame, int depth) {
 
-		String boardS = currentGame.stringRepresentation();
+		final int currentPlayerIndex = currentGame.getNextPlayer();
+		final String boardS = currentGame.stringRepresentation(currentPlayerIndex);
 
+		log.debug("starting search at depth {} for player {}", depth, currentPlayerIndex);
+
+		int gameEnded = currentGame.getGameEnded(currentPlayerIndex);
 		if (!isBoardEndedEs.containsKey(boardS)) {
-			isBoardEndedEs.put(boardS, currentGame.getGameEnded(1));
+			isBoardEndedEs.put(boardS, gameEnded);
 		}
 
-		Integer gameFinishedState = isBoardEndedEs.get(boardS);
 		float boardValueV = 0;
 
-		if (gameFinishedState != 0) {
-			boardValueV = gameFinishedState;
+		if (gameEnded != 0) {
+			boardValueV = gameEnded;
 		} else if (!choiceValuePredictionForBoardPs.containsKey(boardS)) {
 			boardValueV = predictValueWithNeuralNet(currentGame, boardS);
 		} else {
 
-			int actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS);
-			int playerIndex = currentGame.getNextPlayer();
+			final int actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS, currentGame);
 
-			// Possible optimization : cache the game to reuse it.
-			try {
-
-				currentGame.activateAction(playerIndex, actionIndexOfNextSimulationA);
-
-			} catch (Exception ex) {
-				currentGame.setPrintActivations(true);
-				currentGame.printDescribeGame();
-				currentGame.printChoiceList();
-
-				ex.printStackTrace();
-
-				// patch the valid moves and redo another action
-				validMovesForBoardVs.put(boardS, currentGame.getValidMoves());
-				actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS);
-				currentGame.activateAction(playerIndex, actionIndexOfNextSimulationA);
+			String describeAction = "";
+			if (log.isDebugEnabled()) {
+				describeAction = currentGame.describeAction(actionIndexOfNextSimulationA);
 			}
 
-			int nextPlayerIndex = currentGame.getNextPlayer();
+//			try {
 
-			boardValueV = search(currentGame);
-			if (nextPlayerIndex == -1) {
+			currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
+
+//			} catch (Exception ex) {
+//
+//				boolean[] validMoves = validMovesForBoardVs.get(boardS);
+//				checkForValidMoveMatch(boardS, validMoves, currentGame);
+//
+//				currentGame.setPrintActivations(true);
+//				currentGame.printDescribeGame();
+//				currentGame.printChoiceList();
+//
+//				ex.printStackTrace();
+//
+//				// patch the valid moves and redo another action
+//				validMovesForBoardVs.put(boardS, currentGame.getValidMoves());
+//				actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS, currentGame);
+//				currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
+//			}
+
+			final int playerForNextAction = currentGame.getNextPlayer();
+
+			boardValueV = search(currentGame, depth + 1);
+
+			if (playerForNextAction == -1) {
 				// game ended, check if the current player won
-				boardValueV = currentGame.getGameEnded(playerIndex);
-			} else if (nextPlayerIndex != playerIndex) {
+				boardValueV = currentGame.getGameEnded(currentPlayerIndex);
+				log.debug("Game ended, player {} board value is {} at depth {}", currentPlayerIndex, boardValueV,
+						depth);
+
+			} else if (playerForNextAction != currentPlayerIndex) {
 				// swap the board value as we switch players
+				String message = "Next action player index {} is different than current player index {}, flipping returned board value from {} to {} at depth {}";
+				log.debug(message, playerForNextAction, currentPlayerIndex, boardValueV, -boardValueV, depth);
 				boardValueV = -boardValueV;
+			} else {
+				log.debug("Next action player index {} is same player index {} at depth {}", playerForNextAction,
+						currentPlayerIndex, depth);
 			}
 
-			updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV);
+			updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV, depth, describeAction);
 
 			incrementBoardHitCount(boardS);
 			incrementBoardActionHitCount(boardS, actionIndexOfNextSimulationA);
@@ -222,12 +248,41 @@ public class MCTS {
 
 		// search always reverts the board value, likely assuming the player switches
 		// between actions.
-		return -boardValueV;
+
+		log.debug("ending search at depth {} for player {} board value {}", depth, currentPlayerIndex, boardValueV);
+
+		return boardValueV;
 
 	}
 
-	private int findBestActionIndexFromPreviousSimulations(String boardS) {
+//	private void checkForValidMoveMatch(String boardS, boolean[] oldValidMoves, Game currentGame) {
+//
+//		Valid v1 = new Valid();
+//		v1.valid = oldValidMoves;
+//		Valid v2 = new Valid();
+//		v2.valid = currentGame.getValidMoves();
+//
+//		if (!v1.equals(v2)) {
+//			log.error("Found two state that have the same canonical form but not the same valid legal moves.");
+//			int[] is = movesToReachBoard.get(boardS);
+//			log.error("Game 1 : " + Arrays.toString(is));
+//			log.error("Game 2 : " + Arrays.toString(currentGame.getActivatedActions()));
+//			log.error("Legal moves 1 : " + Arrays.toString(v1.valid));
+//			log.error("Legal moves 2 : " + Arrays.toString(v2.valid));
+//
+//			throw new IllegalStateException();
+//		}
+//
+//	}
+//
+//	@EqualsAndHashCode
+//	public static class Valid {
+//		public boolean[] valid;
+//	}
+
+	private int findBestActionIndexFromPreviousSimulations(String boardS, Game game) {
 		boolean[] validMoves = validMovesForBoardVs.get(boardS);
+
 		float bestActionValue = Float.NEGATIVE_INFINITY;
 		int bestActionIndex = -1;
 
@@ -247,7 +302,7 @@ public class MCTS {
 		}
 
 		if (bestActionIndex == -1) {
-			log.error("findBestActionIndexFromPreviousSimulations return -1 index, valuid moves : {}",
+			log.error("findBestActionIndexFromPreviousSimulations return -1 index, valid moves : {}",
 					Arrays.toString(validMoves));
 		}
 
@@ -294,7 +349,10 @@ public class MCTS {
 
 		float boardValueV = predictActionAndValue.getRight();
 
-		choiceValuePredictionForBoardPs.put(boardS, allActionProbability);
+		if (Options.MCTS_PREDICT_VALUE_WITH_SIMULATION) {
+			int nextPlayer = currentGame.getNextPlayer();
+			boardValueV = currentGame.getSimpleValue(nextPlayer, boardValueV);
+		}
 
 		boolean[] validMoves = currentGame.getValidMoves();
 		allActionProbability.maskInvalidMoves(validMoves);
@@ -309,31 +367,48 @@ public class MCTS {
 			 * dozens or hundreds of these messages you should pay attention to your NNet
 			 * and/or training process.
 			 */
-			log.debug("All valid moves were masked, do workaround where all actions get equal probability.");
+			log.info("All valid moves were masked, do workaround where all actions get equal probability.");
 			allMovesMaskedCount++;
 
 			allActionProbability.activateAllValidMoves(validMoves);
 		}
+
+		if (Options.MCTS_USE_MANUAL_AI) {
+			KemetGame kg = (KemetGame) game;
+
+			int nextPlayer = currentGame.getNextPlayer();
+			TrialPlayerAI ai = new TrialPlayerAI(kg.getPlayerByIndex(nextPlayer), kg);
+			ai.print = false;
+			int actionIndex = ai.pickAction(kg.action.getNextPlayerChoicePick()).getIndex();
+
+			allActionProbability.boostActionIndex(actionIndex);
+		}
+
 		allActionProbability.normalize();
+
+		choiceValuePredictionForBoardPs.put(boardS, allActionProbability);
 
 		printActionProbabilities(allActionProbability, boardValueV, currentGame);
 
 		validMovesForBoardVs.put(boardS, validMoves);
+		if (Options.MCTS_VALIDATE_MOVE_FOR_BOARD) {
+			movesToReachBoard.put(boardS, currentGame.getActivatedActions());
+		}
 		boardHitCountNs.put(boardS, 0);
 		return boardValueV;
 	}
 
 	public void printActionProbabilities(PolicyVector allActionProbability, float value, Game currentGame) {
 		if (Options.PRINT_MCTS_SEARCH_PROBABILITIES) {
-			log.debug("Current board value : {}", value);
-
-			allActionProbability.printActionProbabilities(currentGame);
-
+			if (log.isDebugEnabled()) {
+				log.debug("Current board value : {} for player {}", value, currentGame.getNextPlayer());
+			}
+			// allActionProbability.printActionProbabilities(currentGame);
 		}
-
 	}
 
-	private void updateBoardActionValue(String boardS, int actoinIndexA, float newBoardActionValueV) {
+	private float updateBoardActionValue(String boardS, int actoinIndexA, float newBoardActionValueV, int depth,
+			String describeAction) {
 		boolean preExists = false;
 		float previousBoardActionValueQ = 0;
 		Map<Integer, Float> map = valueAtBoardActionQsa.get(boardS);
@@ -358,7 +433,11 @@ public class MCTS {
 					/ (currentBoardActionHitCountNsa + 1);
 		}
 
+		log.debug("Adjusted action {} from value {} merged with {} resulting value {} at depth {}", describeAction,
+				previousBoardActionValueQ, newBoardActionValueV, newValue, depth);
+
 		map.put(actoinIndexA, newValue);
+		return newValue;
 	}
 
 	public void incrementBoardActionHitCount(String s, int a) {
@@ -385,29 +464,36 @@ public class MCTS {
 	}
 
 	private float adjustMoveValue(String boardS, int actionIndexA) {
-		boolean preExists = false;
-		float previousActionValue = 0;
-		Map<Integer, Float> map = valueAtBoardActionQsa.get(boardS);
-		if (map != null && map.containsKey(actionIndexA)) {
-			previousActionValue = map.get(actionIndexA);
-			preExists = true;
-		}
+
 		float cpuct = getCPuct();
 		float currentActionValueU;
 
 		PolicyVector policyVectorValuePrediction = choiceValuePredictionForBoardPs.get(boardS);
 		Integer boardHitCount = boardHitCountNs.get(boardS);
 		float actionValuePredictionFromPolicy = policyVectorValuePrediction.vector[actionIndexA];
-		if (preExists) {
+
+		Map<Integer, Float> map = valueAtBoardActionQsa.get(boardS);
+		if (map != null && map.containsKey(actionIndexA)) {
+			float previousActionValue = 0;
+			previousActionValue = map.get(actionIndexA);
+
 			Map<Integer, Integer> boardActionHitCounter = boardActionHitCountNsa.get(boardS);
 			Integer boardAndActionHitCounter = boardActionHitCounter.get(actionIndexA);
 
-			currentActionValueU = (float) (previousActionValue + cpuct * actionValuePredictionFromPolicy
-					* Math.sqrt(boardHitCount) / (1 + boardAndActionHitCounter));
+			currentActionValueU = getAdjustedActionValueForSearch(cpuct, boardHitCount, actionValuePredictionFromPolicy,
+					previousActionValue, boardAndActionHitCounter);
 		} else {
 			currentActionValueU = (float) (cpuct * actionValuePredictionFromPolicy
 					* Math.sqrt(boardHitCount + EPSILON)); // Q = 0 ?
 		}
+		return currentActionValueU;
+	}
+
+	public static float getAdjustedActionValueForSearch(float cpuct, Integer boardHitCount,
+			float actionValuePredictionFromPolicy, float previousActionValue, Integer boardAndActionHitCounter) {
+		float currentActionValueU;
+		currentActionValueU = (float) (previousActionValue
+				+ cpuct * actionValuePredictionFromPolicy * Math.sqrt(boardHitCount) / (1 + boardAndActionHitCounter));
 		return currentActionValueU;
 	}
 
@@ -417,6 +503,11 @@ public class MCTS {
 
 	public void setGame(Game game2) {
 		this.game = game2;
+	}
+
+	public void setCpuct(float d) {
+		cPuct = d;
+
 	}
 
 }

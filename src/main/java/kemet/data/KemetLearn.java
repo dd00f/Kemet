@@ -4,7 +4,9 @@ import kemet.ai.KemetNeuralNetwork;
 import kemet.util.Coach;
 import kemet.util.GameFactory;
 import kemet.util.NeuralNet;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class KemetLearn {
 
 	public static void main(String[] args) {
@@ -25,9 +27,10 @@ public class KemetLearn {
 	    neuralNet.saveCheckpoint("./temp", "initial.nn");
 	    neuralNet.loadCheckpoint("./temp", "initial.nn");
 	    
-	    boolean loadModel = true;
+	    boolean loadModel = false;
 	    boolean loadTrainingExamples = false;
 	    if( loadModel ) {
+	    	log.info("loading previous best neural network");
 	    	neuralNet.loadCheckpoint("./temp", "best.pth.tar");
 	    }
 	    

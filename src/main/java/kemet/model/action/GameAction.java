@@ -1,12 +1,19 @@
 package kemet.model.action;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import kemet.Options;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.Validation;
+import kemet.model.action.choice.Choice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class GameAction implements Action {
 
 	/**
@@ -121,9 +128,31 @@ public class GameAction implements Action {
             chainedActions.add(createDayAction(game, chainedActions));
             nextPlayerChoicePick = chainedActions.getNextPlayerChoicePick();
         }
+        
+        if( Options.VALIDATE_PLAYER_CHOICE_PICK_INDEX ) {
+        	validatePlayerChoicePickIndex(nextPlayerChoicePick);
+        }
 
         return nextPlayerChoicePick;
     }
+
+	private void validatePlayerChoicePickIndex(PlayerChoicePick nextPlayerChoicePick) {
+		
+		List<Choice> choiceList = nextPlayerChoicePick.choiceList;
+		Set<Integer> indexes = new HashSet<>();
+		
+		for (Choice choice : choiceList) {
+			int index = choice.getIndex();
+			if( indexes.contains(index)) {
+				String message = "two choices have the same index " + index + " " + choiceList;
+				log.error(message);
+				throw new IllegalStateException(message);
+			}
+			
+		}
+		
+	}
+
 
 	private Action createDayAction(KemetGame game, Action parent) {
 		ChainedAction action = ChainedAction.create(game, parent);

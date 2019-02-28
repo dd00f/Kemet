@@ -10,6 +10,7 @@ import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex.Op;
+import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.ActivationLayer;
 import org.deeplearning4j.nn.conf.layers.BatchNormalization;
@@ -33,7 +34,7 @@ import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
 import lombok.val;
 
-public class KemetNeuralNetBuilder {
+public class KemetRecurrentNeuralNetBuilder {
 
 	public static LossFunction POLICY_LOSS_FUNCTION = LossFunctions.LossFunction.XENT;
 	public static Activation POLICY_ACTIVATION = Activation.SIGMOID;
@@ -44,20 +45,9 @@ public class KemetNeuralNetBuilder {
 	public static double NESTEROV_LEARN_RATE = 0.006;
 	public static int INPUT_SIZE = BoardInventory.TOTAL_STATE_COUNT;
 	public static int OUTPUT_SIZE = ChoiceInventory.TOTAL_CHOICE;
-	public static int LAYER_SIZE = INPUT_SIZE * 5;
+	public static int LAYER_SIZE = INPUT_SIZE;
 	public static boolean VALUE_OUTPUT = true;
-
-	// TODO default was true
-	public static boolean NEURAL_NET_RESIDUAL_ACTIVATED = false;
-
-	// Keep this at false, true destabilizes the network.
-	public static boolean NEURAL_NET_TRAIN_WITH_MASK = false;
-
-	// TODO default was true
-	public static boolean NEURAL_NET_RELU_INTERNAL_LAYERS = true;
-
 	// TODO reset back to 10 or 20
-	// Number of residual blocks in the neural network.
 	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;
 	
 	
@@ -86,46 +76,39 @@ public class KemetNeuralNetBuilder {
 		builder.l2(1e-4);
 
 		ComputationGraphConfiguration.GraphBuilder conf2 = builder.graphBuilder();
-		conf2.addInputs("in");
+		String inputLayerName = "in";
+		conf2.addInputs(inputLayerName);
+		List<String> layerList = new ArrayList<>();
 
-		String dense0LayerName = "dense0";
+		int cumulativeLayerSize = INPUT_SIZE;
+		layerList.add(inputLayerName);
+		
+		String dense0LayerName = "dense";
 		WeightInit weightInit = WEIGHT_INIT;
-		// WeightInit weightInit = WeightInit.LECUN_NORMAL;
-		conf2.layer(dense0LayerName, new DenseLayer.Builder().nIn(INPUT_SIZE).nOut(LAYER_SIZE)
-				.activation(Activation.RELU).weightInit(weightInit).build(), "in");
+//		conf2.layer(dense0LayerName, new DenseLayer.Builder().nIn(cumulativeLayerSize).nOut(LAYER_SIZE)
+//				.activation(Activation.RELU).weightInit(weightInit).build(), inputLayerName);
 
-		String policyInput = dense0LayerName;
+		String policyInput = inputLayerName;
+		
+//		layerList.add(dense0LayerName);
+		
 
+//		cumulativeLayerSize += LAYER_SIZE;
+		
 		for (int i = 0; i < NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT; ++i) {
 			String denseLayerName = dense0LayerName + "_" + i;
+			String mergeLayerName = "merge_" + i; 
 
-			conf2.layer(denseLayerName, new DenseLayer.Builder().nIn(LAYER_SIZE).nOut(LAYER_SIZE)
+			conf2.layer(denseLayerName, new DenseLayer.Builder().nIn(cumulativeLayerSize).nOut(LAYER_SIZE)
 					.activation(Activation.RELU).weightInit(weightInit).build(), policyInput);
+			
+			cumulativeLayerSize += LAYER_SIZE;
+			
+			layerList.add(denseLayerName);
 
-			policyInput = denseLayerName;
+			conf2.addVertex(mergeLayerName, new MergeVertex(), layerList.toArray(new String[layerList.size()]));
 
-			if (NEURAL_NET_RESIDUAL_ACTIVATED) {
-
-				String denseLayerNameR = dense0LayerName + "_r_" + i;
-				String mergeBlockName = "merge_r_" + i;
-				String mergeActivationName = "mergeActivation_r_" + i;
-
-				Builder residualDenseBuilder = new DenseLayer.Builder().nIn(LAYER_SIZE).nOut(LAYER_SIZE)
-						.weightInit(weightInit);
-
-				if (false) {
-					residualDenseBuilder.activation(Activation.RELU);
-				}
-
-				conf2.layer(denseLayerNameR, residualDenseBuilder.build(), policyInput);
-
-				conf2.addVertex(mergeBlockName, new ElementWiseVertex(Op.Add), denseLayerName, denseLayerNameR);
-				conf2.addLayer(mergeActivationName, new ActivationLayer.Builder().activation(Activation.RELU).build(),
-						mergeBlockName);
-
-				policyInput = mergeActivationName;
-
-			}
+			policyInput = mergeLayerName;
 
 		}
 
@@ -141,7 +124,7 @@ public class KemetNeuralNetBuilder {
 		// ILossFunction lossFunction = new LossMultiLabel();
 		Activation activationFunction = POLICY_ACTIVATION;
 
-		conf2.layer(policyOutputLayer, new OutputLayer.Builder(lossFunction).nIn(LAYER_SIZE).nOut(OUTPUT_SIZE)
+		conf2.layer(policyOutputLayer, new OutputLayer.Builder(lossFunction).nIn(cumulativeLayerSize).nOut(OUTPUT_SIZE)
 				.activation(activationFunction).weightInit(weightInit).build(), policyInput);
 
 		if (VALUE_OUTPUT) {
@@ -154,7 +137,7 @@ public class KemetNeuralNetBuilder {
 			// LossFunctions.LossFunction.MEAN_SQUARED_LOGARITHMIC_ERROR;
 			Activation valueActivationFunction = VALUE_ACTIVATION;
 //			
-			conf2.layer(valueOutput, new OutputLayer.Builder(valueLossFunction).nIn(LAYER_SIZE).nOut(1)
+			conf2.layer(valueOutput, new OutputLayer.Builder(valueLossFunction).nIn(cumulativeLayerSize).nOut(1)
 					.activation(valueActivationFunction).weightInit(weightInit).build(), policyInput);
 
 			// conf2.setOutputs(layers.toArray(new String[layers.size()]));
@@ -185,7 +168,7 @@ public class KemetNeuralNetBuilder {
 	}
 
 	public static ComputationGraph build() {
-		KemetNeuralNetBuilder build = new KemetNeuralNetBuilder();
+		KemetRecurrentNeuralNetBuilder build = new KemetRecurrentNeuralNetBuilder();
 
 		return build.apply(NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT);
 

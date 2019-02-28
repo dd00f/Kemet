@@ -2,9 +2,18 @@ package kemet;
 
 public class Options {
 
+	public static boolean MCTS_PREDICT_VALUE_WITH_SIMULATION = false;
+
+	public static boolean MCTS_VALIDATE_MOVE_FOR_BOARD = false;
+
+	public static boolean VALIDATE_PLAYER_CHOICE_PICK_INDEX = false;
+	
+	public static boolean USE_RECURRENT_NEURAL_NET = true;
+
+
 	static {
 		// keep this as long as there are TODO notice.
-		int junk;
+		// int junk;
 	}
 
 	/**
@@ -14,29 +23,29 @@ public class Options {
 	 */
 	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 1000;
 
-	// TODO reset this to 1000
 	/**
 	 * Number of iterations to coach. In each iteration, games are played and then
 	 * used to train the neural network.
 	 */
-	public static int COACH_NUMBER_OF_NN_TRAINING_ITERATIONS = 10;
+	public static int COACH_NUMBER_OF_NN_TRAINING_ITERATIONS = 1000;
 
-	// TO DO reset GAME_TURN_LIMIT to 20
+
 	// Number of turns before the game ends.
 	public static int GAME_TURN_LIMIT = 15;
 
-	// TODO reset this to 40
 	// Number of matches used to compare 2 generations of the neural network
-	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 10;
+	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 20;
 
-	// TODO reset this to 100
 	// number of games to play when training the neural network
-	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 10;
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 40;
 
-	// TODO reset this to 25+
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network
-	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 30;
+	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 50;
+	
+	// number of times to run the test data to fit the neural network
+	public static int NEURAL_NET_TRAIN_EPOCH = 100;
+
 
 	// option to print the probability of every option searched during MTCS
 	// evaluation
@@ -107,8 +116,6 @@ public class Options {
 
 	public static boolean PRINT_MCTS_FULL_PROBABILITY_VECTOR = false;
 
-	// number of times to run the test data to fit the neural network
-	public static int NEURAL_NET_TRAIN_EPOCH = 10;
 
 	public static boolean PRINT_ARENA_GAME_EVENTS = false;
 
@@ -116,17 +123,10 @@ public class Options {
 
 	public static boolean COACH_VALIDATE_PLAYER_NAME = false;
 
-	// TODO default was true
-	public static boolean NEURAL_NET_RESIDUAL_ACTIVATED = false;
 
-	// TODO default was true
-	public static boolean NEURAL_NET_TRAIN_WITH_MASK = false;
+	public static boolean COACH_USE_MANUAL_AI = false;
 
-	// TODO default was true
-	public static boolean NEURAL_NET_RELU_INTERNAL_LAYERS = true;
-
-	// TODO reset back to 10 or 20
-	// Number of residual blocks in the neural network.
-	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;
-
+	
+	public static boolean MCTS_USE_MANUAL_AI = false;
+	
 }

@@ -1,6 +1,7 @@
 package kemet.data;
 
 import kemet.ai.HumanPlayer;
+import kemet.ai.NeuralNetworkPlayer;
 import kemet.ai.RandomPlayerAI;
 import kemet.ai.TrialPlayerAI;
 import kemet.model.KemetGame;
@@ -17,10 +18,21 @@ public class TwoPlayerGame implements GameFactory
 	public static final String MEDIUM_TEMPLE = "Medium Temple";
 	public static final String SMALL_TEMPLE = "Small Temple";
 	public static final String MIDDLE_OBELISK = "Middle Obelisk";
+	
+	public static boolean PLAYER_ONE_NEURAL = false;
+	public static boolean PLAYER_ONE_TRIAL = false;
+	public static boolean PLAYER_ONE_HUMAN = true;
+
+	public static boolean PLAYER_TWO_NEURAL = false;
+	public static boolean PLAYER_TWO_TRIAL = false;
+	public static boolean PLAYER_TWO_HUMAN = true;
+
+	
 	public KemetGame game = KemetGame.create();
 
     public static void main(String[] args)
     {
+    	PLAYER_ONE_NEURAL = true;
         TwoPlayerGame twoPlayerGame = new TwoPlayerGame();
         twoPlayerGame.initializeGame();
         twoPlayerGame.runGame();
@@ -56,15 +68,43 @@ public class TwoPlayerGame implements GameFactory
 
     private void createPlayers()
     {
-        // createAIPlayer("red");
-        createTrialAIPlayer("red");
-        
-        //createTrialAIPlayer("blue");
-        createHumanPlayer("blue");
+    	String firstPlayerName = "red";
+    	if( PLAYER_ONE_NEURAL ) {
+			createNeuralNetworkPlayer(firstPlayerName);
+    	}
+    	else if( PLAYER_ONE_TRIAL ) {
+            createAIPlayer(firstPlayerName);
+    	}
+    	else {
+    		createHumanPlayer(firstPlayerName);
+    	}
+    	
+    	
+    	String secondPlayerName = "blue";
+    	if( PLAYER_TWO_NEURAL ) {
+			createNeuralNetworkPlayer(secondPlayerName);
+    	}
+    	else if( PLAYER_TWO_TRIAL ) {
+            createAIPlayer(secondPlayerName);
+    	}
+    	else {
+    		createHumanPlayer(secondPlayerName);
+    	}
 
     }
 
-    public Player createHumanPlayer(String name)
+    private Player createNeuralNetworkPlayer(String name) {
+        Player player = Player.create();
+        player.name = name;
+        player.game = game;
+        player.actor = new NeuralNetworkPlayer(player, game, "./temp/", "best.pth.tar");
+        player.index =  game.playerByInitiativeList.size();
+        game.playerByInitiativeList.add(player);
+
+        return player;
+	}
+
+	public Player createHumanPlayer(String name)
     {
         Player player = Player.create();
         player.name = name;

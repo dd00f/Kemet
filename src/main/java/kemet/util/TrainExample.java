@@ -10,6 +10,7 @@ import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
 import kemet.Options;
+import kemet.ai.KemetNeuralNetBuilder;
 import lombok.Getter;
 
 /**
@@ -25,7 +26,7 @@ public class TrainExample implements Serializable{
 	private static final long serialVersionUID = 2356489501285949798L;
 	public ByteCanonicalForm gameStateS;
 	public PolicyVector actionPolicyP;
-	public int valueV;
+	public float valueV;
 	public int currentPlayer;
 	
 	@Getter
@@ -45,11 +46,12 @@ public class TrainExample implements Serializable{
 	public MultiDataSet convertToMultiDataSet() {
 		
 		
-		INDArray[] features = new INDArray[] {gameStateS.getINDArray()};
+		INDArray stateINDArray = gameStateS.getINDArray();
+		INDArray[] features = new INDArray[] {stateINDArray};
 		INDArray[] labels = new INDArray[] { actionPolicyP.toINDArray(), Nd4j.scalar(valueV) };
 		INDArray[] labelMask = new INDArray[] {Utilities.createArray(validMoves), Nd4j.scalar(1)};
 		
-		if( ! Options.NEURAL_NET_TRAIN_WITH_MASK ) {
+		if( ! KemetNeuralNetBuilder.NEURAL_NET_TRAIN_WITH_MASK ) {
 			labelMask = null;
 		}
 		

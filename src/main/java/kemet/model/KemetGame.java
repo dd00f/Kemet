@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.IntUnaryOperator;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -13,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import kemet.Options;
+import kemet.ai.Simulation;
 import kemet.model.action.GameAction;
 import kemet.model.action.PlayerChoicePick;
 import kemet.model.action.choice.Choice;
@@ -20,7 +20,6 @@ import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 import kemet.util.Game;
-import kemet.util.Utilities;
 
 public class KemetGame implements Model, Game {
 
@@ -196,8 +195,8 @@ public class KemetGame implements Model, Game {
 		builder.append("Game turn ");
 		builder.append(this.roundNumber);
 		builder.append("\n");
-		builder.append("Actions : ");
-		builder.append(Arrays.toString(actions));
+		builder.append("Actions : \n\t");
+		builder.append(Arrays.toString( getActivatedActions()));
 		builder.append("\n");
 		for (Player player : playerByInitiativeList) {
 			player.describePlayer(builder);
@@ -458,7 +457,7 @@ public class KemetGame implements Model, Game {
 	}
 
 	public int[] getActivatedActions() {
-		return actions;
+		return Arrays.copyOf(actions, recordActionIndex);
 	}
 
 	public void replayMultipleActions(int[] actions) {
@@ -470,6 +469,10 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public void activateAction(int player, int actionIndex) {
+		
+		if( actionIndex == -1 ) {
+			return;
+		}
 
 		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
 		if (nextPlayerChoicePick.player.index != player) {
@@ -592,10 +595,9 @@ public class KemetGame implements Model, Game {
 	}
 
 	@Override
-	public String stringRepresentation() {
-		byte[] canonicalForm = getCanonicalForm(0).getCanonicalForm();
-		String canonicalString = Utilities.bytesToHex(canonicalForm);
-		return canonicalString;
+	public String stringRepresentation(int playerIndex) {
+		ByteCanonicalForm canonicalForm2 = getCanonicalForm(playerIndex);
+		return canonicalForm2.toCanonicalString();
 	}
 
 	@Override
@@ -609,6 +611,20 @@ public class KemetGame implements Model, Game {
 
 	public void setPlayerName(int playerIndex, String name) {
 		getPlayerByIndex(playerIndex).name = name;
+	}
+
+	@Override
+	public float getSimpleValue(int playerIndex, float predictedValue) {
+		
+		Player playerByIndex = getPlayerByIndex(playerIndex);
+		
+		Player opponent = getPlayerByIndex(Math.abs(playerIndex-1));
+		
+		float pointDifference = Simulation.calculatePlayerScore(playerByIndex) - Simulation.calculatePlayerScore(opponent);
+		float victoryPointsObjective = VICTORY_POINTS_OBJECTIVE * 1000;
+		pointDifference = pointDifference / victoryPointsObjective;
+		
+		return pointDifference;
 	}
 
 }

@@ -275,7 +275,7 @@
 		Average number of moves per game : 
 			- Chess 40
 			- Go 40
-			- Mini Kemet 400 micro decisions ( a single army move is 3 decision : source tile, size to move, destination tile )
+			- Mini Kemet 400 micro decisions ( a single army move is 4 decision : action space, source tile, size to move, destination tile )
 		
 		Input vector
 			- Chess 1152 ( 8*8*18 )
@@ -287,10 +287,149 @@
 			- Go : 381 ( 19*19 )
 			- Mini-Kemet : 90
 		
+		The biggest problem is the number of moves per game. That may mean I'll need 10x more training than other games. 
+		I could merge decisions to create fewer training steps : 
+		- upgrade pyramid : 6 tiles x 4 color x 4 level = 96 output
+		- moves : 2 move tile x 13 tiles source * 7 army size * 5 connections per tile + 1 end turn = 911 output
+			- army strength could be a fraction instead of a fixed output
+		- recruit : 13 tiles * 7 army size = 91 output
+		- purchase tiles " 16*4 = 64 output
+		
+		So, my output vector would grow from 90 to 1100, my moves per game would shrink from 400 down to ~120. It also means my MCTS 
+		efficiency would triple as it wouldn't need to evaluate so many sub-states to find good values. 
+		
+		Next step : run performance test : 
+		- Is it better to have an output that's 90 and run 3000 training fit, or an output that's 1100 and run 1000 training fit ?
+		 
+
+2019-02-20
+	Batch me up Scotty
+		My initial code trials set the training batch size to ... 1, you know, just to see if the code compiles and runs.
+		A few copy-paste later, and my entire code base kept using a training batch size of 1.
+		How much difference does the batch size make for training ?
+		A lot it turns out, training is now 100 times faster, turning 2 hours to 2 minutes. Now we're talking !
+
+2019-02-23
+	Network collapse ?
+		My AI training leads to an endless stream of games where the preferred action is "skip turn". Something tells me the 
+		network has collapsed. A few things to try : 
+		- eliminate -1 values
+		- run some tests against the neural network with sample board values to see if it converges.
+			- turns out that training the network with masks doesn't work.
+
+	Recurrent network
+		I created a first version of the recurrent neural network where every layer created feeds to the layer below them 
+		so that lower layers never forget the initial state.
+		
+2019-02-24
+	Bug fix
+		MCTS always stored the board state according to player zero. Leading to a bug on hidden card selection state.
+		
+		The state normalization wasn't working. Fixed that.
+		
+		
+2019-02-26
+	Slowly getting better
+		With the latest round of fixes, the Neural Network is finally getting stable. 
+		After 90 iterations, the Neural Network keeps on improving. 
+		- It captured experience from 3,600 games at this point.
+		- On average, games now end on turn 10 instead of turn 15 because the AI gains much more 
+		victory points through battle. 
+		- It seems to have completely ditched the idea of building high level pyramids.
+		- It doesn't seem to fully grasp the concept of temple to gain victory points, though it does show a tendency to 
+		go there.
+		- It doesn't get the concept of army size. It prefers to recruit many small armies and send them 
+		all over the map, regardless of how likely they will win battles. Odds are, it would get
+		crushed by a human opponent who would always attack with armies of size 5 and disband any weak armies.
+		
+	Current concerns
+		
+		- The neural network may struggle to fully understand state data that mixes binary states (current phase move value is 1.0 )
+		with scalar data (army strength is 0.1 ). One option would be to create a binary state for scalar values :
+			- instead of prayer points = 0.5
+			- prayer point 1 = 1
+			- prayer point 2 = 1
+			- prayer point 3 = 0
+			- prayer point 4 = 0
+			
+			- instead of army size on tile X = 0.2
+			- tile X army token 1 = 1
+			- tile X army token 2 = 0
+			- tile X army token 3 = 0
+			- tile X army token 4 = 0
+			- tile X army token 5 = 0
+		
+		- The neural network may struggle to train with states it hasn't seen much. If it rarely sees a size 5 army, 
+		it may start ignoring the option to move all 5 soldiers in an army because the MCTS zeroed out this option 
+		as it wasn't available, slowly reducing the probability that this option will ever get picked. I need to figure out
+		if masking outputs will fix this.
+		
+		- The MCTS struggles with effectiveness : with 50 search depth, it barely has time to explore the ramifications of a 
+		single move action. It can only rely on the instinct it built using the value function estimation to pick best paths.
+		Expanding the output tree to reduce the number of decisions may help.
+		
+		- The neural network may be too shallow : It's currently using about 100 features per layer, 5 layers, pyramidal 
+		recurrency. That may not be enough breath and depth of knowledge to fully handle the game.
+		
+		- There is a bit of gambling in battle card selection, may need to apply a state learning algorithm that predicts
+		how often an enemy will pick a specific card.
+		
+		- Move & battle execution needs to be learned in every tile ?
+		The board value function must learn what it means to have an army in each different tile and how to move to that 
+		specific tile. I already created features that describe the current battle, that may help...
+		
+		- Performance : if I read it right, AlphaGo was able to train by trying 1600 moves in each MCTS simulation in 0.004 seconds.
+		My current neural network takes 0.000,666 second to run a single evaluation and it represents 99%+ of the time
+		spent while running a game. At that speed, 1600 move simluation per MCTS would take 1.065 seconds. 
+		That's 266 times slower than Alpha Go. Pair that with the fact that a game of Kemet takes about 400 decisions versus
+		40 decisions in chess and my implementation is now 2,660 times slower than Alpha Go. 
+		Translation  :
+			- It took AlphaGo 1 day to reach a "good" play level.
+			- It will take 7 years for AlphaKemet to reach good play level.
+			
+			- It took AlphaGo 7 days to reach Master level.
+			- It will take 51 years for AlphaKemet to reach Master play level.
+		
+		On the other hand, Mini-Kemet is likely easier to solve than Chess due to its simplicity. 
+		
+		
+	Next Steps :
+	
+		- Play a game vs the neural network with both a human and the trial AI. Who knows, maybe that rampaging neural network
+		really found the best solution to the current subset of Kemet. 
+	
+		- Try to run training with masks in a way that doesn't collapse the neural network to ensure actions that aren't 
+		available frequently don't become erased in policy vectors. One option : Preserve neural network policy output 
+		values, only modify the ones that were actually available for trial.
+		
+		- Performance : Batch neural net evaluation during MCTS to try all moves in the current decision tree ?
+		
+		- Reduce the number of decisions to take in a game by merging them
+			- Upgrade pyramid picks tile, color & level
+			- Move army picks source, destination & army size
+			- Combat picks both attack & discard.
+			- recruit picks tile & army size
+			- buying tiles & selecting the tile to buy. ( that's required anyway )
+			
+			- While the game remains simple, this works ok, but I wonder how it will impact things like : 
+				- DI card selection during combat
+					- This has to remain a separate action.
+				
+				- Beast modeling in terms of
+					- move options would include a binary option to move beast or not. 
+		 
+	Version 1.0 is good to go !
 		
 
+2019-02-27
+
+	First Human Trial
+		First human vs neural network challenge game. Results : 8-0 win for camp human.
+	
+		Turns out this neural network isn't very smart yet, probably due to bugs in the way I trained it. 
+		It seems to favor actions that are showing up frequently, since it's more likely to see small armies than 
+		large ones, it favors them. Leading to an easy victory for camp humans by attacking those tiny armies.
+		Since the skip turn action also shows up frequently, it seems to like that option as well.
+	
 
 
-TODO : 
-	- TrialAI isn't very good at recruiting since any army score is worth more than raw prayer points.
-	To fix this, TrialAI will need to try to simulate a few more actions.

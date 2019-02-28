@@ -98,8 +98,9 @@ public interface Game {
 	 * 
 	 * @return boardString: a quick conversion of board to a string format. Required
 	 *         by MCTS for hashing.
+	 *         
 	 */
-	public String stringRepresentation();
+	public String stringRepresentation(int playerIndex);
 	
 	public void playbackGame(int[] actions);
 
@@ -123,6 +124,15 @@ public interface Game {
 	public int[] getActivatedActions();
 	
 	public void replayMultipleActions(int[] actions);
+	
+	/**
+	 * Used to get a simplified view of the value of the board from a player perspective.
+	 * Useful for games where the winning conditions is based on a clear score counter.
+	 * @param playerIndex the player index from which to get the game value.
+	 * @param predictedValue the value that was predicted by the neural network.
+	 * @return the simplified value.
+	 */
+	public float getSimpleValue(int playerIndex, float predictedValue );
 
 
 }

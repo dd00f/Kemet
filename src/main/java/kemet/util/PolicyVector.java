@@ -2,6 +2,7 @@ package kemet.util;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Random;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 
@@ -85,9 +86,46 @@ public class PolicyVector implements Serializable {
 		}
 	}
 
-
 	public void printProbabilityVector() {
 		log.info("All Probabilities : " +  Arrays.toString(vector));
 	}
 
+	public void boostActionIndex(int actionIndex) {
+		vector[actionIndex] += 2;
+		normalize();
+	}
+	
+	public static Random random = new Random();
+
+
+	
+	public int pickRandomAction() {
+		float nextFloat = random.nextFloat();
+		int action = 0;
+		for (int i = 0; i < vector.length; i++) {
+			float f = vector[i];
+			if (f > 0) {
+				nextFloat -= f;
+				if (nextFloat <= 0) {
+					action = i;
+					break;
+				}
+			}
+		}
+		return action;
+	}
+
+	public int pickBestAction() {
+		int action = 0;
+		float highestValue = -1;
+		for (int i = 0; i < vector.length; i++) {
+			float f = vector[i];
+			if (f > highestValue) {
+				highestValue = f;
+				action = i;
+			}
+		}
+		return action;
+	}
+	
 }

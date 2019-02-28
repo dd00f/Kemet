@@ -18,8 +18,8 @@ public class Utilities {
 	
 	public static INDArray createArray(float[] values) {
 		
-		return new org.nd4j.linalg.jcublas.JCublasNDArray(values);
-		//return new org.nd4j.linalg.cpu.nativecpu.NDArray(values);
+		//return new org.nd4j.linalg.jcublas.JCublasNDArray(values);
+		return new org.nd4j.linalg.cpu.nativecpu.NDArray(values);
 		
 	}
 
