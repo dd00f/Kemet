@@ -2,6 +2,17 @@ package kemet;
 
 public class Options {
 
+	// TODO set to false
+	public static boolean COACH_PRINT_GAME_AFTER_SELF_TRAINING = false;
+
+	// when set to false, epoch will be executed by the dl4j api without shuffling 
+	// inputs first.
+	public static boolean NEURAL_NET_SHUFFLE_BETWEEN_EPOCH = false;
+
+	public static int COACH_MAX_TRAINING_LIST_LENGTH = 200000;
+
+	public static boolean VALIDATE_POOLED_GAMES = false;
+
 	public static boolean MCTS_PREDICT_VALUE_WITH_SIMULATION = false;
 
 	public static boolean MCTS_VALIDATE_MOVE_FOR_BOARD = false;
@@ -13,7 +24,7 @@ public class Options {
 
 	static {
 		// keep this as long as there are TODO notice.
-		// int junk;
+		int junk;
 	}
 
 	/**
@@ -21,7 +32,7 @@ public class Options {
 	 * try to explore more options. Used to end games quickly if there is a clear
 	 * winner after X moves on average.
 	 */
-	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 1000;
+	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 300;
 
 	/**
 	 * Number of iterations to coach. In each iteration, games are played and then
@@ -34,19 +45,25 @@ public class Options {
 	public static int GAME_TURN_LIMIT = 15;
 
 	// Number of matches used to compare 2 generations of the neural network
-	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 20;
+	// TODO reset
+	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 40;
 
 	// number of games to play when training the neural network
-	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 40;
+	// TODO reset to 100 ?
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 50;
 
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network
-	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 50;
+	// TODO reset to 50
+	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 100;
 	
 	// number of times to run the test data to fit the neural network
-	public static int NEURAL_NET_TRAIN_EPOCH = 100;
+	public static int NEURAL_NET_TRAIN_EPOCH = 30;
 
+	// number of actions to remember in the game
+	public static int GAME_TRACK_MAX_ACTION_COUNT = 1024;
 
+	
 	// option to print the probability of every option searched during MTCS
 	// evaluation
 	public static boolean PRINT_MCTS_SEARCH_PROBABILITIES = false;
@@ -61,7 +78,7 @@ public class Options {
 	public static boolean PRINT_COACH_SEARCH_PROBABILITIES = false;
 
 	// option to validate move index before execution
-	public static boolean ARENA_VALIDATE_MOVES = true;
+	public static boolean ARENA_VALIDATE_MOVES = false;
 
 	// option run the simulation in multiple threads
 	public static boolean SIMULATION_MULTI_THREAD = true;
@@ -119,7 +136,7 @@ public class Options {
 
 	public static boolean PRINT_ARENA_GAME_EVENTS = false;
 
-	public static boolean PRINT_ARENA_GAME_END = true;
+	public static boolean PRINT_ARENA_GAME_END = false;
 
 	public static boolean COACH_VALIDATE_PLAYER_NAME = false;
 
@@ -127,6 +144,15 @@ public class Options {
 	public static boolean COACH_USE_MANUAL_AI = false;
 
 	
+	public static boolean COACH_USE_STACKING_MCTS = true;
+
+	
 	public static boolean MCTS_USE_MANUAL_AI = false;
 	
+	public static boolean MCTS_PREPARE_PREDICTIONS = false;
+	
+	public static int MCTS_PREPARE_PREDICTION_DEPTH = 1;
+
+	public static int MCTS_PREPARE_PREDICTION_MAX_DEPTH = 1;
+
 }

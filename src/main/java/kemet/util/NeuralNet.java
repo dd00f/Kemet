@@ -51,4 +51,11 @@ public interface NeuralNet {
 	
 	public NeuralNet clone();
 
+	/**
+	 * Predict the outcome of multiple game states
+	 * @param gameCanonicalForm array of canonical forms
+	 * @return resulting association of policy vector and value
+	 */
+	public Pair<PolicyVector, Float>[] predict(List<ByteCanonicalForm> gameCanonicalForm);
+
 }

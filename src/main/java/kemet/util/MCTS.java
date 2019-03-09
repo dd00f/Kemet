@@ -1,7 +1,9 @@
 package kemet.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -28,15 +30,21 @@ public class MCTS {
 
 	private float cPuct; // C? P? upper confidence T?
 
-	public Map<String, Map<Integer, Float>> valueAtBoardActionQsa; // stores Q values for s,a (as defined in the paper)
-	public Map<String, Map<Integer, Integer>> boardActionHitCountNsa; // stores #times edge s (game CF) a (choice
-																		// Index) was visited
-	public Map<String, Integer> boardHitCountNs; // stores #times board s (game CF) was visited
-	public Map<String, PolicyVector> choiceValuePredictionForBoardPs; // stores initial policy (returned by neural net)
+	public Map<ByteCanonicalForm, Map<Integer, Float>> valueAtBoardActionQsa; // stores Q values for s,a (as defined in
+																				// the paper)
+	public Map<ByteCanonicalForm, Map<Integer, Integer>> boardActionHitCountNsa; // stores #times edge s (game CF) a
+																					// (choice
+	// Index) was visited
+	public Map<ByteCanonicalForm, Integer> boardHitCountNs; // stores #times board s (game CF) was visited
+	public Map<ByteCanonicalForm, PolicyVector> choiceValuePredictionForBoardPs; // stores initial policy (returned by
+																					// neural net)
 
-	public Map<String, Integer> isBoardEndedEs; // stores game.getGameEnded ended for board s
-	public Map<String, boolean[]> validMovesForBoardVs; // stores game.getValidMoves for board s
-	public Map<String, int[]> movesToReachBoard; // stores game.getValidMoves for board s
+	public Map<ByteCanonicalForm, Integer> isBoardEndedEs; // stores game.getGameEnded ended for board s
+	public Map<ByteCanonicalForm, boolean[]> validMovesForBoardVs; // stores game.getValidMoves for board s
+	public Map<ByteCanonicalForm, int[]> movesToReachBoard; // stores game.getValidMoves for board s
+
+	public Map<ByteCanonicalForm, Pair<PolicyVector, Float>> preparedPredictions = new HashMap<>();
+
 	private int simulationCount;
 
 	private long getActionProbabilityTotalCount = 0;
@@ -64,6 +72,10 @@ public class MCTS {
 
 	}
 
+	private int maxSearchDepth;
+
+	private long getActionProbabilityTotalDepth;
+
 	/**
 	 * This function performs simulationCount simulations of MCTS starting from
 	 * canonicalBoard.
@@ -83,6 +95,7 @@ public class MCTS {
 		long starProbNano = System.nanoTime();
 
 		// run the requested simulation count
+		maxSearchDepth = 1;
 		for (int i = 0; i < simulationCount; ++i) {
 			long starSimNano = System.nanoTime();
 			Game clone = game.clone();
@@ -90,13 +103,13 @@ public class MCTS {
 
 			log.debug("---------- Search {} starting ----------------", i);
 			search(clone, 1);
-			log.debug("---------- Search {} finished ----------------", i);
+			log.debug("---------- Search {} finished, max depth {} ----------------", i, maxSearchDepth);
 
 			simulationTotalCount++;
 			simulationTotalTimeNano += System.nanoTime() - starSimNano;
 		}
 
-		String gameString = game.stringRepresentation(game.getNextPlayer());
+		ByteCanonicalForm gameString = game.getCanonicalForm(game.getNextPlayer());
 
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
@@ -125,6 +138,7 @@ public class MCTS {
 
 		getActionProbabilityTotalCount++;
 		getActionProbabilityTotalTimeNano += System.nanoTime() - starProbNano;
+		getActionProbabilityTotalDepth += maxSearchDepth;
 
 		return probabilitiesOfAllActions;
 	}
@@ -173,25 +187,31 @@ public class MCTS {
 	 */
 	public float search(Game currentGame, int depth) {
 
+		if (maxSearchDepth < depth) {
+			maxSearchDepth = depth;
+		}
+
 		final int currentPlayerIndex = currentGame.getNextPlayer();
-		final String boardS = currentGame.stringRepresentation(currentPlayerIndex);
+		ByteCanonicalForm canonicalForm = currentGame.getCanonicalForm(currentPlayerIndex);
+		// final String boardS = canonicalForm.toCanonicalString();
 
 		log.debug("starting search at depth {} for player {}", depth, currentPlayerIndex);
 
 		int gameEnded = currentGame.getGameEnded(currentPlayerIndex);
-		if (!isBoardEndedEs.containsKey(boardS)) {
-			isBoardEndedEs.put(boardS, gameEnded);
+		if (!isBoardEndedEs.containsKey(canonicalForm)) {
+			isBoardEndedEs.put(canonicalForm, gameEnded);
 		}
 
 		float boardValueV = 0;
 
 		if (gameEnded != 0) {
 			boardValueV = gameEnded;
-		} else if (!choiceValuePredictionForBoardPs.containsKey(boardS)) {
-			boardValueV = predictValueWithNeuralNet(currentGame, boardS);
+		} else if (!choiceValuePredictionForBoardPs.containsKey(canonicalForm)) {
+			boardValueV = predictValueWithNeuralNet(currentGame, canonicalForm, depth);
 		} else {
 
-			final int actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(boardS, currentGame);
+			final int actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(canonicalForm,
+					currentGame);
 
 			String describeAction = "";
 			if (log.isDebugEnabled()) {
@@ -239,10 +259,10 @@ public class MCTS {
 						currentPlayerIndex, depth);
 			}
 
-			updateBoardActionValue(boardS, actionIndexOfNextSimulationA, boardValueV, depth, describeAction);
+			updateBoardActionValue(canonicalForm, actionIndexOfNextSimulationA, boardValueV, depth, describeAction);
 
-			incrementBoardHitCount(boardS);
-			incrementBoardActionHitCount(boardS, actionIndexOfNextSimulationA);
+			incrementBoardHitCount(canonicalForm);
+			incrementBoardActionHitCount(canonicalForm, actionIndexOfNextSimulationA);
 
 		}
 
@@ -280,7 +300,7 @@ public class MCTS {
 //		public boolean[] valid;
 //	}
 
-	private int findBestActionIndexFromPreviousSimulations(String boardS, Game game) {
+	private int findBestActionIndexFromPreviousSimulations(ByteCanonicalForm boardS, Game game) {
 		boolean[] validMoves = validMovesForBoardVs.get(boardS);
 
 		float bestActionValue = Float.NEGATIVE_INFINITY;
@@ -313,10 +333,11 @@ public class MCTS {
 
 		if (Options.PRINT_MCTS_STATS) {
 
-			log.info(
-					"action count = {}, nnet call count = {}, average nnet call time micro = {}, all move masked count : {}",
-					getActionProbabilityTotalCount, neuralNetTotalCount,
-					neuralNetTotalTimeNano / (neuralNetTotalCount * 1000), allMovesMaskedCount);
+			String infoMessage = "action count = {}, avg action time micro = {}, nnet call count = {}, average nnet call time micro = {}, all move masked count : {}, unused prediction count : {}, avg depth per search : {}";
+			log.info(infoMessage, getActionProbabilityTotalCount,
+					getActionProbabilityTotalTimeNano / (getActionProbabilityTotalCount * 1000), neuralNetTotalCount,
+					neuralNetTotalTimeNano / (neuralNetTotalCount * 1000), allMovesMaskedCount,
+					preparedPredictions.size(), getActionProbabilityTotalDepth / getActionProbabilityTotalCount);
 			log.debug("simulationTotalCount = {}", simulationTotalCount);
 			log.debug("neuralNetTotalCount = {}", neuralNetTotalCount);
 			log.debug("getActionProbabilityTotalTimeNano = {}", getActionProbabilityTotalTimeNano);
@@ -331,15 +352,23 @@ public class MCTS {
 		}
 	}
 
-	private float predictValueWithNeuralNet(Game currentGame, String boardS) {
-		ByteCanonicalForm canonicalForm = currentGame.getCanonicalForm(currentGame.getNextPlayer());
+	private float predictValueWithNeuralNet(Game currentGame, ByteCanonicalForm canonicalForm, int depth) {
 
-		long starNano = System.nanoTime();
+		Pair<PolicyVector, Float> predictActionAndValue = null;
 
-		Pair<PolicyVector, Float> predictActionAndValue = neuralNet.predict(canonicalForm);
+		if (Options.MCTS_PREPARE_PREDICTIONS && depth <= Options.MCTS_PREPARE_PREDICTION_MAX_DEPTH) {
+			predictActionAndValue = fetchPreparedPredictions(canonicalForm);
 
-		neuralNetTotalCount++;
-		neuralNetTotalTimeNano += System.nanoTime() - starNano;
+			if (predictActionAndValue == null) {
+				preparePredictionsFromGame(currentGame);
+				predictActionAndValue = fetchPreparedPredictions(canonicalForm);
+			}
+		} else {
+			long starNano = System.nanoTime();
+			predictActionAndValue = neuralNet.predict(canonicalForm);
+			neuralNetTotalCount++;
+			neuralNetTotalTimeNano += System.nanoTime() - starNano;
+		}
 
 		PolicyVector allActionProbability = predictActionAndValue.getLeft();
 
@@ -386,19 +415,66 @@ public class MCTS {
 
 		allActionProbability.normalize();
 
-		choiceValuePredictionForBoardPs.put(boardS, allActionProbability);
+		choiceValuePredictionForBoardPs.put(canonicalForm, allActionProbability);
 
 		printActionProbabilities(allActionProbability, boardValueV, currentGame);
 
-		validMovesForBoardVs.put(boardS, validMoves);
+		validMovesForBoardVs.put(canonicalForm, validMoves);
 		if (Options.MCTS_VALIDATE_MOVE_FOR_BOARD) {
-			movesToReachBoard.put(boardS, currentGame.getActivatedActions());
+			movesToReachBoard.put(canonicalForm, currentGame.getActivatedActions());
 		}
-		boardHitCountNs.put(boardS, 0);
+		boardHitCountNs.put(canonicalForm, 0);
 		return boardValueV;
 	}
 
-	public void printActionProbabilities(PolicyVector allActionProbability, float value, Game currentGame) {
+	private void preparePredictionsFromGame(Game currentGame) {
+		List<ByteCanonicalForm> preparedBoards = new ArrayList<>();
+
+		preparePredictionsFromGame(currentGame, preparedBoards, Options.MCTS_PREPARE_PREDICTION_DEPTH);
+
+		int size = preparedBoards.size();
+		long starNano = System.nanoTime();
+		Pair<PolicyVector, Float>[] predict = neuralNet.predict(preparedBoards);
+		neuralNetTotalCount += size;
+		long duration = System.nanoTime() - starNano;
+		neuralNetTotalTimeNano += duration;
+		log.debug("Ran {} predictions on neural network, took {} nano", size, duration);
+
+		for (int i = 0; i < predict.length; i++) {
+			Pair<PolicyVector, Float> pair = predict[i];
+			ByteCanonicalForm board = preparedBoards.get(i);
+			preparedPredictions.put(board, pair);
+		}
+
+	}
+
+	private void preparePredictionsFromGame(Game currentGame, List<ByteCanonicalForm> preparedBoards, int depthLeft) {
+		int nextPlayer = currentGame.getNextPlayer();
+		ByteCanonicalForm canonicalForm = currentGame.getCanonicalForm(nextPlayer);
+		preparedBoards.add(canonicalForm);
+
+		if (depthLeft > 0) {
+			int nextDepth = depthLeft - 1;
+			boolean[] validMoves = currentGame.getValidMoves();
+			for (int i = 0; i < validMoves.length; i++) {
+				boolean b = validMoves[i];
+				if (b) {
+					Game clone = currentGame.clone();
+					clone.activateAction(nextPlayer, i);
+					if (!clone.isGameEnded()) {
+						preparePredictionsFromGame(clone, preparedBoards, nextDepth);
+					}
+				}
+			}
+		}
+	}
+
+	private Pair<PolicyVector, Float> fetchPreparedPredictions(ByteCanonicalForm boardS) {
+		Pair<PolicyVector, Float> remove = preparedPredictions.remove(boardS);
+		return remove;
+	}
+
+	public static void printActionProbabilities(PolicyVector allActionProbability, float value, Game currentGame) {
 		if (Options.PRINT_MCTS_SEARCH_PROBABILITIES) {
 			if (log.isDebugEnabled()) {
 				log.debug("Current board value : {} for player {}", value, currentGame.getNextPlayer());
@@ -407,8 +483,8 @@ public class MCTS {
 		}
 	}
 
-	private float updateBoardActionValue(String boardS, int actoinIndexA, float newBoardActionValueV, int depth,
-			String describeAction) {
+	private float updateBoardActionValue(ByteCanonicalForm boardS, int actoinIndexA, float newBoardActionValueV,
+			int depth, String describeAction) {
 		boolean preExists = false;
 		float previousBoardActionValueQ = 0;
 		Map<Integer, Float> map = valueAtBoardActionQsa.get(boardS);
@@ -440,7 +516,7 @@ public class MCTS {
 		return newValue;
 	}
 
-	public void incrementBoardActionHitCount(String s, int a) {
+	public void incrementBoardActionHitCount(ByteCanonicalForm s, int a) {
 		Map<Integer, Integer> map = boardActionHitCountNsa.get(s);
 		if (map == null) {
 			map = new HashMap<Integer, Integer>();
@@ -454,7 +530,7 @@ public class MCTS {
 		map.put(a, hitCount);
 	}
 
-	private void incrementBoardHitCount(String boardS) {
+	private void incrementBoardHitCount(ByteCanonicalForm boardS) {
 		Integer numberHits = boardHitCountNs.get(boardS);
 		if (numberHits == null) {
 			boardHitCountNs.put(boardS, 1);
@@ -463,7 +539,7 @@ public class MCTS {
 		}
 	}
 
-	private float adjustMoveValue(String boardS, int actionIndexA) {
+	private float adjustMoveValue(ByteCanonicalForm boardS, int actionIndexA) {
 
 		float cpuct = getCPuct();
 		float currentActionValueU;
@@ -508,6 +584,31 @@ public class MCTS {
 	public void setCpuct(float d) {
 		cPuct = d;
 
+	}
+
+	public void printCurrentBoardProbability() {
+
+		ByteCanonicalForm gameString = game.getCanonicalForm(game.getNextPlayer());
+		
+		Pair<PolicyVector, Float> predict = neuralNet.predict(gameString);
+		PolicyVector policy = predict.getKey();
+		Float value = predict.getValue();
+		
+		value += 1;
+		value /= 2;
+		value *= 100;
+		
+		log.info("Neural net chance to win : {} %", value);
+		
+		Map<Integer, Float> valueAtActionQ = valueAtBoardActionQsa.get(gameString);
+		Set<Entry<Integer, Float>> entrySet = valueAtActionQ.entrySet();
+		for (Entry<Integer, Float> entry : entrySet) {
+			Integer key = entry.getKey();
+			Float predictedActionValue = entry.getValue();
+			float nnetPredict = policy.vector[key];
+			log.info("Action index {} | mcts predicted value {} | nnet predicted value {} | action : {}", key, predictedActionValue, nnetPredict, game.describeAction(key));
+		}
+		
 	}
 
 }

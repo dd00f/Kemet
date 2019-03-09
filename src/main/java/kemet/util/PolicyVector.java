@@ -6,6 +6,7 @@ import java.util.Random;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 
+import kemet.model.action.choice.ChoiceInventory;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -126,6 +127,22 @@ public class PolicyVector implements Serializable {
 			}
 		}
 		return action;
+	}
+
+	public void fromINDArray(INDArray policyOutput) {
+		boolean foundNan = false;
+		vector = new float[ChoiceInventory.TOTAL_CHOICE];
+		for (int i = 0; i < ChoiceInventory.TOTAL_CHOICE; ++i) {
+			float floatValue = policyOutput.getFloat(i);
+			if (Float.isNaN(floatValue)) {
+				foundNan = true;
+			}
+			vector[i] = floatValue;
+		}
+		
+		if (foundNan) {
+			throw new IllegalArgumentException("Policy value returned a NaN value " + Arrays.toString(vector));
+		}
 	}
 	
 }

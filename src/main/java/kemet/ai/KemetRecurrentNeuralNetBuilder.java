@@ -5,34 +5,20 @@ import java.util.List;
 
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
-import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.Updater;
-import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
-import org.deeplearning4j.nn.conf.graph.ElementWiseVertex.Op;
 import org.deeplearning4j.nn.conf.graph.MergeVertex;
 import org.deeplearning4j.nn.conf.inputs.InputType;
-import org.deeplearning4j.nn.conf.layers.ActivationLayer;
-import org.deeplearning4j.nn.conf.layers.BatchNormalization;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
-import org.deeplearning4j.nn.conf.layers.DenseLayer.Builder;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.learning.config.AdaGrad;
 import org.nd4j.linalg.learning.config.Nesterovs;
-import org.nd4j.linalg.learning.config.Sgd;
-import org.nd4j.linalg.lossfunctions.ILossFunction;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
-import org.nd4j.linalg.lossfunctions.impl.LossMultiLabel;
 
-import kemet.Options;
 import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
-import lombok.val;
 
 public class KemetRecurrentNeuralNetBuilder {
 
@@ -45,7 +31,7 @@ public class KemetRecurrentNeuralNetBuilder {
 	public static double NESTEROV_LEARN_RATE = 0.006;
 	public static int INPUT_SIZE = BoardInventory.TOTAL_STATE_COUNT;
 	public static int OUTPUT_SIZE = ChoiceInventory.TOTAL_CHOICE;
-	public static int LAYER_SIZE = INPUT_SIZE;
+	public static int LAYER_SIZE = INPUT_SIZE * 2;
 	public static boolean VALUE_OUTPUT = true;
 	// TODO reset back to 10 or 20
 	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;

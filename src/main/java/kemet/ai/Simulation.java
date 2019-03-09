@@ -146,7 +146,7 @@ public class Simulation {
 
 				checkToHideAttackerBattleCard(depth, currentPick);
 
-				choice.activate();
+				gameClone.activateAction(choice);
 
 				counter.incrementChoiceCount();
 

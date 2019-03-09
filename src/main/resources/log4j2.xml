@@ -46,7 +46,10 @@
 		</Logger>
 
 		-->
-
+		<Logger name="kemet.util" level="info" additivity="false" includeLocation="false">
+			<AppenderRef ref="textFile" />
+			<AppenderRef ref="Console" />
+		</Logger>
 		
 		<!-- 
 			All loggers should enable INFO level logs and above.

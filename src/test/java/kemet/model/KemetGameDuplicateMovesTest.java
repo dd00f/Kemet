@@ -19,8 +19,8 @@ class KemetGameDuplicateMovesTest {
 	private TwoPlayerGame factory;
 	private KemetGame createGame;
 
-	private Map<String, Valid> validMap = new HashMap<>();
-	private Map<String, int[]> movesToReach = new HashMap<>();
+	private Map<ByteCanonicalForm, Valid> validMap = new HashMap<>();
+	private Map<ByteCanonicalForm, int[]> movesToReach = new HashMap<>();
 
 	@EqualsAndHashCode
 	public static class Valid {
@@ -311,9 +311,9 @@ class KemetGameDuplicateMovesTest {
 				fail("Failed");
 			}
 		} else {
-			String canonicalString = canonicalForm.toCanonicalString();
-			validMap.put(canonicalString, valid);
-			movesToReach.put(canonicalString, createGame.getActivatedActions());
+			// String canonicalString = canonicalForm.toCanonicalString();
+			validMap.put(canonicalForm, valid);
+			movesToReach.put(canonicalForm, createGame.getActivatedActions());
 		}
 	}
 

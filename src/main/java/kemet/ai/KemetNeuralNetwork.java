@@ -4,7 +4,6 @@ package kemet.ai;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -19,7 +18,6 @@ import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.TestMultiDataSetIterator;
 
 import kemet.Options;
-import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.NeuralNet;
 import kemet.util.PolicyVector;
@@ -63,34 +61,63 @@ public class KemetNeuralNetwork implements NeuralNet {
 		for (TrainExample trainExample : examples) {
 			setList.add(trainExample.convertToMultiDataSet());
 		}
+		int setListSize = setList.size();
+		log.info("START training {} examples over {} epochs.", setListSize, epochs);
 
-		long totalTime = 0;
-		long end = System.currentTimeMillis();
-		long start = end;
-		for (int i = 1; i <= epochs; ++i) {
-			trainEpoch(i, setList);
+		if (Options.NEURAL_NET_SHUFFLE_BETWEEN_EPOCH) {
+
+			long totalTime = 0;
+			long end = System.currentTimeMillis();
+			long start = end;
+			for (int i = 1; i <= epochs; ++i) {
+				trainEpoch(i, setList);
+
+				// bookkeeping + plot progress
+				long now = System.currentTimeMillis();
+				// eps_time.update(now - end);
+
+				end = now;
+				long duration = end - start;
+				totalTime += duration;
+				long average = totalTime / i;
+				long timeLeft = average * (epochs - i);
+
+				float durationFloat = duration;
+
+				float setListSizeFloat = setListSize;
+				float durationPerData = durationFloat / setListSizeFloat;
+				log.info(i + "/" + epochs + " | train eps time " + duration + "ms | total " + totalTime + "ms | ETA "
+						+ timeLeft + "ms, train list size : " + setListSize + " time per input ms = "
+						+ durationPerData);
+				String message = "{} / {}  | train eps time {}ms | total {}ms | ETA {}ms, train list size : {} time per input ms = {}";
+				log.info(message, i , epochs , duration , totalTime , timeLeft , setListSize , durationPerData);
+				
+				start = now;
+			}
+
+		} else {
+			long totalTime = 0;
+			long end = System.currentTimeMillis();
+			long start = end;
+			TestMultiDataSetIterator iterator = new TestMultiDataSetIterator(5000,
+					setList.toArray(new MultiDataSet[setList.size()]));
+			model.fit(iterator, epochs);
 
 			// bookkeeping + plot progress
 			long now = System.currentTimeMillis();
-			// eps_time.update(now - end);
 
 			end = now;
-			long duration = end - start;
-			totalTime += duration;
-			long average = totalTime / i;
-			long timeLeft = average * (epochs - i);
+			totalTime = end - start;
 
-			float durationFloat = duration;
+			float durationFloat = totalTime;
 
-			int setListSize = setList.size();
 			float setListSizeFloat = setListSize;
-			float durationPerData = durationFloat / setListSizeFloat;
-			log.info(i + "/" + epochs + " | train eps time " + duration + "ms | total " + totalTime + "ms | ETA "
-					+ timeLeft + "ms, train list size : " + setListSize + " time per input ms = " + durationPerData);
+			float durationPerData = durationFloat / epochs / setListSizeFloat;
+			float timePerEpoch = durationFloat / epochs;
+			String message = "END   trained {} epoch | total {} ms | train list size : {} | time per epoch ms = {}ms | time per input ms = {}";
+			log.info(message, epochs, totalTime, setListSize, timePerEpoch, durationPerData);
 
-			start = now;
 		}
-
 	}
 
 	private void trainEpoch(int i, List<MultiDataSet> setList) {
@@ -115,25 +142,64 @@ public class KemetNeuralNetwork implements NeuralNet {
 		INDArray policyOutput = outputArray[0];
 		INDArray valueOutput = outputArray[1];
 
-		boolean foundNan = false;
 		PolicyVector vector = new PolicyVector();
-		vector.vector = new float[ChoiceInventory.TOTAL_CHOICE];
-		for (int i = 0; i < ChoiceInventory.TOTAL_CHOICE; ++i) {
-			float floatValue = policyOutput.getFloat(i);
-			if (Float.isNaN(floatValue)) {
-				foundNan = true;
-			}
-			vector.vector[i] = floatValue;
-		}
-
-		if (foundNan) {
-			throw new IllegalArgumentException("Policy value returned a NaN value " + Arrays.toString(vector.vector));
-		}
+		vector.fromINDArray(policyOutput);
 
 		float value = valueOutput.getFloat(0);
 
 		Pair<PolicyVector, Float> pair = new MutablePair<>(vector, value);
 		return pair;
+	}
+
+	@Override
+	public Pair<PolicyVector, Float>[] predict(List<ByteCanonicalForm> gameCanonicalForm) {
+
+		MultiDataSet[] mdsArray = convertByteCanonicalFormToMultiDataSet(gameCanonicalForm);
+		TestMultiDataSetIterator testMultiDataSetIterator = new TestMultiDataSetIterator(5000, mdsArray);
+		INDArray[] output = model.output(testMultiDataSetIterator);
+
+		Pair<PolicyVector, Float>[] retVal = convertOutputArrayToPolicyValuePairs(output);
+		return retVal;
+	}
+
+	private Pair<PolicyVector, Float>[] convertOutputArrayToPolicyValuePairs(INDArray[] output) {
+		INDArray policyArray = output[0];
+		INDArray valueArray = output[1];
+
+		int outputCount = policyArray.rows();
+
+		@SuppressWarnings("unchecked")
+		Pair<PolicyVector, Float>[] retVal = new Pair[outputCount];
+
+		for (int i = 0; i < outputCount; ++i) {
+
+			PolicyVector vector = new PolicyVector();
+			vector.fromINDArray(policyArray.getRow(i));
+
+			float value = valueArray.getRow(i).getFloat(0);
+
+			Pair<PolicyVector, Float> pair = new MutablePair<>(vector, value);
+
+			retVal[i] = pair;
+		}
+
+		return retVal;
+	}
+
+	private static INDArray dummyArray = Utilities.createArray(new float[1]);
+
+	private MultiDataSet[] convertByteCanonicalFormToMultiDataSet(List<ByteCanonicalForm> gameCanonicalForm) {
+
+		int size = gameCanonicalForm.size();
+		MultiDataSet[] retVal = new MultiDataSet[size];
+
+		for (int i = 0; i < size; i++) {
+			ByteCanonicalForm byteCanonicalForm = gameCanonicalForm.get(i);
+			INDArray indArray = byteCanonicalForm.getINDArray();
+			retVal[i] = new org.nd4j.linalg.dataset.MultiDataSet(indArray, dummyArray);
+		}
+
+		return retVal;
 	}
 
 	@Override

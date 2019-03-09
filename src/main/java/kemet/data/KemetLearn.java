@@ -1,5 +1,6 @@
 package kemet.data;
 
+import kemet.ai.KemetNeuralNetBuilder;
 import kemet.ai.KemetNeuralNetwork;
 import kemet.util.Coach;
 import kemet.util.GameFactory;
@@ -19,6 +20,8 @@ public class KemetLearn {
 //		log.trace("trace");
 //		log.fatal("fatal");
 		
+//		KemetNeuralNetBuilder.NESTEROV_LEARN_RATE = 0.002;
+//		KemetNeuralNetBuilder.NESTEROV_MOMENTUM = 0.5;
 		
 	    GameFactory gameFactory = new TwoPlayerGame();
 	    

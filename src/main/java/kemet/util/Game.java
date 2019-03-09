@@ -94,13 +94,13 @@ public interface Game {
 	 */
 	public List<Game> getSymmetries(int playerIndex);
 
-	/**
-	 * 
-	 * @return boardString: a quick conversion of board to a string format. Required
-	 *         by MCTS for hashing.
-	 *         
-	 */
-	public String stringRepresentation(int playerIndex);
+//	/**
+//	 * 
+//	 * @return boardString: a quick conversion of board to a string format. Required
+//	 *         by MCTS for hashing.
+//	 *         
+//	 */
+//	public String stringRepresentation(int playerIndex);
 	
 	public void playbackGame(int[] actions);
 
@@ -133,6 +133,8 @@ public interface Game {
 	 * @return the simplified value.
 	 */
 	public float getSimpleValue(int playerIndex, float predictedValue );
+	
+	public boolean isGameEnded();
 
 
 }

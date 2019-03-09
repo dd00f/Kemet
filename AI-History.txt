@@ -432,4 +432,64 @@
 		Since the skip turn action also shows up frequently, it seems to like that option as well.
 	
 
+2019-03-02
+
+	Batch me up Scotty - Training mode
+		When I learned that batched calls to the training fit function were over 100 times faster than individual calls, 
+		I wondered if batching calls to the output function would yield the same result.
+		
+		A quick unit test later, I discovered that batching calls to output was 
+		- 20 times faster in batches of 100 vs 1 
+		- 40 times faster in batches of 1000 vs 1
+		
+		I could leverage this during self-plays & arena fights.
+		
+		This required a significant refactoring of the MCTS algorithm. It would have to run all games in parallel. 
+		It couldn't be recursive anymore as	I'd have to run the search process until a neural network call is required, 
+		stack all the request, call the neural network in batch, and resume the search process where it left off.
+		
+		Once it was done, the results were : 
+		- 1 game, 10 MCTS search : 
+			- Original : 3.3s
+			- Parallel : 9.0s  ( 2.7x slower )
+		
+		- 50 game, 10 MCTS search : 
+			- Original : 151s
+			- Parallel :  25s  ( 6x faster ! )
+		
+		- 100 game, 10 MCTS search : 
+			- Original : 300s
+			- Parallel :  38s  ( 7.8x faster ! )
+		
+		Almost 8x faster to do the exact same job !  I'll drink to that !
+
+2019-03-03
+	
+	Mass brawl
+		The arena now runs all its games in parallel, let the games begin !
+		
+
+2019-03-05
+
+	First training
+		After 9 hours of training, the neural net now plays somewhat ok. It still loses to human opponents.
+		It now moves armies in size of 5 on occasion, but still skips its turn way too often and doesn't seem
+		to understand when to attack. This would probably need a deeper neural network and/or more self training.
+
+TODO : 
+		- Try to run training with masks in a way that doesn't collapse the neural network to ensure actions that aren't 
+		available frequently don't become erased in policy vectors. One option : Preserve neural network policy output 
+		values, only modify the ones that were actually available for trial.
+		
+		- make each action token a variable ? 
+		
+		- move action to isolated island - avoid choice if the army can't move.
+		- last discard action isn't a choice, force it.
+		- army retreat may have only one move, force it.
+		- there may be a forced action to pick when selecting the action ( one choice left in row 3 ), force it.
+		- Bug : moving army from Blue District 3 doesn't offer teleportation options.
+		
+		- allocate new action index for various purpose ( end turn in move, vs recruit, vs buy, etc..., army size in recruit vs move )
+		
+		- add all base game powers
 

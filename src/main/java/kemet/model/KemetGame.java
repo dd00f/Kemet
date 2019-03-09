@@ -27,8 +27,6 @@ public class KemetGame implements Model, Game {
 
 	private static final long serialVersionUID = 6738783849669850313L;
 
-	public static final int MAX_ACTION_COUNT = 1024;
-
 	private static final Logger LOGGER = LogManager.getLogger(KemetGame.class);
 
 	public List<Tile> tileList = new ArrayList<>();
@@ -45,9 +43,20 @@ public class KemetGame implements Model, Game {
 	public int battleCount = 0;
 
 	public int recordActionIndex = 0;
-	public int[] actions = new int[MAX_ACTION_COUNT];
+	public int[] actions = null;
+	{
+		if (Options.GAME_TRACK_MAX_ACTION_COUNT > 0) {
+			actions = new int[Options.GAME_TRACK_MAX_ACTION_COUNT];
+		}
+	}
 
 	private static Cache<KemetGame> GAME_CACHE = new Cache<KemetGame>(() -> new KemetGame());
+
+	private PlayerChoicePick nextPlayerChoicePick;
+
+	private ByteCanonicalForm canonicalForm;
+
+	private boolean[] allValidMoves;
 
 	public static KemetGame create() {
 		KemetGame create = GAME_CACHE.create();
@@ -76,7 +85,9 @@ public class KemetGame implements Model, Game {
 		availablePowerList.clear();
 
 		recordActionIndex = 0;
-		Arrays.fill(actions, -1);
+		if (actions != null) {
+			Arrays.fill(actions, -1);
+		}
 	}
 
 	@Override
@@ -113,7 +124,9 @@ public class KemetGame implements Model, Game {
 		clone.action.relink(clone);
 
 		clone.recordActionIndex = recordActionIndex;
-		clone.actions = actions.clone();
+		if (actions != null) {
+			clone.actions = actions.clone();
+		}
 
 		// relink the structure
 		for (Tile tile : clone.tileList) {
@@ -123,6 +136,9 @@ public class KemetGame implements Model, Game {
 		for (Player player : clone.playerByInitiativeList) {
 			player.relink(clone);
 		}
+
+		clone.allValidMoves = allValidMoves;
+		clone.canonicalForm = canonicalForm;
 
 		return clone;
 	}
@@ -196,7 +212,7 @@ public class KemetGame implements Model, Game {
 		builder.append(this.roundNumber);
 		builder.append("\n");
 		builder.append("Actions : \n\t");
-		builder.append(Arrays.toString( getActivatedActions()));
+		builder.append(Arrays.toString(getActivatedActions()));
 		builder.append("\n");
 		for (Player player : playerByInitiativeList) {
 			player.describePlayer(builder);
@@ -367,12 +383,10 @@ public class KemetGame implements Model, Game {
 	}
 
 	public void activateNightPowers() {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void provideNightDiCards() {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -455,8 +469,13 @@ public class KemetGame implements Model, Game {
 		deepCacheClone.activateAction(player, actionIndex);
 		return deepCacheClone;
 	}
+	
+	private static final int[] EMPTY = new int[] {};
 
 	public int[] getActivatedActions() {
+		if( actions == null ) {
+			return EMPTY;
+		}
 		return Arrays.copyOf(actions, recordActionIndex);
 	}
 
@@ -467,27 +486,36 @@ public class KemetGame implements Model, Game {
 		}
 	}
 
+	public void activateAction(Choice choice) {
+		if (recordActionIndex < Options.GAME_TRACK_MAX_ACTION_COUNT) {
+			actions[recordActionIndex++] = choice.getIndex();
+		}
+
+		choice.activate();
+
+		// reset the cached choice to null
+		nextPlayerChoicePick = null;
+		canonicalForm = null;
+		allValidMoves = null;
+	}
+
 	@Override
 	public void activateAction(int player, int actionIndex) {
-		
-		if( actionIndex == -1 ) {
+
+		if (actionIndex == -1) {
 			return;
 		}
 
-		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
-		if (nextPlayerChoicePick.player.index != player) {
+		PlayerChoicePick currentPlayerChoicePick = getNextPlayerChoicePick();
+
+		if (currentPlayerChoicePick.player.index != player) {
 			LOGGER.warn("Next player index for action doesn't match");
 		}
 
-		for (Choice choice : nextPlayerChoicePick.choiceList) {
+		for (Choice choice : currentPlayerChoicePick.choiceList) {
 			if (choice.getIndex() == actionIndex) {
 
-				if (recordActionIndex < MAX_ACTION_COUNT) {
-					actions[recordActionIndex++] = actionIndex;
-				}
-
-				choice.activate();
-
+				activateAction(choice);
 				return;
 			}
 		}
@@ -495,6 +523,14 @@ public class KemetGame implements Model, Game {
 		String message = "Unable to find action that matches index : " + actionIndex;
 		LOGGER.error(message);
 		throw new IllegalArgumentException(message);
+	}
+
+	private PlayerChoicePick getNextPlayerChoicePick() {
+		if (nextPlayerChoicePick == null) {
+			nextPlayerChoicePick = action.getNextPlayerChoicePick();
+		}
+
+		return nextPlayerChoicePick;
 	}
 
 	@Override
@@ -506,7 +542,7 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public String describeAction(int i) {
-		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+		PlayerChoicePick nextPlayerChoicePick = getNextPlayerChoicePick();
 
 		for (Choice choice : nextPlayerChoicePick.choiceList) {
 			if (choice.getIndex() == i) {
@@ -518,7 +554,7 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public void printChoiceList() {
-		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+		PlayerChoicePick nextPlayerChoicePick = getNextPlayerChoicePick();
 
 		for (Choice choice : nextPlayerChoicePick.choiceList) {
 			printEvent(choice.toString());
@@ -527,7 +563,7 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public int getNextPlayer() {
-		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+		PlayerChoicePick nextPlayerChoicePick = getNextPlayerChoicePick();
 		if (nextPlayerChoicePick == null) {
 			return -1;
 		}
@@ -536,24 +572,35 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public boolean[] getValidMoves() {
-		boolean[] retVal = new boolean[ChoiceInventory.TOTAL_CHOICE];
+		if (allValidMoves == null) {
+			allValidMoves = new boolean[ChoiceInventory.TOTAL_CHOICE];
 
-		PlayerChoicePick nextPlayerChoicePick = action.getNextPlayerChoicePick();
+			PlayerChoicePick nextPlayerChoicePick = getNextPlayerChoicePick();
 
-		if (nextPlayerChoicePick != null) {
-			List<Choice> choiceList = nextPlayerChoicePick.choiceList;
-			for (Choice choice : choiceList) {
-				retVal[choice.getIndex()] = true;
+			if (nextPlayerChoicePick != null) {
+				List<Choice> choiceList = nextPlayerChoicePick.choiceList;
+				for (Choice choice : choiceList) {
+					allValidMoves[choice.getIndex()] = true;
+				}
+			} else {
+				LOGGER.error("No next player choices for getValidMoves(), game must be ended.");
 			}
-		} else {
-			LOGGER.error("No next player choices for getValidMoves(), game must be ended.");
 		}
 
-		return retVal;
+		return allValidMoves;
+	}
+
+	@Override
+	public boolean isGameEnded() {
+		getNextPlayerChoicePick();
+
+		return winner != null;
 	}
 
 	@Override
 	public int getGameEnded(int playerIndex) {
+		getNextPlayerChoicePick();
+
 		if (winner == null) {
 			return 0;
 		}
@@ -565,24 +612,28 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public ByteCanonicalForm getCanonicalForm(int playerIndex) {
-		// ensure the board is moved to the latest state
-		action.getNextPlayerChoicePick();
 
-		// GAME
-		ByteCanonicalForm canonicalForm = new KemetByteCanonicalForm(BoardInventory.TOTAL_STATE_COUNT);
-		canonicalForm.set(BoardInventory.ROUND_NUMBER, roundNumber);
+		if (canonicalForm == null) {
+			// ensure the board is moved to the latest state
+			getNextPlayerChoicePick();
 
-		// ACTION STATE
-		action.fillCanonicalForm(canonicalForm, playerIndex);
+			canonicalForm = new KemetByteCanonicalForm(BoardInventory.TOTAL_STATE_COUNT);
+			canonicalForm.set(BoardInventory.ROUND_NUMBER, roundNumber);
 
-		// TILE
-		for (Tile tile : tileList) {
-			tile.fillCanonicalForm(canonicalForm, playerIndex);
-		}
+			// ACTION STATE
+			action.fillCanonicalForm(canonicalForm, playerIndex);
 
-		// PLAYER
-		for (Player player : playerByInitiativeList) {
-			player.fillCanonicalForm(canonicalForm, playerIndex);
+			// TILE
+			for (Tile tile : tileList) {
+				tile.fillCanonicalForm(canonicalForm, playerIndex);
+			}
+
+			// PLAYER
+			for (Player player : playerByInitiativeList) {
+				player.fillCanonicalForm(canonicalForm, playerIndex);
+			}
+
+			canonicalForm.finalize();
 		}
 
 		return canonicalForm;
@@ -594,11 +645,11 @@ public class KemetGame implements Model, Game {
 		return new ArrayList<>();
 	}
 
-	@Override
-	public String stringRepresentation(int playerIndex) {
-		ByteCanonicalForm canonicalForm2 = getCanonicalForm(playerIndex);
-		return canonicalForm2.toCanonicalString();
-	}
+//	@Override
+//	public String stringRepresentation(int playerIndex) {
+//		ByteCanonicalForm canonicalForm2 = getCanonicalForm(playerIndex);
+//		return canonicalForm2.toCanonicalString();
+//	}
 
 	@Override
 	public Game clone() {
@@ -615,15 +666,16 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public float getSimpleValue(int playerIndex, float predictedValue) {
-		
+
 		Player playerByIndex = getPlayerByIndex(playerIndex);
-		
-		Player opponent = getPlayerByIndex(Math.abs(playerIndex-1));
-		
-		float pointDifference = Simulation.calculatePlayerScore(playerByIndex) - Simulation.calculatePlayerScore(opponent);
+
+		Player opponent = getPlayerByIndex(Math.abs(playerIndex - 1));
+
+		float pointDifference = Simulation.calculatePlayerScore(playerByIndex)
+				- Simulation.calculatePlayerScore(opponent);
 		float victoryPointsObjective = VICTORY_POINTS_OBJECTIVE * 1000;
 		pointDifference = pointDifference / victoryPointsObjective;
-		
+
 		return pointDifference;
 	}
 

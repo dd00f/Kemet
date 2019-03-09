@@ -43,6 +43,9 @@ public class NeuralNetworkPlayer extends PlayerActor {
 	
 	public void pickActionAndActivate(PlayerChoicePick pick) {
 		PolicyVector actionProbability = mcts.getActionProbability(1);
+		
+		mcts.printCurrentBoardProbability();
+		
 		int pickBestAction = actionProbability.pickBestAction();
 		
 		actionProbability.printActionProbabilities(game);

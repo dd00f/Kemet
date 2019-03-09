@@ -1,37 +1,24 @@
 package kemet.ai;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.deeplearning4j.nn.api.OptimizationAlgorithm;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
-import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.Updater;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex.Op;
 import org.deeplearning4j.nn.conf.inputs.InputType;
 import org.deeplearning4j.nn.conf.layers.ActivationLayer;
-import org.deeplearning4j.nn.conf.layers.BatchNormalization;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
 import org.deeplearning4j.nn.conf.layers.DenseLayer.Builder;
 import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.learning.config.AdaGrad;
 import org.nd4j.linalg.learning.config.Nesterovs;
-import org.nd4j.linalg.learning.config.Sgd;
-import org.nd4j.linalg.lossfunctions.ILossFunction;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
-import org.nd4j.linalg.lossfunctions.impl.LossMultiLabel;
 
-import kemet.Options;
 import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
-import lombok.val;
 
 public class KemetNeuralNetBuilder {
 
@@ -51,7 +38,7 @@ public class KemetNeuralNetBuilder {
 	public static boolean NEURAL_NET_RESIDUAL_ACTIVATED = false;
 
 	// Keep this at false, true destabilizes the network.
-	public static boolean NEURAL_NET_TRAIN_WITH_MASK = false;
+	public static boolean NEURAL_NET_TRAIN_WITH_MASK = true;
 
 	// TODO default was true
 	public static boolean NEURAL_NET_RELU_INTERNAL_LAYERS = true;

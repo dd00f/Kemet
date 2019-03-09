@@ -54,7 +54,7 @@ class StabilityTest {
 
 		coach = new Coach(new TwoPlayerGame(), nn);
 		Options.COACH_USE_MANUAL_AI = true;
-		KemetNeuralNetBuilder.NEURAL_NET_TRAIN_WITH_MASK = false;
+		KemetNeuralNetBuilder.NEURAL_NET_TRAIN_WITH_MASK = true;
 		
 		Options.PRINT_COACH_SEARCH_ACTIONS = true;
 		Options.PRINT_COACH_SEARCH_PROBABILITIES = true;
@@ -68,7 +68,7 @@ class StabilityTest {
 
 		for (int i = 0; i < 10000; ++i) {
 			TestMultiDataSetIterator fitIterator = new TestMultiDataSetIterator(5000, trainArrays);
-			build.fit(fitIterator, 100);
+			build.fit(fitIterator, 10);
 			score(i);
 		}
 

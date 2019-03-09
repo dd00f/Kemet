@@ -33,6 +33,7 @@ public class TwoPlayerGame implements GameFactory
     public static void main(String[] args)
     {
     	PLAYER_ONE_NEURAL = true;
+    	PLAYER_ONE_HUMAN = false;
         TwoPlayerGame twoPlayerGame = new TwoPlayerGame();
         twoPlayerGame.initializeGame();
         twoPlayerGame.runGame();
@@ -48,7 +49,7 @@ public class TwoPlayerGame implements GameFactory
     public void runGame()
     {
        
-        while (true)
+        while (! game.isGameEnded())
         {
             PlayerChoicePick nextPlayerChoicePick = game.action.getNextPlayerChoicePick();
             if( nextPlayerChoicePick == null ) {

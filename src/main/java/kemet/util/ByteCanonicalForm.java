@@ -1,14 +1,13 @@
 package kemet.util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import org.nd4j.linalg.api.ndarray.INDArray;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-@EqualsAndHashCode
 public class ByteCanonicalForm implements Serializable{
 	
 	/**
@@ -20,13 +19,46 @@ public class ByteCanonicalForm implements Serializable{
 	@Setter
 	private byte[] canonicalForm;
 	
+	private int hashCode = 0;
+	
+	private boolean finalized = false;
+	
 	public ByteCanonicalForm( int size ) {
 		canonicalForm = new byte[size];
 	}
 	
 	public void set( int index, byte value ) {
+		if( finalized ) {
+			throw new IllegalStateException("ByteCanonicalForm is finalized");
+		}
 		canonicalForm[index] = value;
 	}
+	
+	public void finalize() {
+		hashCode = 0;
+		finalized = true;
+	}
+	
+	@Override
+	public int hashCode() {
+		if( hashCode == 0 || ! finalized ) {
+			hashCode = Arrays.hashCode(canonicalForm);
+		}
+		return hashCode;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof ByteCanonicalForm) {
+        	ByteCanonicalForm aString = (ByteCanonicalForm)obj;
+            return Arrays.equals(canonicalForm, aString.canonicalForm);
+        }
+        return false;
+	}
+	
 	
 //	public byte[] getCanonicalForm() {
 //		return canonicalForm;
@@ -52,10 +84,10 @@ public class ByteCanonicalForm implements Serializable{
 		
 	}
 
-	public String toCanonicalString() {
-		String canonicalString = Utilities.bytesToHex(canonicalForm);
-
-		return canonicalString;
-	}
+//	public String toCanonicalString() {
+//		String canonicalString = Utilities.bytesToHex(canonicalForm);
+//
+//		return canonicalString;
+//	}
 
 }

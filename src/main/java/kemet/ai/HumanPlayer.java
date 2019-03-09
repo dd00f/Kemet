@@ -48,7 +48,7 @@ public class HumanPlayer extends PlayerActor {
                 }
                 
                 if( retVal == describe ) {
-                    describe.activate();
+                    game.activateAction(describe);
                     retVal = null;
                 }
                 else if( retVal != null ) {

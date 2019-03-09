@@ -43,7 +43,8 @@ public abstract class PlayerActor implements Serializable {
 	public abstract Choice pickAction(PlayerChoicePick pick);
 
 	public void pickActionAndActivate(PlayerChoicePick pick) {
-		pickAction(pick).activate();
+		Choice pickAction = pickAction(pick);
+		game.activateAction(pickAction);
 	}
 
 }
