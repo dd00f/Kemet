@@ -471,23 +471,71 @@
 
 2019-03-05
 
-	First training
+	First masked training
 		After 9 hours of training, the neural net now plays somewhat ok. It still loses to human opponents.
 		It now moves armies in size of 5 on occasion, but still skips its turn way too often and doesn't seem
 		to understand when to attack. This would probably need a deeper neural network and/or more self training.
 
-TODO : 
-		- Try to run training with masks in a way that doesn't collapse the neural network to ensure actions that aren't 
-		available frequently don't become erased in policy vectors. One option : Preserve neural network policy output 
-		values, only modify the ones that were actually available for trial.
+2019-03-10
+
+	Action cleanup
+		Removed a few useless choices such as discarding battle card with 1 choice, moving army with 
+		no valid choice from an island or retreating an army when there's only 1 choice.
+
+
+2019-03-11
+
+	Incompetence theory
+		Theories to explain why the current Alpha Kemet doesn't work well :
+		1 - The low value path  : Could it be that the highest value paths are hidden behind low value 
+			actions ? For instance, pray, recruit & then move with a big army instead of 
+			moving right away with a small army ? In theory, chess has the same problem, so this 
+			looks unlikely.
+			
+		2 - Not enough simulations : Exploring 100 simulations may sound ok, but it's not much 
+			in the scale of a single battle event. For instance, starting with army at home,
+			initiating a battle and be confident in victory requires : 
+			1 - 6 path, 2 of which leads to move
+			2 - 3 paths, picking the army, assuming 2 + end turn
+			3 - 14 paths, picking the target tile.
+			4 - 6 paths, picking the army size
+			5 - 8 paths, picking the attack battle card
+			6 - 7 paths, picking the attack discard card
+			7 - 8 paths, picking the defense battle card
+			8 - 7 paths, picking the defense discard card
+			9 - 2 paths, picking attack recall
+			10- 2 paths, picking defense recall
+			11- 3 paths, picking a retreat tile
+			
+			6x3x14x6x8x7x8x7x2x2x3 = 57 million explorations !
+			
+			A few ways to simplify things : 
+			- eliminate defense discard card selection in simulation
+				Down to 12 million
+			- assume the AI would focus on 3 temples tiles instead of 14
+			 	Down to 1.7 million scenarios for a battle
+			- ignore the initial move selection ( x6 )
+				Down to  290,000 scenarios
+			- ignore army picking  ( x3 )
+				Down to 96,768
+			- army size focus : focus on size 5 army ( x 6 )
+				Down to 16,128
+			- show the result of battle victory sooner, removing recall & retreat tile ( x2x2x3 ) ( already done )
+				Down to 1344 scenarios
+TODO High priority: 
+		
+		- short term memory MCTS- gradually forget old actions and action branches that didn't pan out. Allowing games
+		to try thousands of simulation.
+		
+		- Eliminate discard selection on opponent simulation games.
+		
+		- Ensure MCTS doesn't cheat when simulating opponent battle card selection.
+
+TODO Low priority: 
 		
 		- make each action token a variable ? 
 		
-		- move action to isolated island - avoid choice if the army can't move.
-		- last discard action isn't a choice, force it.
-		- army retreat may have only one move, force it.
-		- there may be a forced action to pick when selecting the action ( one choice left in row 3 ), force it.
-		- Bug : moving army from Blue District 3 doesn't offer teleportation options.
+		- eliminate -1 values ( didn't seem to matter much so far )
 		
 		- allocate new action index for various purpose ( end turn in move, vs recruit, vs buy, etc..., army size in recruit vs move )
 		
