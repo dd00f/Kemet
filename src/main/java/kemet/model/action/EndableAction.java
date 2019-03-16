@@ -38,6 +38,7 @@ public abstract class EndableAction implements Action, Endable
     	
     }
     
+    @Override
     public final void initialize() {
     	ended = false;
     	internalInitialize();

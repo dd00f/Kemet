@@ -152,7 +152,7 @@ public class MCTS {
 			}
 		} else {
 			for (int i = 0; i < actionHitCounts.length; i++) {
-				countsFloat[i] = (float) actionHitCounts[i];
+				countsFloat[i] = actionHitCounts[i];
 			}
 		}
 

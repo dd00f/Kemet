@@ -34,6 +34,7 @@ public class ByteCanonicalForm implements Serializable{
 		canonicalForm[index] = value;
 	}
 	
+	@Override
 	public void finalize() {
 		hashCode = 0;
 		finalized = true;

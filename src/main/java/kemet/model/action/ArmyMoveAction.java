@@ -42,6 +42,7 @@ public class ArmyMoveAction extends EndableAction {
 
 	}
 
+	@Override
 	public void internalInitialize() {
 		game = null;
 		player = null;
@@ -103,7 +104,7 @@ public class ArmyMoveAction extends EndableAction {
 		clone.army = army;
 		clone.battle = battle;
 		if (battle != null) {
-			clone.battle = (BattleAction) battle.deepCacheClone();
+			clone.battle = battle.deepCacheClone();
 			clone.battle.setParent(clone);
 		}
 		clone.isTeleport = isTeleport;
@@ -122,6 +123,7 @@ public class ArmyMoveAction extends EndableAction {
 		CACHE.release(this);
 	}
 
+	@Override
 	public void clear() {
 		game = null;
 		player = null;
@@ -146,6 +148,7 @@ public class ArmyMoveAction extends EndableAction {
 		return create;
 	}
 
+	@Override
 	public Action getParent() {
 		return parent;
 	}
@@ -351,10 +354,15 @@ public class ArmyMoveAction extends EndableAction {
 
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 				addArmyTileMoveChoice(pick.choiceList);
+				
+				if( pick.choiceList.size() == 0 ) {
+					// no possible destination tile (usually because move landed on a island )
+					return null;
+				}
+				
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
 				return pick.validate();
 			}
-
 			else {
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 				addArmySizeMoveChoice(pick.choiceList);

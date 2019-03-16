@@ -144,7 +144,7 @@ public class RecruitAction extends EndableAction {
 		clone.pickedTiles.clear();
 		clone.pickedTiles.addAll(pickedTiles);
 
-		clone.battles = (ChainedAction) battles.deepCacheClone();
+		clone.battles = battles.deepCacheClone();
 		clone.battles.setParent(clone);
 
 		clone.parent = parent;
@@ -159,6 +159,7 @@ public class RecruitAction extends EndableAction {
 		CACHE.release(this);
 	}
 
+	@Override
 	public void clear() {
 		if (battles != null) {
 			battles.release();

@@ -120,7 +120,7 @@ public class KemetGame implements Model, Game {
 		clone.printActivations = printActivations;
 		clone.winner = clone.getPlayerByCopy(winner);
 
-		clone.action = (GameAction) action.deepCacheClone();
+		clone.action = action.deepCacheClone();
 		clone.action.relink(clone);
 
 		clone.recordActionIndex = recordActionIndex;
@@ -206,6 +206,7 @@ public class KemetGame implements Model, Game {
 		}
 	}
 
+	@Override
 	public void describeGame(StringBuilder builder) {
 
 		builder.append("Game turn ");
@@ -310,6 +311,7 @@ public class KemetGame implements Model, Game {
 		return null;
 	}
 
+	@Override
 	public void playbackGame(int[] actions) {
 
 	}
@@ -335,6 +337,7 @@ public class KemetGame implements Model, Game {
 		return false;
 	}
 
+	@Override
 	public void printDescribeGame() {
 		if (printActivations) {
 			printEvent(toString());
@@ -345,6 +348,7 @@ public class KemetGame implements Model, Game {
 		return winner != null;
 	}
 
+	@Override
 	public void setPrintActivations(boolean printActivations) {
 		this.printActivations = printActivations;
 	}
@@ -472,6 +476,7 @@ public class KemetGame implements Model, Game {
 	
 	private static final int[] EMPTY = new int[] {};
 
+	@Override
 	public int[] getActivatedActions() {
 		if( actions == null ) {
 			return EMPTY;
@@ -479,6 +484,7 @@ public class KemetGame implements Model, Game {
 		return Arrays.copyOf(actions, recordActionIndex);
 	}
 
+	@Override
 	public void replayMultipleActions(int[] actions) {
 		for (int i = 0; i < actions.length; i++) {
 			int j = actions[i];
@@ -656,10 +662,12 @@ public class KemetGame implements Model, Game {
 		return deepCacheClone();
 	}
 
+	@Override
 	public String getPlayerName(int playerIndex) {
 		return getPlayerByIndex(playerIndex).name;
 	}
 
+	@Override
 	public void setPlayerName(int playerIndex, String name) {
 		getPlayerByIndex(playerIndex).name = name;
 	}

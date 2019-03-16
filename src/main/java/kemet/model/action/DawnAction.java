@@ -35,6 +35,7 @@ public class DawnAction implements Action {
 
 	}	
 	
+	@Override
 	public void initialize() {
 		game = null;
 		parent= null;

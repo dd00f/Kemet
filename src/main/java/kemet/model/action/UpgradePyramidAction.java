@@ -114,6 +114,7 @@ public class UpgradePyramidAction extends EndableAction {
 		CACHE.release(this);
 	}
 
+	@Override
 	public void clear() {
 
 		game = null;

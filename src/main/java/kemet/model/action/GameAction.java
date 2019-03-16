@@ -28,6 +28,7 @@ public class GameAction implements Action {
 
 	public static Cache<GameAction> CACHE = new Cache<GameAction>(() -> new GameAction());
 	
+	@Override
 	public void initialize() {
 		initialized = false;
 		chainedActions = null;
@@ -43,7 +44,7 @@ public class GameAction implements Action {
 		clone.initialized = initialized;
 
 		// deep clone all owned objects
-		clone.chainedActions = (ChainedAction) chainedActions.deepCacheClone();
+		clone.chainedActions = chainedActions.deepCacheClone();
 		clone.chainedActions.setParent(clone);
 
 		return clone;

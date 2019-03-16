@@ -23,6 +23,7 @@ public class ChainedAction implements Action {
 
 	public static Cache<ChainedAction> CACHE = new Cache<ChainedAction>(() -> new ChainedAction());
 
+	@Override
 	public void initialize() {
 		game = null;
 		parent = null;
@@ -146,6 +147,7 @@ public class ChainedAction implements Action {
 		actionChain.clear();
 	}
 
+	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		if (actionChain.size() > 0) {
 			actionChain.get(0).fillCanonicalForm(cannonicalForm, playerIndex);

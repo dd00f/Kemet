@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import kemet.model.Player;
-
 public interface Game {
 	/*
 	 * This class specifies the base Game class. To define your own game, subclass

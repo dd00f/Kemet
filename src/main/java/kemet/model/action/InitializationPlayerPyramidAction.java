@@ -97,6 +97,7 @@ public class InitializationPlayerPyramidAction implements Action {
 		return create;
 	}
 
+	@Override
 	public Action getParent() {
 		return parent;
 	}

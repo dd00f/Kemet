@@ -55,6 +55,7 @@ public class BattleAction implements Action {
 
 	private boolean incrementedCounter = false;
 
+	@Override
 	public void initialize() {
 
 		game = null;
@@ -292,7 +293,7 @@ public class BattleAction implements Action {
 						+ " over attacking " + attackingArmy.name + " with a battle score of " + attackerScore);
 			}
 		}
-		
+
 		attackingArmy.owningPlayer.checkToRecuperateAllBattleCards();
 		defendingArmy.owningPlayer.checkToRecuperateAllBattleCards();
 	}
@@ -358,6 +359,18 @@ public class BattleAction implements Action {
 				player.discardBattleCard(card);
 			} else {
 				player.useBattleCard(card);
+
+				// force discard
+				List<BattleCard> availableBattleCards = player.availableBattleCards;
+				if (availableBattleCards.size() == 1) {
+					BattleCard forcedDiscard = availableBattleCards.get(0);
+					player.discardBattleCard(forcedDiscard);
+					if (isAttacker) {
+						attackingDiscardBattleCard = forcedDiscard;
+					} else {
+						defendingDiscardBattleCard = forcedDiscard;
+					}
+				}
 			}
 
 			if (isAttacker) {
@@ -498,13 +511,11 @@ public class BattleAction implements Action {
 
 		@Override
 		public int getIndex() {
-			if( recall ) {
-				return ChoiceInventory.RECALL_CHOICE;	
+			if (recall) {
+				return ChoiceInventory.RECALL_CHOICE;
 			}
 			return ChoiceInventory.PASS_CHOICE_INDEX;
 		}
-		
-		
 
 	}
 
@@ -560,7 +571,8 @@ public class BattleAction implements Action {
 
 			if (tile.isWalledByEnemy(pick.player)) {
 				// moving into a city tile with walls
-				// LOGGER.info("Army " + army + " can't retreat to tile " + tile.name + " because it has walls.");
+				// LOGGER.info("Army " + army + " can't retreat to tile " + tile.name + "
+				// because it has walls.");
 				continue;
 			}
 
@@ -596,7 +608,13 @@ public class BattleAction implements Action {
 		}
 
 		if (!attackerRetreatTilePicked) {
-			return addArmyTileRetreatMoveChoice(true, tile).validate();
+			PlayerChoicePick pick = addArmyTileRetreatMoveChoice(true, tile);
+			if (pick.choiceList.size() == 1) {
+				// force the retreat tile if there is only one available
+				pick.choiceList.get(0).activate();
+			} else {
+				return pick.validate();
+			}
 		}
 
 		if (!defenderRetreatPicked) {
@@ -604,22 +622,26 @@ public class BattleAction implements Action {
 		}
 
 		if (!defenderRetreatTilePicked) {
-			return addArmyTileRetreatMoveChoice(false, tile).validate();
+			PlayerChoicePick pick = addArmyTileRetreatMoveChoice(false, tile);
+			if (pick.choiceList.size() == 1) {
+				// force the retreat tile if there is only one available
+				pick.choiceList.get(0).activate();
+			} else {
+				return pick.validate();
+			}
 		}
 
-		if( !incrementedCounter ) {
+		if (!incrementedCounter) {
 			incrementedCounter = true;
 			game.battleCount++;
 		}
 		// battle is over
 		return null;
 	}
-	
-	
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		
+
 		cannonicalForm.set(BoardInventory.STATE_BATTLE, attackingArmy.owningPlayer.getState(playerIndex));
 		tile.setSelected(cannonicalForm, playerIndex, attackingArmy.owningPlayer.getState(playerIndex));
 
@@ -629,42 +651,46 @@ public class BattleAction implements Action {
 		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_STRENGTH, defendingArmy.getDefendingStrength());
 		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_SHIELD, defendingArmy.getDefendingShield());
 		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_DAMAGE, defendingArmy.getDefendingDamage());
-		
-		if( battleResolved ) {
-			cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) (attackerWins ? 1:-1));
+
+		if (battleResolved) {
+			cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) (attackerWins ? 1 : -1));
 		}
-		
+
 		if (attackingUsedBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD, attackingArmy.owningPlayer.getState(playerIndex));
-		}
-		else if (attackingDiscardBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_DISCARD, attackingArmy.owningPlayer.getState(playerIndex));
-		}
-		else if (defendingUsedBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD, defendingArmy.owningPlayer.getState(playerIndex));
-		}
-		else if (defendingDiscardBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD, defendingArmy.owningPlayer.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD,
+					attackingArmy.owningPlayer.getState(playerIndex));
+		} else if (attackingDiscardBattleCard == null) {
+			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_DISCARD,
+					attackingArmy.owningPlayer.getState(playerIndex));
+		} else if (defendingUsedBattleCard == null) {
+			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
+					defendingArmy.owningPlayer.getState(playerIndex));
+		} else if (defendingDiscardBattleCard == null) {
+			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+					defendingArmy.owningPlayer.getState(playerIndex));
 		}
 
 		else if (!attackerRetreatPicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL, attackingArmy.owningPlayer.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
+					attackingArmy.owningPlayer.getState(playerIndex));
 		}
 
 		else if (!attackerRetreatTilePicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT, defendingArmy.owningPlayer.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
+					defendingArmy.owningPlayer.getState(playerIndex));
 		}
 
 		else if (!defenderRetreatPicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL, defendingArmy.owningPlayer.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
+					defendingArmy.owningPlayer.getState(playerIndex));
 		}
 
 		else if (!defenderRetreatTilePicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT, attackingArmy.owningPlayer.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
+					attackingArmy.owningPlayer.getState(playerIndex));
 		}
-		
+
 	}
-	
 
 	public void resolveBattle() {
 		if (!battleResolved) {
@@ -739,9 +765,9 @@ public class BattleAction implements Action {
 		}
 	}
 
+	@Override
 	public void setParent(Action parent) {
 		this.parent = parent;
 	}
-
 
 }
