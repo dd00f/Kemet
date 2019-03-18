@@ -395,7 +395,9 @@ public class Player implements Model {
 	}
 
 	public void checkToRecuperateAllBattleCards() {
-		if (availableBattleCards.size() == 0) {
+		
+		// half of all cards are used
+		if (usedBattleCards.size() >= BattleCard.CARD_COUNT / 2) {
 			if (game.printActivations) {
 				game.printEvent("Player " + name + " recuperates all his battle cards.");
 			}
@@ -804,6 +806,14 @@ public class Player implements Model {
 
 	public static int getCardStatusIndex(int canonicalPlayerIndex, BattleCard card) {
 		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index;
+	}
+
+	public void enterSimulationMode(int playerIndex) {
+		if( index != playerIndex ) {
+			// return all discard battle cards for simulations to act as if those cards were available.
+			recoverAllDiscardedBattleCards();
+		}
+		
 	}
 
 }

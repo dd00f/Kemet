@@ -4,18 +4,16 @@ import java.util.List;
 
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.dataset.api.MultiDataSet;
 
 import kemet.Options;
 import kemet.ai.KemetNeuralNetwork;
 import kemet.ai.KemetRecurrentNeuralNetBuilder;
 import kemet.ai.TrialPlayerAI;
 import kemet.model.KemetGame;
-import kemet.util.Coach;
-import kemet.util.Game;
 import kemet.util.GameFactory;
-import kemet.util.MCTS;
 import kemet.util.PolicyVector;
+import kemet.util.SearchPooler;
+import kemet.util.StackingMCTS;
 import kemet.util.TrainExample;
 
 class MctsTrainingTest {
@@ -65,10 +63,13 @@ class MctsTrainingTest {
 		createGame.printActivations = true;
 		createGame.printDescribeGame();
 		
-		MCTS mcts = new MCTS(createGame, nn, 1, 500);
+
+		SearchPooler pooler = new SearchPooler(nn);
+		StackingMCTS mcts = new StackingMCTS(createGame, pooler, 0.5f);
+		
 		mcts.setCpuct(0.5f);
 		
-		PolicyVector actionProbability = mcts.getActionProbability(0.5f);
+		PolicyVector actionProbability = mcts.getActionProbability(0.5f, 500);
 		
 		
 

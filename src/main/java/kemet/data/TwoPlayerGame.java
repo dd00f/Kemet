@@ -61,7 +61,7 @@ public class TwoPlayerGame implements GameFactory
 
     }
 
-    private void initializeGame()
+    public void initializeGame()
     {
         createPlayers();
         createTiles();

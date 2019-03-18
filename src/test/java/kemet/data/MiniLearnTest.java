@@ -1,17 +1,12 @@
 package kemet.data;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.MutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.deeplearning4j.api.storage.StatsStorage;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.ui.api.UIServer;
 import org.deeplearning4j.ui.stats.StatsListener;
 import org.deeplearning4j.ui.storage.InMemoryStatsStorage;
@@ -20,21 +15,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.dataset.api.iterator.TestMultiDataSetIterator;
 
-import kemet.Options;
-import kemet.ai.KemetNeuralNetwork;
 import kemet.ai.KemetNeuralNetBuilder;
-import kemet.model.BoardInventory;
-import kemet.model.KemetGame;
-import kemet.model.action.PlayerChoicePick;
-import kemet.model.action.choice.ChoiceInventory;
-import kemet.util.ByteCanonicalForm;
-import kemet.util.Coach;
-import kemet.util.Game;
-import kemet.util.GameFactory;
-import kemet.util.MCTS;
-import kemet.util.NeuralNet;
-import kemet.util.PolicyVector;
-import kemet.util.TrainExample;
 import kemet.util.Utilities;
 
 class MiniLearnTest {

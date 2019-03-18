@@ -1,23 +1,19 @@
 package kemet.data;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import kemet.Options;
 import kemet.ai.KemetNeuralNetwork;
 import kemet.model.KemetGame;
-import kemet.model.action.PlayerChoicePick;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Coach;
-import kemet.util.Game;
 import kemet.util.GameFactory;
-import kemet.util.MCTS;
 import kemet.util.NeuralNet;
 import kemet.util.PolicyVector;
+import kemet.util.SearchPooler;
+import kemet.util.StackingMCTS;
 import kemet.util.TrainExample;
 
 class KemetLearnTest {
@@ -61,14 +57,15 @@ class KemetLearnTest {
 
 			List<TrainExample> trainExamples = new ArrayList<>();
 
-			MCTS newmcts = new MCTS(null, neuralNet, cpuct, simulationPerMove); // reset the search tree
+			SearchPooler pooler = new SearchPooler(neuralNet);
+			StackingMCTS newmcts = new StackingMCTS(game, pooler, cpuct);
 			newmcts.setGame(game);
 			
 			PolicyVector NNETPredict = neuralNet.predict(canonicalBoard).getLeft();
 			System.out.println("NNET prediction policy 26 = " + NNETPredict.vector[26] + " at 27 = " + NNETPredict.vector[27]);
 			NNETPredict.printProbabilityVector();
 
-			newActionProbabilityPi = newmcts.getActionProbability(temperature);
+			newActionProbabilityPi = newmcts.getActionProbability(temperature, simulationPerMove);
 			// newmcts.choiceValuePredictionForBoardPs.get(stringRepresentation).printProbabilityVector();
 
 			System.out.println("Training policy");

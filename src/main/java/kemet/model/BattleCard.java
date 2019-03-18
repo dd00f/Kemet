@@ -17,6 +17,8 @@ public class BattleCard implements Model {
 	public static final String SHIELD_PUSH = "Shield Push";
 	public static final String DEFENSIVE_RETREAT = "Defensive Retreat";
 	public static final String FERVENT_PURGE = "Fervent Purge";
+	
+	public static final int CARD_COUNT = 8;
 
 	public static int INDEXER = 0;
 

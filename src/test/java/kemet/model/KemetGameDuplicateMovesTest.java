@@ -230,9 +230,10 @@ class KemetGameDuplicateMovesTest {
 		Valid v1 = new Valid();
 		Valid v2 = new Valid();
 		Valid v3 = new Valid();
-		v1.valid = createGame.getValidMoves();
-		v2.valid = createGame.getValidMoves();
-		v3.valid = createGame.getValidMoves();
+		boolean[] validMoves = createGame.getValidMoves();
+		v1.valid = Arrays.copyOf(validMoves, validMoves.length);
+		v2.valid = Arrays.copyOf(validMoves, validMoves.length);
+		v3.valid = Arrays.copyOf(validMoves, validMoves.length);
 		v3.valid[10] = !v3.valid[10];
 		assertEquals(v1, v2);
 		assertNotEquals(v1, v3);
@@ -249,7 +250,7 @@ class KemetGameDuplicateMovesTest {
 			if (createGame.getGameEnded(0) != 0) {
 				ByteCanonicalForm canonicalForm = cf;
 				Valid valid = new Valid();
-				valid.valid = createGame.getValidMoves();
+				valid.valid = validMoves;
 				checkForValidMoveMatch(canonicalForm, valid);
 			}
 

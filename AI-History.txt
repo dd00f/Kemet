@@ -522,14 +522,29 @@
 				Down to 16,128
 			- show the result of battle victory sooner, removing recall & retreat tile ( x2x2x3 ) ( already done )
 				Down to 1344 scenarios
+
+
+2019-03-16
+		Forgetful
+			The MCTS now cleans up its memory to only remember moves that have a chance of happening. Discarding the rest.
+			It can now train 100 games in parallel with 1000 simulation per move. It takes 10 seconds to do 1 move on all 
+			100 games.
+			
+
+2019-03-17
+	Cheater
+		When defending, the MCTS will automatically know which battle card was used by the attacker 
+		since the choice is alredy made, I'd need to revert simulations to pick defender card first.
+	
+
 TODO High priority: 
 		
-		- short term memory MCTS- gradually forget old actions and action branches that didn't pan out. Allowing games
-		to try thousands of simulation.
+
 		
 		- Eliminate discard selection on opponent simulation games.
 		
 		- Ensure MCTS doesn't cheat when simulating opponent battle card selection.
+			Attack is ok, but defense keeps the selected cards. Reverse card selection order.
 
 TODO Low priority: 
 		

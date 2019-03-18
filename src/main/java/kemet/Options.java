@@ -2,7 +2,6 @@ package kemet;
 
 public class Options {
 
-	// TODO set to false
 	public static boolean COACH_PRINT_GAME_AFTER_SELF_TRAINING = false;
 
 	// when set to false, epoch will be executed by the dl4j api without shuffling 
@@ -45,17 +44,14 @@ public class Options {
 	public static int GAME_TURN_LIMIT = 15;
 
 	// Number of matches used to compare 2 generations of the neural network
-	// TODO reset
-	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 40;
+	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 50;
 
 	// number of games to play when training the neural network
-	// TODO reset to 100 ?
-	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 50;
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 100;
 
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network
-	// TODO reset to 50
-	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 100;
+	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 1000;
 	
 	// number of times to run the test data to fit the neural network
 	public static int NEURAL_NET_TRAIN_EPOCH = 30;

@@ -5,15 +5,7 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
 public interface Game {
-	/*
-	 * This class specifies the base Game class. To define your own game, subclass
-	 * this class and implement the functions below. This works when the game is
-	 * two-player, adversarial and turn-based.
-	 * 
-	 * Use 1 for player1 and -1 for player2.
-	 * 
-	 * See othello/OthelloGame.py for an example implementation.
-	 */
+
 
 	public void initialize();
 
@@ -92,14 +84,7 @@ public interface Game {
 	 */
 	public List<Game> getSymmetries(int playerIndex);
 
-//	/**
-//	 * 
-//	 * @return boardString: a quick conversion of board to a string format. Required
-//	 *         by MCTS for hashing.
-//	 *         
-//	 */
-//	public String stringRepresentation(int playerIndex);
-	
+
 	public void playbackGame(int[] actions);
 
 	public void describeGame(StringBuilder builder);
@@ -133,6 +118,8 @@ public interface Game {
 	public float getSimpleValue(int playerIndex, float predictedValue );
 	
 	public boolean isGameEnded();
+	
+	public void enterSimulationMode(int playerIndex);
 
 
 }

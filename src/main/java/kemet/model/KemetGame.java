@@ -41,6 +41,7 @@ public class KemetGame implements Model, Game {
 	public GameAction action = null;
 	public boolean printActivations = true;
 	public int battleCount = 0;
+	public int simulatedPlayerIndex = -1;
 
 	public int recordActionIndex = 0;
 	public int[] actions = null;
@@ -52,9 +53,9 @@ public class KemetGame implements Model, Game {
 
 	private static Cache<KemetGame> GAME_CACHE = new Cache<KemetGame>(() -> new KemetGame());
 
-	private PlayerChoicePick nextPlayerChoicePick;
+	public PlayerChoicePick nextPlayerChoicePick;
 
-	private ByteCanonicalForm canonicalForm;
+	public ByteCanonicalForm canonicalForm;
 
 	private boolean[] allValidMoves;
 
@@ -77,6 +78,8 @@ public class KemetGame implements Model, Game {
 		winner = null;
 		action = GameAction.create(this);
 		printActivations = true;
+		battleCount = 0;
+		simulatedPlayerIndex = -1;
 
 		tileList.clear();
 		playerByInitiativeList.clear();
@@ -118,6 +121,10 @@ public class KemetGame implements Model, Game {
 		clone.victoryConditionTriggered = victoryConditionTriggered;
 		clone.victoryPointObjective = victoryPointObjective;
 		clone.printActivations = printActivations;
+		
+		clone.battleCount = battleCount;
+		clone.simulatedPlayerIndex = simulatedPlayerIndex;
+		
 		clone.winner = clone.getPlayerByCopy(winner);
 
 		clone.action = action.deepCacheClone();
@@ -493,8 +500,10 @@ public class KemetGame implements Model, Game {
 	}
 
 	public void activateAction(Choice choice) {
-		if (recordActionIndex < Options.GAME_TRACK_MAX_ACTION_COUNT) {
-			actions[recordActionIndex++] = choice.getIndex();
+		int index = choice.getIndex();
+
+		if (recordActionIndex < Options.GAME_TRACK_MAX_ACTION_COUNT && index >= 0) {
+			actions[recordActionIndex++] = index;
 		}
 
 		choice.activate();
@@ -531,7 +540,7 @@ public class KemetGame implements Model, Game {
 		throw new IllegalArgumentException(message);
 	}
 
-	private PlayerChoicePick getNextPlayerChoicePick() {
+	public PlayerChoicePick getNextPlayerChoicePick() {
 		if (nextPlayerChoicePick == null) {
 			nextPlayerChoicePick = action.getNextPlayerChoicePick();
 		}
@@ -647,15 +656,8 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public List<Game> getSymmetries(int playerIndex) {
-		// ???
 		return new ArrayList<>();
 	}
-
-//	@Override
-//	public String stringRepresentation(int playerIndex) {
-//		ByteCanonicalForm canonicalForm2 = getCanonicalForm(playerIndex);
-//		return canonicalForm2.toCanonicalString();
-//	}
 
 	@Override
 	public Game clone() {
@@ -685,6 +687,16 @@ public class KemetGame implements Model, Game {
 		pointDifference = pointDifference / victoryPointsObjective;
 
 		return pointDifference;
+	}
+
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+		simulatedPlayerIndex = playerIndex;
+		
+		for (Player player : playerByInitiativeList) {
+			player.enterSimulationMode( playerIndex );
+		}
+		
 	}
 
 }

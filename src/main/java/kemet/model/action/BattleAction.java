@@ -378,12 +378,23 @@ public class BattleAction implements Action {
 					attackingDiscardBattleCard = card;
 				} else {
 					attackingUsedBattleCard = card;
+					if( game.simulatedPlayerIndex >= 0 && game.simulatedPlayerIndex != player.index ) {
+						// skip discard card selection for other players during simulations
+						attackingDiscardBattleCard = card;
+					}
+					
 				}
 			} else {
 				if (isDiscard) {
 					defendingDiscardBattleCard = card;
 				} else {
 					defendingUsedBattleCard = card;
+
+					if( game.simulatedPlayerIndex >= 0 && game.simulatedPlayerIndex != player.index ) {
+						// skip discard card selection for other players during simulations
+						defendingDiscardBattleCard = card;
+					}
+
 				}
 			}
 

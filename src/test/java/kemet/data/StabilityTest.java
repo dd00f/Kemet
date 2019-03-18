@@ -59,7 +59,7 @@ class StabilityTest {
 		Options.PRINT_COACH_SEARCH_ACTIONS = true;
 		Options.PRINT_COACH_SEARCH_PROBABILITIES = true;
 		
-		executeEpisode = coach.executeEpisode();
+		coach.runSelfTrainingStacking();
 
 		createAdjustedTrainDataset();
 
@@ -120,11 +120,11 @@ class StabilityTest {
 	private void createAdjustedTrainDataset() {
 		List<MultiDataSet> setList = new ArrayList<>();
 
-		float trainCount = executeEpisode.size();
+		float trainCount = coach.trainExamplesHistory.size();
 		int i = 0;
 		float iFloat = 0;
 
-		for (TrainExample trainExample : executeEpisode) {
+		for (TrainExample trainExample : coach.trainExamplesHistory) {
 			i++;
 			iFloat = i;
 			// adjust the value based on the depth of the game
@@ -138,8 +138,6 @@ class StabilityTest {
 	private KemetNeuralNetwork nn;
 
 	private Coach coach;
-
-	private List<TrainExample> executeEpisode;
 
 	private MultiDataSet[] trainArrays;
 

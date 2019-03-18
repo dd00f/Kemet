@@ -26,7 +26,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class Coach {
 
-	private static final int PLAY_PRINT_INTERVAL = 20;
+	private static final int PLAY_PRINT_INTERVAL = 100;
 
 	/**
 	 * Number of iterations to coach. In each iteration, {@link #numEps} games are
@@ -85,6 +85,61 @@ public class Coach {
 		pnet = nnet.clone();
 	}
 
+	/**
+	 * This function executes one episode of this.play, starting with player 1. As
+	 * the game is played, each turn is added as a training example to
+	 * trainExamples. The game is played till the game ends. After the game ends,
+	 * the outcome of the game is used to assign values to each example in
+	 * trainExamples.
+	 * 
+	 * 
+	 * It uses a temp=1 if episodeStep < tempThreshold, and thereafter uses temp=0.
+	 * 
+	 * Returns: trainExamples: a list of examples of the form (canonicalBoard,pi,v)
+	 * pi is the MCTS informed policy vector, v is +1 i
+	 * 
+	 * @return
+	 */
+	public List<TrainExample> executeEpisode() {
+
+		MCTS mcts = new MCTS(null, nnet, cpuct, simulationCount); // reset the search tree
+
+		List<TrainExample> trainExamples = new ArrayList<>();
+		Game game = gameFactory.createGame();
+		game.setPrintActivations(Options.PRINT_COACH_SEARCH_ACTIONS);
+		mcts.setGame(game);
+		int currentPlayer = game.getNextPlayer();
+		int episodeStep = 0;
+
+		while (true) {
+
+			episodeStep += 1;
+
+			// At temperature zero, do less exploration
+			int temperature = 0;
+			if (episodeStep < temperatureThreshold) {
+
+				// At temperature 1, do more exploration during the first few moves
+				temperature = 1;
+			}
+
+			currentPlayer = activateNextAction(game, mcts, trainExamples, temperature, currentPlayer);
+
+			int gameEnded = game.getGameEnded(currentPlayer);
+
+			if (gameEnded != 0) {
+				adjustAllTrainingExampleValue(trainExamples, currentPlayer, gameEnded);
+				break;
+			}
+
+		}
+
+		mcts.printStats();
+
+		return trainExamples;
+
+	}
+
 	public void adjustAllTrainingExampleValue(List<TrainExample> trainExamples, int currentPlayer,
 			int isCurrentPlayerWinner) {
 		for (TrainExample trainExample : trainExamples) {
@@ -95,6 +150,41 @@ public class Coach {
 			}
 			trainExample.valueV = isCurrentPlayerWinner * currentPlayerMod;
 		}
+	}
+
+	public int activateNextAction(Game game, MCTS mcts, List<TrainExample> trainExamples, int temperature,
+			int currentPlayer) {
+
+		ByteCanonicalForm canonicalBoard = game.getCanonicalForm(currentPlayer);
+
+		PolicyVector actionProbabilityPi = mcts.getActionProbability(temperature);
+
+		int actionIndex = actionProbabilityPi.pickRandomAction();
+		if (Options.COACH_USE_MANUAL_AI) {
+			KemetGame kg = (KemetGame) game;
+			TrialPlayerAI ai = new TrialPlayerAI(kg.getPlayerByIndex(currentPlayer), kg);
+			ai.print = false;
+			actionIndex = ai.pickAction(kg.action.getNextPlayerChoicePick()).getIndex();
+
+			actionProbabilityPi.boostActionIndex(actionIndex);
+		}
+
+		boolean[] validMoves = game.getValidMoves();
+		trainExamples.add(new TrainExample(canonicalBoard, currentPlayer, actionProbabilityPi, 0, validMoves));
+
+		if (Options.PRINT_COACH_SEARCH_PROBABILITIES) {
+			actionProbabilityPi.printActionProbabilities(game);
+		}
+
+		try {
+			game.activateAction(currentPlayer, actionIndex);
+			currentPlayer = game.getNextPlayer();
+		} catch (Exception ex) {
+			log.error("Activate action failed", ex);
+
+			activateFirstValidMoveOnError(game, currentPlayer, validMoves);
+		}
+		return currentPlayer;
 	}
 
 	private void activateFirstValidMoveOnError(Game game, int currentPlayer, boolean[] validMoves) {
@@ -153,8 +243,7 @@ public class Coach {
 			if (Options.COACH_USE_STACKING_MCTS) {
 				runSelfTrainingStacking();
 			} else {
-				// runSelfTraining();
-				throw new IllegalStateException();
+				runSelfTraining();
 			}
 		}
 
@@ -181,13 +270,12 @@ public class Coach {
 
 		} else {
 
-			throw new IllegalStateException();
-//			MCTS previousMcts = new MCTS(null, pnet, cpuct, simulationCount);
-//			MCTS newMcts = new MCTS(null, nnet, cpuct, simulationCount);
-//
-//			Arena arena = playArenaGames(previousMcts, newMcts);
-//
-//			pickArenaWinner(j, arena);
+			MCTS previousMcts = new MCTS(null, pnet, cpuct, simulationCount);
+			MCTS newMcts = new MCTS(null, nnet, cpuct, simulationCount);
+
+			Arena arena = playArenaGames(previousMcts, newMcts);
+
+			pickArenaWinner(j, arena);
 		}
 	}
 
@@ -276,12 +364,6 @@ public class Coach {
 					nextPlayerMcts = getNextMcts(previousMcts, newMcts, nextPlayer, swapped);
 
 					activateActionOnGame(temperature, nextPlayerMcts);
-					
-					previousMcts.cleanupOldCycles();
-					newMcts.cleanupOldCycles();
-					
-					previousMcts.incrementCycle();
-					newMcts.incrementCycle();
 
 					if (nextPlayerMcts.game.isGameEnded()) {
 						previousMCTSList[j] = null;
@@ -302,9 +384,6 @@ public class Coach {
 					}
 				}
 			}
-			
-			previousPooler.cleanup();
-			newPooler.cleanup();
 
 			return remainingGameCount;
 		}
@@ -399,13 +478,16 @@ public class Coach {
 		}
 
 		public void createSearchPooler(NeuralNet pnet2, NeuralNet nnet2) {
-			previousPooler = new SearchPooler(pnet2);
+			previousPooler = new SearchPooler();
+			previousPooler.neuralNet = pnet2;
 
-			newPooler = new SearchPooler(nnet2);
+			newPooler = new SearchPooler();
+			newPooler.neuralNet = nnet2;
+
 		}
 
 		private void incrementVictoryCount(boolean swapped, int playerZeroScore) {
-			if (!swapped) {
+			if (! swapped) {
 				// swapped
 				if (playerZeroScore > 0) {
 					// player zero won
@@ -453,7 +535,39 @@ public class Coach {
 
 	}
 
-	public void runSelfTrainingStacking() {
+	private void runSelfTraining() {
+		List<TrainExample> iterationTrainExamples = new ArrayList<>(); // = deque([],
+																		// maxlen=this.args.maxlenOfQueue)
+
+		long totalTime = 0;
+		long end = System.currentTimeMillis();
+		long start = end;
+		for (int k = 1; k <= numEps; k++) {
+			List<TrainExample> executeEpisode = executeEpisode();
+			iterationTrainExamples.addAll(executeEpisode);
+
+			// bookkeeping + plot progress
+			long now = System.currentTimeMillis();
+			// eps_time.update(now - end);
+
+			end = now;
+			long duration = end - start;
+			totalTime += duration;
+			long average = totalTime / k;
+			long timeLeft = average * (numEps - k);
+
+			log.info(k + "/" + numEps + " | eps time " + duration + "ms | total " + totalTime + "ms | ETA " + timeLeft
+					+ "ms");
+
+			start = now;
+
+		}
+
+		// save the iteration examples to the history
+		trainExamplesHistory.addAll(iterationTrainExamples);
+	}
+
+	private void runSelfTrainingStacking() {
 
 		long totalTime = 0;
 		long end = System.currentTimeMillis();
@@ -461,7 +575,8 @@ public class Coach {
 
 		log.info("START : Self Training Stacking of {} games", numEps);
 
-		SearchPooler pooler = new SearchPooler(nnet);
+		SearchPooler pooler = new SearchPooler();
+		pooler.neuralNet = nnet;
 
 		StackingMCTS[] gameList = new StackingMCTS[numEps];
 
@@ -486,12 +601,12 @@ public class Coach {
 			remainingGameCount = runPooledGameAction(pooler, gameList, trainExamples, remainingGameCount, episodeStep);
 
 			if (episodeStep % PLAY_PRINT_INTERVAL == 0) {
-				pooler.printStats("Self play " + episodeStep + " | ");
+				pooler.printStats("Self play " + episodeStep);
 			}
 
 		}
 
-		pooler.printStats("Self play finished " + episodeStep + " | ");
+		pooler.printStats("Self play finished " + episodeStep);
 
 		// bookkeeping + plot progress
 		long now = System.currentTimeMillis();
@@ -528,16 +643,11 @@ public class Coach {
 			StackingMCTS mcts = gameList[j];
 			if (mcts != null) {
 				activateActionOnGame(temperature, mcts);
-				
-				mcts.cleanupOldCycles();
-				mcts.incrementCycle();
 
 				// purge ended games
 				remainingGameCount = checkIfGameEnded(gameList, remainingGameCount, j, mcts, trainExamples);
 			}
 		}
-		
-		pooler.cleanup();
 
 		return remainingGameCount;
 	}
@@ -583,9 +693,8 @@ public class Coach {
 		}
 
 		boolean[] validMoves = game.getValidMoves();
-		TrainExample trainExample = new TrainExample(canonicalForm, currentPlayer, actionProbabilityAfterSearch, 0,
-				validMoves);
-		mcts.trainExamples.add(trainExample);
+		mcts.trainExamples
+				.add(new TrainExample(canonicalForm, currentPlayer, actionProbabilityAfterSearch, 0, validMoves));
 
 		if (Options.PRINT_COACH_SEARCH_PROBABILITIES) {
 			actionProbabilityAfterSearch.printActionProbabilities(game);
@@ -636,8 +745,84 @@ public class Coach {
 		}
 	}
 
+	private void pickArenaWinner(int j, Arena arena) {
+		float newWinCountfloat = arena.getNewWinCount();
+		float previousWinCountfloat = arena.getPreviousWinCount();
+		int drawCount = arena.getDrawCount();
+		log.info("NEW/PREV WINS : {} / {} ; DRAWS : {}", arena.getNewWinCount(), arena.getPreviousWinCount(),
+				drawCount);
+		if (newWinCountfloat + previousWinCountfloat > 0
+				&& newWinCountfloat / (newWinCountfloat + previousWinCountfloat) < this.updateThreshold) {
+			log.info("REJECTING NEW MODEL");
+			this.nnet.loadCheckpoint(this.checkpoint, "temp.pth.tar");
+		} else {
+			log.info("ACCEPTING NEW MODEL");
+			this.nnet.saveCheckpoint(this.checkpoint, this.getCheckpointFile(j));
+			this.nnet.saveCheckpoint(this.checkpoint, "best.pth.tar");
+
+			saveTrainExamples(getBestExampleFileName());
+		}
+	}
+
 	private String getBestExampleFileName() {
 		return this.checkpoint + "best.pth.tar" + ".examples";
+	}
+
+	private Arena playArenaGames(MCTS pmcts, MCTS nmcts) {
+		log.info("PITTING AGAINST PREVIOUS VERSION");
+
+		Player previousPlayer = new Player() {
+
+			public String name = "old";
+
+			@Override
+			public int getActionProbability(Game game) {
+				validatePlayer(game, name);
+
+				pmcts.setGame(game);
+				return pmcts.getActionProbability(0).getMaximumMove();
+			}
+
+			@Override
+			public void printStats() {
+				pmcts.printStats();
+
+			}
+		};
+
+		Player newPlayer = new Player() {
+
+			public String name = "new";
+
+			@Override
+			public int getActionProbability(Game game) {
+				validatePlayer(game, name);
+
+				nmcts.setGame(game);
+				return nmcts.getActionProbability(0).getMaximumMove();
+			}
+
+			@Override
+			public void printStats() {
+				nmcts.printStats();
+
+			}
+
+		};
+
+		Arena arena = new Arena(previousPlayer, newPlayer, gameFactory);
+
+		arena.playGames(this.arenaCompare);
+		return arena;
+	}
+
+	private void validatePlayer(Game game, String expectedName) {
+		if (Options.COACH_VALIDATE_PLAYER_NAME) {
+			String playerName = game.getPlayerName(game.getNextPlayer());
+			if (!playerName.equals(expectedName)) {
+				throw new IllegalArgumentException("player name = " + playerName + ", expected " + expectedName);
+			}
+		}
 	}
 
 	public String getCheckpointFile(int iteration) {
