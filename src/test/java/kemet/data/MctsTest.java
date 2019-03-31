@@ -1,26 +1,10 @@
 package kemet.data;
 
-import java.util.List;
-
-import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.junit.jupiter.api.Test;
-import org.nd4j.linalg.dataset.api.MultiDataSet;
 
-import kemet.Options;
-import kemet.ai.KemetNeuralNetwork;
-import kemet.ai.KemetRecurrentNeuralNetBuilder;
-import kemet.ai.TrialPlayerAI;
-import kemet.model.KemetGame;
-import kemet.util.Coach;
-import kemet.util.Game;
-import kemet.util.GameFactory;
 import kemet.util.StackingMCTS;
-import kemet.util.PolicyVector;
-import kemet.util.TrainExample;
 
 class StackingMCTSTest {
-
-	private ComputationGraph build;
 
 	public boolean useRecurrentNetwork = true;
 
@@ -95,9 +79,5 @@ class StackingMCTSTest {
 		System.out.println(StackingMCTS.getAdjustedActionValueForSearch(0.5f, 7, 0.5f, 0.7f, 2));
 
 	}
-
-	private KemetNeuralNetwork nn;
-
-	private List<TrainExample> executeEpisode;
 
 }

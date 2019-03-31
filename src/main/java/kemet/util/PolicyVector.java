@@ -16,10 +16,38 @@ public class PolicyVector implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -4843132931066392140L;
+
+	public static long ALL_VALID_MOVES_MASKED = 0;
+
 	public float[] vector;
 
 	public INDArray toINDArray() {
 		return Utilities.createArray(vector);
+	}
+
+	/**
+	 * if all valid moves were masked make all valid moves equally probable
+	 * 
+	 * All valid moves may be masked if either your NNet architecture is
+	 * insufficient or you've get overfitting or something else. If you have got
+	 * dozens or hundreds of these messages you should pay attention to your NNet
+	 * and/or training process.
+	 * 
+	 * @param validMoves
+	 * @return true if the valid moves were patched
+	 */
+	public boolean patchMissingActivatedMoves(boolean[] validMoves) {
+
+		float sum = sum();
+		if (sum <= 0) {
+			log.info("All valid moves were masked, do workaround where all actions get equal probability.");
+
+			ALL_VALID_MOVES_MASKED++;
+			activateAllValidMoves(validMoves);
+			return true;
+		}
+		return false;
+
 	}
 
 	public void activateAllValidMoves(boolean[] validMoves) {
@@ -81,25 +109,24 @@ public class PolicyVector implements Serializable {
 	public void printActionProbabilities(Game currentGame) {
 		for (int i = 0; i < vector.length; i++) {
 			float probability = vector[i];
-			if( probability > 0 ) {
-				log.info( String.format("%2.2f chance of action : %s", probability*100.0, currentGame.describeAction(i)));
+			if (probability > 0) {
+				log.info(String.format("%2.2f chance of action : %s", probability * 100.0,
+						currentGame.describeAction(i)));
 			}
 		}
 	}
 
 	public void printProbabilityVector() {
-		log.info("All Probabilities : " +  Arrays.toString(vector));
+		log.info("All Probabilities : " + Arrays.toString(vector));
 	}
 
 	public void boostActionIndex(int actionIndex) {
 		vector[actionIndex] += 2;
 		normalize();
 	}
-	
+
 	public static Random random = new Random();
 
-
-	
 	public int pickRandomAction() {
 		float nextFloat = random.nextFloat();
 		int action = 0;
@@ -139,10 +166,10 @@ public class PolicyVector implements Serializable {
 			}
 			vector[i] = floatValue;
 		}
-		
+
 		if (foundNan) {
 			throw new IllegalArgumentException("Policy value returned a NaN value " + Arrays.toString(vector));
 		}
 	}
-	
+
 }

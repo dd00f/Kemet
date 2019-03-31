@@ -100,9 +100,9 @@ public class KemetNeuralNetBuilder {
 				Builder residualDenseBuilder = new DenseLayer.Builder().nIn(LAYER_SIZE).nOut(LAYER_SIZE)
 						.weightInit(weightInit);
 
-				if (false) {
-					residualDenseBuilder.activation(Activation.RELU);
-				}
+				//if (false) {
+				//	residualDenseBuilder.activation(Activation.RELU);
+				//}
 
 				conf2.layer(denseLayerNameR, residualDenseBuilder.build(), policyInput);
 

@@ -534,17 +534,74 @@
 2019-03-17
 	Cheater
 		When defending, the MCTS will automatically know which battle card was used by the attacker 
-		since the choice is alredy made, I'd need to revert simulations to pick defender card first.
-	
+		since the choice is already made.
+		
+		- Other player always goes last 
+			I'd need to revert simulations to pick the current simulated player card first.
+			But that would just revert the problem where the Neural Network would always feel that 
+			the other neural network will always pick the best card against them. Leading to an even 
+			probability distribution when there should really be only a few cards that are better than 
+			others. - Overly pessimistic.
 
+		- Other player always goes first 
+			The Neural Net would then predict what the opponent is most likely to pick through MCTS and
+			select the best counter. Works well, but :
+			- the MCTS needs to return probabilities for the current pick, if the current pick forces a previous
+				action to be searched, how would this work ???
+
+		- force other player simultaneous moves : sequential
+			When picking a battle card in simulation mode, change the selection from the other player
+			based on a sequential distribution of the remaining cards. For instance, remember that : 
+			when picking card A, opponent last reaction to card A was card B, so move to card C.
+			- Pro : evens out probability distributions
+			- Pro : Speed up MCTS by avoiding 
+			
+		- force other player simultaneous moves : random
+			When picking a battle card in simulation mode, change the selection from the other player
+			based on a random distribution of the remaining cards.
+			- Pro : Generic
+			- Pro : Works for DI cards too
+			- Pro : Easy
+			- Con : requires lots of simulations to get good distributions.
+			- Con : assumes the opponent is dumb & random
+			
+		- force other player simultaneous moves : probabilistic
+			Build up a memory of how the opponent reacted in a similar battle with the attributes : 
+				- size of my army
+				- size of other army
+				- am I the attacker
+				- list of available / discard cards on both sides
+			- Pro : probably the best solution
+			- Con : development complexity
+			- Con : Unlike poker, this Neural Net won't get to play against opponents enough time to 
+				build valid probability distributions.
+				
+		- force simultaneous moves : mcts
+			Ask for MCTS selection simultaneously for current player attack / discard & opponent attack.
+			Apply them simultaneously.
+			- Game to provide a multi-selection counter ( 1 in most case, >1 in other cases ).
+			- Game to provide a canonical form for each simultaneous selection 
+			- Game to provide a method to apply multiple actions at once ( or sequence them in the order they came in )
+	
+			- Pro : most technically accurate
+			- Con : no level of prediction
+			- Con : Requries one hell of a refactoring.
+
+2019-03-29
+
+	Goodbye defending MCTS cheater
+		The MCTS simulation no longer cheats when defending. During a simulation, the game enters a special mode where
+		the other player's hidden choices are made simultaneously to the simulated player's point of view.
+		The simulated player will use its own neural network to predict a distribution of battle card
+		selection, ensuring that it varies independently of his own choice. In a battle, the simulated player
+		always goes first.
+		
+		Another side benefit of this simultaneous choice is the elimination of the opponent battle card discard
+		selection as it brings no value to the current state of the simulation.
+
+	
 TODO High priority: 
 		
-
-		
-		- Eliminate discard selection on opponent simulation games.
-		
-		- Ensure MCTS doesn't cheat when simulating opponent battle card selection.
-			Attack is ok, but defense keeps the selected cards. Reverse card selection order.
 
 TODO Low priority: 
 		

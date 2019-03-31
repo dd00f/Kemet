@@ -48,7 +48,7 @@ public class SearchPooler {
 			String infoMessage = "{} nnet call count = {} | " + "nnet prediction count = {} | "
 					+ "avg nnet prediction per call = {} | " + "avg time per call us {} | "
 					+ "avg time per prediction us {} | " + "all moves mask count {} | " + " average search depth {}";
-			
+
 			log.info(infoMessage, prefix, neuralNetCallCount, neuralNetPredictionCount,
 					neuralNetPredictionCount / neuralNetCallCount, neuralNetTotalTimeNano / neuralNetCallCount / 1000,
 					neuralNetTotalTimeNano / neuralNetPredictionCount / 1000, allMovesMaskedCount,
@@ -138,20 +138,8 @@ public class SearchPooler {
 
 			inPolicy.maskInvalidMoves(validMoves);
 
-			float sum = inPolicy.sum();
-			if (sum <= 0) {
-				/*
-				 * # if all valid moves were masked make all valid moves equally probable
-				 * 
-				 * # NB! All valid moves may be masked if either your NNet architecture is
-				 * insufficient or you've get overfitting or something else. # If you have got
-				 * dozens or hundreds of these messages you should pay attention to your NNet
-				 * and/or training process.
-				 */
-				log.info("All valid moves were masked, do workaround where all actions get equal probability.");
+			if (inPolicy.patchMissingActivatedMoves(validMoves)) {
 				allMovesMaskedCount++;
-
-				inPolicy.activateAllValidMoves(validMoves);
 			}
 
 			if (Options.MCTS_USE_MANUAL_AI) {
@@ -168,11 +156,9 @@ public class SearchPooler {
 
 			policy = inPolicy;
 
-			if (Options.PRINT_MCTS_FULL_PROBABILITY_VECTOR)
-
-				if (Options.MCTS_VALIDATE_MOVE_FOR_BOARD) {
-					movesToReachBoard = game.getActivatedActions();
-				}
+			if (Options.MCTS_VALIDATE_MOVE_FOR_BOARD) {
+				movesToReachBoard = game.getActivatedActions();
+			}
 
 			game = null;
 		}

@@ -9,7 +9,6 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.api.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
-import kemet.Options;
 import kemet.ai.KemetNeuralNetBuilder;
 import lombok.Getter;
 

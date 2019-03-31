@@ -20,6 +20,7 @@ import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 import kemet.util.Game;
+import kemet.util.StackingMCTS;
 
 public class KemetGame implements Model, Game {
 
@@ -59,6 +60,8 @@ public class KemetGame implements Model, Game {
 
 	private boolean[] allValidMoves;
 
+	public StackingMCTS simulationMcts;
+
 	public static KemetGame create() {
 		KemetGame create = GAME_CACHE.create();
 		create.initialize();
@@ -76,6 +79,7 @@ public class KemetGame implements Model, Game {
 		victoryConditionTriggered = false;
 		victoryPointObjective = 8;
 		winner = null;
+		simulationMcts = null;
 		action = GameAction.create(this);
 		printActivations = true;
 		battleCount = 0;
@@ -146,6 +150,7 @@ public class KemetGame implements Model, Game {
 
 		clone.allValidMoves = allValidMoves;
 		clone.canonicalForm = canonicalForm;
+		clone.simulationMcts = simulationMcts;
 
 		return clone;
 	}
@@ -175,6 +180,8 @@ public class KemetGame implements Model, Game {
 		winner = null;
 
 		action = null;
+		
+		simulationMcts = null;
 
 		GAME_CACHE.release(this);
 	}
@@ -503,11 +510,27 @@ public class KemetGame implements Model, Game {
 		int index = choice.getIndex();
 
 		if (recordActionIndex < Options.GAME_TRACK_MAX_ACTION_COUNT && index >= 0) {
-			actions[recordActionIndex++] = index;
+			if( isSimulation() ) {
+				actions[recordActionIndex++] = index + 1000;
+			}
+			else {
+				actions[recordActionIndex++] = index;
+			}
 		}
 
+		resetCachedChoices();
+		
 		choice.activate();
 
+		resetCachedChoices();
+
+	}
+	
+	public boolean isSimulation() {
+		return simulatedPlayerIndex != -1;
+	}
+
+	public void resetCachedChoices() {
 		// reset the cached choice to null
 		nextPlayerChoicePick = null;
 		canonicalForm = null;
@@ -690,13 +713,15 @@ public class KemetGame implements Model, Game {
 	}
 
 	@Override
-	public void enterSimulationMode(int playerIndex) {
+	public void enterSimulationMode(int playerIndex, StackingMCTS mcts) {
+		resetCachedChoices();
+		
 		simulatedPlayerIndex = playerIndex;
+		simulationMcts = mcts;
 		
 		for (Player player : playerByInitiativeList) {
 			player.enterSimulationMode( playerIndex );
 		}
-		
 	}
 
 }

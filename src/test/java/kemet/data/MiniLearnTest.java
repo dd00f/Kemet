@@ -22,7 +22,6 @@ class MiniLearnTest {
 
 	private ComputationGraph build;
 	private INDArray sTATE;
-	private INDArray eXPECTED_POLICY;
 
 	private INDArray lastState;
 	private float[] lastPolicy;
@@ -291,7 +290,6 @@ class MiniLearnTest {
 		createStateFloat();
 		sTATE = Utilities.createArray(stateFloats);
 		createPolicyFloats();
-		eXPECTED_POLICY = Utilities.createArray(policyFloats);
 
 		float[] trainStateFloat = stateFloats;
 		float[] trainPolicyFloat = policyFloats;

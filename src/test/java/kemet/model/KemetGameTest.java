@@ -52,7 +52,7 @@ class KemetGameTest {
 		
 		
 		createGame = factory.createGame();
-		createGame.enterSimulationMode(0);
+		createGame.enterSimulationMode(0, null);
 
 		actions = new int[] {
 
@@ -66,7 +66,7 @@ class KemetGameTest {
 		
 		
 		createGame = factory.createGame();
-		createGame.enterSimulationMode(1);
+		createGame.enterSimulationMode(1, null);
 
 		actions = new int[] {
 

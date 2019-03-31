@@ -216,7 +216,7 @@ public class Coach {
 		totalTime += duration;
 
 		if (numEps > 0) {
-			log.info("total {} ms to run {} games in parallel. Avg time per game : ", totalTime, matchCount,
+			log.info("total {} ms to run {} games in parallel. Avg time per game : {} ms", totalTime, matchCount,
 					totalTime / matchCount);
 		}
 	}
@@ -276,10 +276,10 @@ public class Coach {
 					nextPlayerMcts = getNextMcts(previousMcts, newMcts, nextPlayer, swapped);
 
 					activateActionOnGame(temperature, nextPlayerMcts);
-					
+
 					previousMcts.cleanupOldCycles();
 					newMcts.cleanupOldCycles();
-					
+
 					previousMcts.incrementCycle();
 					newMcts.incrementCycle();
 
@@ -302,7 +302,7 @@ public class Coach {
 					}
 				}
 			}
-			
+
 			previousPooler.cleanup();
 			newPooler.cleanup();
 
@@ -527,8 +527,13 @@ public class Coach {
 		for (int j = 0; j < gameList.length; j++) {
 			StackingMCTS mcts = gameList[j];
 			if (mcts != null) {
-				activateActionOnGame(temperature, mcts);
-				
+				try {
+					activateActionOnGame(temperature, mcts);
+				} catch (Exception ex) {
+					// scrap games that generated errors
+					gameList[j] = null;
+				}
+
 				mcts.cleanupOldCycles();
 				mcts.incrementCycle();
 
@@ -536,7 +541,7 @@ public class Coach {
 				remainingGameCount = checkIfGameEnded(gameList, remainingGameCount, j, mcts, trainExamples);
 			}
 		}
-		
+
 		pooler.cleanup();
 
 		return remainingGameCount;
@@ -611,7 +616,12 @@ public class Coach {
 		for (int j = 0; j < gameList.length; j++) {
 			StackingMCTS game = gameList[j];
 			if (game != null) {
-				game.finishSearch();
+				try {
+					game.finishSearch();
+				} catch (Exception ex) {
+					// scrap games that generated errors
+					gameList[j] = null;
+				}
 			}
 		}
 	}
@@ -620,7 +630,12 @@ public class Coach {
 		for (int j = 0; j < gameList.length; j++) {
 			StackingMCTS game = gameList[j];
 			if (game != null) {
-				game.startSearch();
+				try {
+					game.startSearch();
+				} catch (Exception ex) {
+					// scrap games that generated errors
+					gameList[j] = null;
+				}
 			}
 		}
 	}

@@ -741,6 +741,11 @@ public class Player implements Model {
 		return index + 1;
 
 	}
+	
+	@Override
+	public String toString() {
+		return "Player " + name + " index " + index;
+	}
 
 	public void fillCanonicalForm(ByteCanonicalForm canonicalForm, int playerIndex) {
 		

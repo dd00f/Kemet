@@ -119,7 +119,7 @@ public interface Game {
 	
 	public boolean isGameEnded();
 	
-	public void enterSimulationMode(int playerIndex);
+	public void enterSimulationMode(int playerIndex, StackingMCTS mcts);
 
 
 }

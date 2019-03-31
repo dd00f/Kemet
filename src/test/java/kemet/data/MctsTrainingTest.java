@@ -1,7 +1,5 @@
 package kemet.data;
 
-import java.util.List;
-
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.junit.jupiter.api.Test;
 
@@ -11,10 +9,8 @@ import kemet.ai.KemetRecurrentNeuralNetBuilder;
 import kemet.ai.TrialPlayerAI;
 import kemet.model.KemetGame;
 import kemet.util.GameFactory;
-import kemet.util.PolicyVector;
 import kemet.util.SearchPooler;
 import kemet.util.StackingMCTS;
-import kemet.util.TrainExample;
 
 class MctsTrainingTest {
 
@@ -69,7 +65,7 @@ class MctsTrainingTest {
 		
 		mcts.setCpuct(0.5f);
 		
-		PolicyVector actionProbability = mcts.getActionProbability(0.5f, 500);
+		//PolicyVector actionProbability = mcts.getActionProbability(0.5f, 500);
 		
 		
 
@@ -78,7 +74,5 @@ class MctsTrainingTest {
 	}
 
 	private KemetNeuralNetwork nn;
-
-	private List<TrainExample> executeEpisode;
 
 }

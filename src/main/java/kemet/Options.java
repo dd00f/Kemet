@@ -23,7 +23,7 @@ public class Options {
 
 	static {
 		// keep this as long as there are TODO notice.
-		int junk;
+		// int junk;
 	}
 
 	/**

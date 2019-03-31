@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import kemet.ai.KemetNeuralNetwork;
 import kemet.model.KemetGame;
 import kemet.util.ByteCanonicalForm;
-import kemet.util.Coach;
 import kemet.util.GameFactory;
 import kemet.util.NeuralNet;
 import kemet.util.PolicyVector;
@@ -23,7 +22,7 @@ class KemetLearnTest {
 
 		GameFactory gameFactory = new TwoPlayerGame();
 		NeuralNet neuralNet = new KemetNeuralNetwork();
-		Coach coach = new Coach(gameFactory, neuralNet);
+		//Coach coach = new Coach(gameFactory, neuralNet);
 
 		neuralNet.saveCheckpoint("./temp", "test.nn");
 		neuralNet.loadCheckpoint("./temp", "test.nn");

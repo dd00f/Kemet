@@ -63,9 +63,6 @@ public class StackingMCTS {
 	public Map<ByteCanonicalForm, MctsBoardInformation> boardInformationMemory = new HashMap<>();
 
 	public SearchPooler pooler;
-
-	private long simulationTotalCount = 0;
-	private long simulationTotalTimeNano = 0;
 	
 	public int currentCycle;
 
@@ -107,8 +104,6 @@ public class StackingMCTS {
 	}
 
 	private int maxSearchDepth;
-
-	private long getActionProbabilityTotalDepth;
 
 	private SearchData searchData;
 
@@ -197,7 +192,7 @@ public class StackingMCTS {
 
 	public class SearchData {
 
-		public List<SearchDataLayer> searchLayers = new ArrayList<>(Options.COACH_MCTS_SIMULATION_COUNT_PER_MOVE / 3);
+		public List<SearchDataLayer> searchLayers = new ArrayList<>(20);
 
 		public boolean searchFinished = false;
 		public Game game;
@@ -277,7 +272,7 @@ public class StackingMCTS {
 		maxSearchDepth = 0;
 		searchData = new SearchData();
 		Game clone = game.clone();
-		clone.enterSimulationMode(clone.getNextPlayer());
+		clone.enterSimulationMode(clone.getNextPlayer(), this);
 		clone.setPrintActivations(Options.PRINT_MCTS_SEARCH_ACTIONS);
 		searchData.game = clone;
 		runSearchUntilNeuralNetPredict();
@@ -309,7 +304,7 @@ public class StackingMCTS {
 	public void runSearchUntilNeuralNetPredict() {
 
 		int currentPlayerIndex = searchData.getGame().getNextPlayer();
-		long start = System.nanoTime();
+		//long start = System.nanoTime();
 
 		while (!searchData.searchFinished) {
 
@@ -352,9 +347,7 @@ public class StackingMCTS {
 			}
 		}
 
-		simulationTotalCount++;
-		long duration = System.nanoTime() - start;
-		simulationTotalTimeNano += duration;
+		//long duration = System.nanoTime() - start;
 
 	}
 
@@ -365,14 +358,14 @@ public class StackingMCTS {
 
 		} catch (Exception ex) {
 
+			ex.printStackTrace();
+
 			GameInformation gameInformation = pooler.providedPredictions.get(canonicalForm);
 			checkForValidMoveMatch(gameInformation, currentGame);
 
 			currentGame.setPrintActivations(true);
 			currentGame.printDescribeGame();
 			currentGame.printChoiceList();
-
-			ex.printStackTrace();
 
 			// patch the valid moves and redo another action
 			gameInformation.validMoves = currentGame.getValidMoves();

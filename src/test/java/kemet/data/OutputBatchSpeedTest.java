@@ -86,7 +86,8 @@ class OutputBatchSpeedTest {
 					mdsList.toArray(new MultiDataSet[mdsList.size()]));
 
 			startNano = System.nanoTime();
-			INDArray[] output = build.output(iterator);
+			//INDArray[] output = 
+					build.output(iterator);
 
 //			System.out.println("Output array count " + output.length);
 //			System.out.println(output[0].getRow(0));

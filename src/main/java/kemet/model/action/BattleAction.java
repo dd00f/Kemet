@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import kemet.model.Army;
 import kemet.model.BattleCard;
 import kemet.model.BoardInventory;
@@ -16,7 +18,12 @@ import kemet.model.action.choice.ChoiceInventory;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import kemet.util.PolicyVector;
+import kemet.util.StackingMCTS;
+import kemet.util.StackingMCTS.MctsBoardInformation;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class BattleAction implements Action {
 	public static final Logger LOGGER = Logger.getLogger(BattleAction.class.getName());
 
@@ -355,50 +362,237 @@ public class BattleAction implements Action {
 		@Override
 		public void choiceActivate() {
 
-			if (isDiscard) {
-				player.discardBattleCard(card);
-			} else {
-				player.useBattleCard(card);
-
-				// force discard
-				List<BattleCard> availableBattleCards = player.availableBattleCards;
-				if (availableBattleCards.size() == 1) {
-					BattleCard forcedDiscard = availableBattleCards.get(0);
-					player.discardBattleCard(forcedDiscard);
-					if (isAttacker) {
-						attackingDiscardBattleCard = forcedDiscard;
-					} else {
-						defendingDiscardBattleCard = forcedDiscard;
-					}
-				}
-			}
-
 			if (isAttacker) {
 				if (isDiscard) {
+					player.discardBattleCard(card);
 					attackingDiscardBattleCard = card;
+					pickDefenderCardBasedOnNeuralNetworkIfSimulation();
 				} else {
-					attackingUsedBattleCard = card;
-					if( game.simulatedPlayerIndex >= 0 && game.simulatedPlayerIndex != player.index ) {
-						// skip discard card selection for other players during simulations
-						attackingDiscardBattleCard = card;
+					if (game.isSimulation()) {
+						if (game.simulatedPlayerIndex != player.index) {
+							// skip discard card selection for other players during simulations
+							String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden ATTACK card which should be simulated by the MCTS.";
+							log.error(message);
+							attackingDiscardBattleCard = card;
+						}
 					}
-					
+					attackingUsedBattleCard = card;
+					player.useBattleCard(card);
+
+					// force discard
+					List<BattleCard> availableBattleCards = player.availableBattleCards;
+					if (availableBattleCards.size() == 1) {
+						BattleCard forcedDiscard = availableBattleCards.get(0);
+						player.discardBattleCard(forcedDiscard);
+						attackingDiscardBattleCard = forcedDiscard;
+						pickDefenderCardBasedOnNeuralNetworkIfSimulation();
+					}
 				}
 			} else {
 				if (isDiscard) {
+					player.discardBattleCard(card);
 					defendingDiscardBattleCard = card;
-				} else {
-					defendingUsedBattleCard = card;
+					pickAttackerCardsBasedOnNeuralNetworkIfSimulation();
 
-					if( game.simulatedPlayerIndex >= 0 && game.simulatedPlayerIndex != player.index ) {
+				} else {
+
+					if (game.isSimulation() && game.simulatedPlayerIndex != player.index) {
 						// skip discard card selection for other players during simulations
+						String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.";
+						log.error(message);
 						defendingDiscardBattleCard = card;
 					}
 
+					defendingUsedBattleCard = card;
+					player.useBattleCard(card);
+
+					// force discard
+					List<BattleCard> availableBattleCards = player.availableBattleCards;
+					if (availableBattleCards.size() == 1) {
+						BattleCard forcedDiscard = availableBattleCards.get(0);
+						player.discardBattleCard(forcedDiscard);
+						defendingDiscardBattleCard = forcedDiscard;
+						pickAttackerCardsBasedOnNeuralNetworkIfSimulation();
+					}
 				}
 			}
 
 			checkToResolveBattle();
+		}
+
+		private void pickAttackerCardsBasedOnNeuralNetworkIfSimulation() {
+			if (game.isSimulation()) {
+				if (game.simulatedPlayerIndex == player.index) {
+
+					Player attacker = attackingArmy.owningPlayer;
+
+					if (!attacker.discardedBattleCards.isEmpty()) {
+						String message = "Opponent attacker in a battle simulation should have all discarded cards available.";
+						log.error(message);
+					}
+
+					if (attackingUsedBattleCard != null) {
+						attacker.returnUsedBattleCard(attackingUsedBattleCard);
+						log.debug("Returned attacker battle card {}", attackingUsedBattleCard.index);
+					}
+					if (attackingDiscardBattleCard != null) {
+						if (!attacker.availableBattleCards.contains(attackingDiscardBattleCard)) {
+							String message = "Opponent attacker in a battle simulation should have selected battle discard available.";
+							log.error(message);
+						}
+					}
+
+					attackingUsedBattleCard = null;
+					attackingDiscardBattleCard = null;
+
+					// force attack card & discard selection based on neural network policy
+					BattleCard found = pickCardForPlayerBasedOnNeuralNetwork(attacker);
+
+					attacker.useBattleCard(found);
+					attackingUsedBattleCard = found;
+					attackingDiscardBattleCard = found;
+				} else {
+					String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden DISCARD card which should be simulated by the MCTS.";
+					log.error(message);
+				}
+			}
+		}
+
+		private void pickDefenderCardBasedOnNeuralNetworkIfSimulation() {
+			if (game.isSimulation()) {
+				if (game.simulatedPlayerIndex == player.index) {
+					// force defense card & discard selection based on neural network policy
+					Player defender = defendingArmy.owningPlayer;
+
+					if (!defender.discardedBattleCards.isEmpty()) {
+						String message = "Opponent defender in a battle simulation should have all discarded cards available.";
+						log.error(message);
+					}
+
+					BattleCard found = pickCardForPlayerBasedOnNeuralNetwork(defender);
+
+					defender.useBattleCard(found);
+					defendingDiscardBattleCard = found;
+					defendingUsedBattleCard = found;
+				} else {
+					String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden DISCARD card which should be simulated by the MCTS.";
+					log.error(message);
+				}
+			}
+		}
+
+		private BattleCard pickCardForPlayerBasedOnNeuralNetwork(Player defender) {
+			game.resetCachedChoices();
+
+			ByteCanonicalForm canonicalForm = game.getCanonicalForm(defender.index);
+
+			List<BattleCard> availableBattleCards = defender.availableBattleCards;
+
+			validateCanonicalFormForSimulatedMove(defender, canonicalForm);
+
+			StackingMCTS simulationMcts = game.simulationMcts;
+			MctsBoardInformation mctsBoardInformation = simulationMcts.getBoardInformation(canonicalForm);
+			PolicyVector policy = mctsBoardInformation.choiceValuePredictionForBoardPs;
+			if (policy == null) {
+				policy = fetchPolicyFromNeuralNetwork(defender, canonicalForm, simulationMcts, mctsBoardInformation);
+			}
+
+			int simulatedActionIndex = policy.pickRandomAction();
+
+			BattleCard found = null;
+			List<BattleCard> list = availableBattleCards;
+			for (BattleCard battleCard : list) {
+				if (battleCard.getPickChoiceIndex() == simulatedActionIndex) {
+					found = battleCard;
+					break;
+				}
+			}
+
+			if (found == null) {
+				// force a card at random.
+				StringBuilder builder = new StringBuilder();
+				defender.describePlayer(builder);
+				String message = "MCTS battle card selection at index {} couldn't be found in the player's available cards. BattleCard Start index {}, Player : {}";
+				log.error(message, simulatedActionIndex, ChoiceInventory.PICK_BATTLE_CARD_CHOICE, builder);
+
+				found = list.get(0);
+			}
+
+			return found;
+		}
+
+		private void validateCanonicalFormForSimulatedMove(Player defender, ByteCanonicalForm canonicalForm) {
+			int canonicalPlayerIndex = defender.getCanonicalPlayerIndex(defender.index);
+
+			String message = "available battle card {} not showing up in canonical form {}";
+			if (defender.index == defendingArmy.owningPlayer.index) {
+				// pick defender card
+				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD] != defender
+						.getState(defender.index)) {
+					log.error(message, card.index, canonicalForm);
+				}
+			} else {
+				// pick attacker card
+				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD] != defender
+						.getState(defender.index)) {
+					log.error(message, card.index, canonicalForm);
+				}
+			}
+
+			for (BattleCard card : defender.availableBattleCards) {
+				if (canonicalForm.getCanonicalForm()[Player.getCardStatusIndex(canonicalPlayerIndex, card)] != 1) {
+					log.error(message, card.index, canonicalForm);
+				}
+			}
+
+			for (BattleCard card : defender.usedBattleCards) {
+				if (canonicalForm.getCanonicalForm()[Player.getCardStatusIndex(canonicalPlayerIndex, card)] != -1) {
+					log.error(message, card.index, canonicalForm);
+				}
+			}
+		}
+
+		private PolicyVector fetchPolicyFromNeuralNetwork(Player defender, ByteCanonicalForm canonicalForm,
+				StackingMCTS simulationMcts, MctsBoardInformation mctsBoardInformation) {
+			PolicyVector policy;
+			Pair<PolicyVector, Float> predict = simulationMcts.pooler.neuralNet.predict(canonicalForm);
+			mctsBoardInformation.boardValue = predict.getValue();
+			mctsBoardInformation.choiceValuePredictionForBoardPs = predict.getLeft();
+			boolean[] validMoves = game.getValidMoves();
+
+			for (BattleCard card : defender.availableBattleCards) {
+				if (validMoves[card.getPickChoiceIndex()] != true) {
+					log.error("available battle card {} not showing up in valid moves {}", card.index, validMoves);
+
+					game.resetCachedChoices();
+					validMoves = game.getValidMoves();
+				}
+			}
+
+			for (BattleCard card : defender.usedBattleCards) {
+				if (validMoves[card.getPickChoiceIndex()] != false) {
+					log.error("used battle card {} IS showing up in valid moves {}", card.index, validMoves);
+
+					game.resetCachedChoices();
+					validMoves = game.getValidMoves();
+				}
+			}
+
+			if (validMoves[ChoiceInventory.PASS_CHOICE_INDEX] == true) {
+				String message = "Pass choice is a valid move, even though we should be picking a battle card.";
+				log.error(message, card.index, validMoves);
+
+				game.resetCachedChoices();
+				validMoves = game.getValidMoves();
+			}
+
+			mctsBoardInformation.validMoves = validMoves;
+			policy = mctsBoardInformation.choiceValuePredictionForBoardPs;
+
+			policy.maskInvalidMoves(validMoves);
+			policy.patchMissingActivatedMoves(validMoves);
+			policy.normalize();
+			return policy;
 		}
 
 		@Override
@@ -594,13 +788,25 @@ public class BattleAction implements Action {
 	}
 
 	private void checkToResolveBattle() {
-		if (defendingDiscardBattleCard != null) {
+		if (defendingDiscardBattleCard != null && attackingDiscardBattleCard != null) {
 			resolveBattle();
 		}
 	}
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
+
+		// force defender to go first if this game is a simulation from the defender
+		// perspective
+		if (attackingUsedBattleCard == null && game.isSimulation()
+				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.index) {
+			if (defendingUsedBattleCard == null) {
+				return addPickBattleCardChoice(defendingArmy.owningPlayer, false, false).validate();
+			} else if (defendingDiscardBattleCard == null) {
+				return addPickBattleCardChoice(defendingArmy.owningPlayer, false, true).validate();
+			}
+		}
+
 		if (attackingUsedBattleCard == null) {
 			return addPickBattleCardChoice(attackingArmy.owningPlayer, true, false).validate();
 		}
@@ -667,40 +873,55 @@ public class BattleAction implements Action {
 			cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) (attackerWins ? 1 : -1));
 		}
 
-		if (attackingUsedBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD,
-					attackingArmy.owningPlayer.getState(playerIndex));
-		} else if (attackingDiscardBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_DISCARD,
-					attackingArmy.owningPlayer.getState(playerIndex));
-		} else if (defendingUsedBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
-					defendingArmy.owningPlayer.getState(playerIndex));
-		} else if (defendingDiscardBattleCard == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
-					defendingArmy.owningPlayer.getState(playerIndex));
+		boolean stateSimulationOverride = false;
+		if (attackingUsedBattleCard == null && game.isSimulation()
+				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.index) {
+			if (defendingUsedBattleCard == null) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
+						defendingArmy.owningPlayer.getState(playerIndex));
+				stateSimulationOverride = true;
+			} else if (defendingDiscardBattleCard == null) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+						defendingArmy.owningPlayer.getState(playerIndex));
+				stateSimulationOverride = true;
+			}
 		}
 
-		else if (!attackerRetreatPicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
-					attackingArmy.owningPlayer.getState(playerIndex));
-		}
+		if (!stateSimulationOverride) {
+			if (attackingUsedBattleCard == null) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD,
+						attackingArmy.owningPlayer.getState(playerIndex));
+			} else if (attackingDiscardBattleCard == null) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_DISCARD,
+						attackingArmy.owningPlayer.getState(playerIndex));
+			} else if (defendingUsedBattleCard == null) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			} else if (defendingDiscardBattleCard == null) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			}
 
-		else if (!attackerRetreatTilePicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
-					defendingArmy.owningPlayer.getState(playerIndex));
-		}
+			else if (!attackerRetreatPicked) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
+						attackingArmy.owningPlayer.getState(playerIndex));
+			}
 
-		else if (!defenderRetreatPicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
-					defendingArmy.owningPlayer.getState(playerIndex));
-		}
+			else if (!attackerRetreatTilePicked) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			}
 
-		else if (!defenderRetreatTilePicked) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
-					attackingArmy.owningPlayer.getState(playerIndex));
-		}
+			else if (!defenderRetreatPicked) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			}
 
+			else if (!defenderRetreatTilePicked) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
+						attackingArmy.owningPlayer.getState(playerIndex));
+			}
+		}
 	}
 
 	public void resolveBattle() {
