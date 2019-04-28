@@ -76,6 +76,12 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_TEMPLE_COUNT, BoardInventory.PLAYER_COUNT,
 				MAXIMUM_TEMPLE_COUNT);
 
+		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_TOKEN, BoardInventory.PLAYER_COUNT,
+				BoardInventory.MAX_DAWN_TOKEN);
+		
+		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_STRENGTH, BoardInventory.PLAYER_COUNT,
+				BoardInventory.MAX_DAWN_BATTLE_STRENGTH_TOKEN);
+				
 		return floatCanonicalForm;
 	}
 

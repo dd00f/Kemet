@@ -81,7 +81,7 @@ public class Army implements Model {
 		if (beast != null) {
 			score += beast.fightBonus;
 		}
-		score += owningPlayer.fightBonus;
+		score += owningPlayer.strengthBonus;
 
 		if (isAttacking) {
 			score += owningPlayer.attackBonus;
@@ -286,27 +286,27 @@ public class Army implements Model {
 	}
 
 	public byte getAttackStrength() {
-		return armySize;
+		return getScore(true);
 	}
 
 	public byte getAttackShield() {
-		return 0;
+		return owningPlayer.shieldBonus;
 	}
 
 	public byte getAttackDamage() {
-		return 0;
+		return owningPlayer.damageBonus;
 	}
 
 	public byte getDefendingStrength() {
-		return armySize;
+		return getScore(false);
 	}
 
 	public byte getDefendingShield() {
-		return 0;
+		return owningPlayer.shieldBonus;
 	}
 
 	public byte getDefendingDamage() {
-		return 0;
+		return owningPlayer.damageBonus;
 	}
 
 }

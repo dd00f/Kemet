@@ -211,7 +211,7 @@ public class InitializationPlayerRecruitAction implements Action
 		@Override
 		public int getIndex() {
 			if( soldierCount == 0 ) {
-				return ChoiceInventory.PASS_CHOICE_INDEX;
+				return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
 			}
 			return ChoiceInventory.ARMY_SIZE_CHOICE + soldierCount - 1;
 		}

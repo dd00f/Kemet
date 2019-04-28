@@ -6,6 +6,7 @@ import kemet.model.BoardInventory;
 import kemet.model.Color;
 import kemet.model.KemetGame;
 import kemet.model.Player;
+import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
@@ -261,9 +262,16 @@ public class UpgradePyramidAction extends EndableAction {
 
 	private byte calculateCost(byte pyramidInitialLevel, int i) {
 		byte cost = 0;
+		boolean hasSlaves = player.hasPower(PowerList.WHITE_2_SLAVE);
 		for (byte j = (byte) (pyramidInitialLevel + 1); j <= i; j++) {
 			cost += j;
+			if( hasSlaves ) {
+				cost -= 1;
+			}
 		}
+		
+		cost = player.applyPriestOfRaBonus(cost);
+		
 		return cost;
 	}
 

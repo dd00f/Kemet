@@ -12,6 +12,11 @@ public class BoardInventory {
 
 	public static final int MAX_PYRAMID_LEVEL = 4;
 
+	public static final int MAX_DAWN_TOKEN = 10;
+	
+	public static final float MAX_DAWN_BATTLE_STRENGTH_TOKEN = MAX_DAWN_TOKEN + 5;
+
+	
 	public static int INDEXER = 0;
 
 	// -----------------------
@@ -42,6 +47,10 @@ public class BoardInventory {
 	public static final int STATE_PICK_DEFENDER_RECALL = INDEXER++;
 	public static final int STATE_PICK_ATTACKER_RETREAT = INDEXER++;
 	public static final int STATE_PICK_DEFENDER_RETREAT = INDEXER++;
+	public static final int STATE_PICK_INITIATIVE_BATTLE_CARD = INDEXER++;
+	public static final int STATE_PICK_INITIATIVE_DISCARD = INDEXER++;
+	public static final int STATE_PICK_INITIATIVE_DAWN_TOKEN = INDEXER++;
+	public static final int STATE_PICK_INITIATIVE_ORDER = INDEXER++;
 
 	// -----------------------
 	// GAME SELECTION DATA
@@ -198,7 +207,34 @@ public class BoardInventory {
 		INDEXER += PLAYER_COUNT * BattleCard.INDEXER;
 	}
 	
+	public static final int PLAYER_DAWN_TOKEN = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT;
+	}
+	
+	public static final int PLAYER_DAWN_STRENGTH = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT;
+	}
+	
+	public static final int PLAYER_SELECTED_ORDER = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT * PLAYER_COUNT;
+	}
+	
+	public static final int PLAYER_ORDER = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT * PLAYER_COUNT;
+	}
+	
+	public static final int PLAYER_POWERS = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT * PowerList.POWER_INDEXER;
+	}
+	
 	public static final int TOTAL_STATE_COUNT = INDEXER;
+
+
 
 
 

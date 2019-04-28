@@ -9,6 +9,7 @@ import kemet.model.Beast;
 import kemet.model.BoardInventory;
 import kemet.model.KemetGame;
 import kemet.model.Player;
+import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
@@ -36,6 +37,7 @@ public class RecruitAction extends EndableAction {
 	public ChainedAction battles;
 	private KemetGame game;
 	private Action parent;
+	private byte freeRecruitLeft = -1;
 
 	public static Cache<RecruitAction> CACHE = new Cache<RecruitAction>(() -> new RecruitAction());
 
@@ -84,6 +86,7 @@ public class RecruitAction extends EndableAction {
 		tile = null;
 		beast = null;
 		cost = 0;
+		freeRecruitLeft = -1;
 		recruitSize = -1;
 		pickedTiles.clear();
 		battles = null;
@@ -139,6 +142,7 @@ public class RecruitAction extends EndableAction {
 		clone.tile = tile;
 		clone.beast = beast;
 		clone.cost = cost;
+		clone.freeRecruitLeft = freeRecruitLeft;
 		clone.recruitSize = recruitSize;
 
 		clone.pickedTiles.clear();
@@ -232,8 +236,16 @@ public class RecruitAction extends EndableAction {
 		if (returnValue == null) {
 			returnValue = player.createArmy();
 		}
+		
+
 
 		player.modifyPrayerPoints((byte) -cost, "recruit action");
+		
+		freeRecruitLeft-= recruitSize;
+		if( freeRecruitLeft < 0 ) {
+			freeRecruitLeft = 0;
+		}
+		
 		returnValue.recruit(recruitSize);
 		if (beast != null) {
 			returnValue.addBeast(beast);
@@ -322,6 +334,7 @@ public class RecruitAction extends EndableAction {
 	}
 
 	public void activateAction() {
+
 		Army army = createArmy();
 
 		if (resultsInCombat()) {
@@ -348,6 +361,17 @@ public class RecruitAction extends EndableAction {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
+		
+		if( freeRecruitLeft < 0 ) {
+			freeRecruitLeft = 0;
+			if( player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE)) {
+				freeRecruitLeft += 2;
+			}
+			if( player.hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
+				freeRecruitLeft += 1;
+			}
+		}
+		
 
 		if (isEnded()) {
 			// trigger battle actions
@@ -368,7 +392,7 @@ public class RecruitAction extends EndableAction {
 				return pick.validate();
 			} else if (playerHasBeastAvailable()) {
 
-				// pick besat
+				// pick beast
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 				addRecruitBeastChoice(pick.choiceList);
@@ -432,7 +456,7 @@ public class RecruitAction extends EndableAction {
 		@Override
 		public int getIndex() {
 			if (pickArmySize == 0) {
-				return ChoiceInventory.PASS_CHOICE_INDEX;
+				return ChoiceInventory.PASS_RECRUIT_CHOICE_INDEX;
 			}
 			return ChoiceInventory.ARMY_SIZE_CHOICE + pickArmySize - 1;
 		}
@@ -455,7 +479,13 @@ public class RecruitAction extends EndableAction {
 		for (byte i = min; i <= max; ++i) {
 			RecruitArmySizeChoice subChoice = new RecruitArmySizeChoice(game, player);
 			subChoice.pickArmySize = i;
-			subChoice.pickCost = i;
+			
+			byte cost = (byte) (i - freeRecruitLeft);
+			if( cost < 0 ) {
+				cost = 0;
+			}
+			
+			subChoice.pickCost = cost;
 
 			choiceList.add(subChoice);
 		}

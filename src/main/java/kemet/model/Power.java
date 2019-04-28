@@ -8,11 +8,23 @@ public class Power implements Model {
 	private static final long serialVersionUID = -5358086685710717961L;
 	
 	public String name;
-	public short level = 0;
+	public byte level = 0;
 	public Color color = Color.NONE;
-	public Player owner = null;
+	public String description;
+
+	public int index;
 	
-	public void applyToPlayer() {
+
+	
+	public Power(int index, String name, byte level, Color color, String description) {
+		this.index = index;
+		this.name = name;
+		this.level = level;
+		this.color = color;
+		this.description = description;
+	}
+	
+	public void applyToPlayer(Player player) {
 		
 		
 	}
@@ -29,8 +41,12 @@ public class Power implements Model {
 
 	@Override
 	public void initialize() {
-		// TODO Auto-generated method stub
-		
+
+	}
+	
+	@Override
+	public String toString() {
+		return index + " : " + color + " : " + level + " : " + name + " : " + description;
 	}
 
 }

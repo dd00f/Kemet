@@ -2,12 +2,13 @@ package kemet.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import kemet.ai.PlayerActor;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class Player implements Model {
 
 	public static final int ACTION_TOKEN_COUNT = 5;
@@ -20,9 +21,6 @@ public class Player implements Model {
 	 * 
 	 */
 	private static final long serialVersionUID = 233743569229589016L;
-
-	public static final Logger LOGGER = Logger.getLogger(Player.class.getName());
-
 
 	public String name;
 
@@ -40,17 +38,14 @@ public class Player implements Model {
 	public byte initiativeTokens = 0;
 	private byte prayerPoints = 5;
 	public byte maximumArmySize = 5;
-	public byte fightBonus = 0;
+	public byte strengthBonus = 0;
 	public byte attackBonus = 0;
 	public byte defenseBonus = 0;
-	public byte bloodBonus = 0;
+	public byte damageBonus = 0;
 	public byte shieldBonus = 0;
 	public byte moveCapacity = 1;
 	public byte availableArmyTokens = INITIAL_ARMY_TOKEN;
-	public byte teleportCost = 2;
 	public short armyCounter = 1;
-	public boolean canTeleportFromObelisk = false;
-	public boolean canBreachWalls = false;
 
 	public List<Power> powerList = new ArrayList<>();
 	public List<BattleCard> availableBattleCards = new ArrayList<>();
@@ -95,6 +90,19 @@ public class Player implements Model {
 		initialize();
 	}
 
+	public boolean hasPower(Power powerToCheck) {
+		if( powerToCheck == null ) {
+			return false;
+		}
+		
+		for (Power power : powerList) {
+			if (power.name.equals(powerToCheck.name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public void initialize() {
 
@@ -109,18 +117,15 @@ public class Player implements Model {
 		initiativeTokens = 0;
 		prayerPoints = 5;
 		maximumArmySize = 5;
-		fightBonus = 0;
+		strengthBonus = 0;
 		attackBonus = 0;
 		defenseBonus = 0;
-		bloodBonus = 0;
+		damageBonus = 0;
 		shieldBonus = 0;
 		index = 0;
 		moveCapacity = 1;
 		availableArmyTokens = 12;
-		teleportCost = 2;
 		armyCounter = 1;
-		canTeleportFromObelisk = false;
-		canBreachWalls = false;
 
 		powerList.clear();
 		availableBattleCards.clear();
@@ -171,17 +176,14 @@ public class Player implements Model {
 		clone.initiativeTokens = initiativeTokens;
 		clone.prayerPoints = prayerPoints;
 		clone.maximumArmySize = maximumArmySize;
-		clone.fightBonus = fightBonus;
+		clone.strengthBonus = strengthBonus;
 		clone.attackBonus = attackBonus;
 		clone.defenseBonus = defenseBonus;
-		clone.bloodBonus = bloodBonus;
+		clone.damageBonus = damageBonus;
 		clone.shieldBonus = shieldBonus;
 		clone.moveCapacity = moveCapacity;
 		clone.availableArmyTokens = availableArmyTokens;
-		clone.teleportCost = teleportCost;
 		clone.armyCounter = armyCounter;
-		clone.canTeleportFromObelisk = canTeleportFromObelisk;
-		clone.canBreachWalls = canBreachWalls;
 		clone.rowOneMoveUsed = rowOneMoveUsed;
 		clone.rowOneRecruitUsed = rowOneRecruitUsed;
 		clone.rowTwoMoveUsed = rowTwoMoveUsed;
@@ -330,7 +332,7 @@ public class Player implements Model {
 			prayerPoints = MAXIMUM_PRAYER_POINTS;
 		}
 		if (prayerPoints < 0) {
-			LOGGER.warning("Player " + name + " managed to reach " + prayerPoints + " prayer points.");
+			log.warn("Player {} managed to reach {} prayer points.", name, prayerPoints);
 			prayerPoints = 0;
 		}
 		if (game.printActivations) {
@@ -384,7 +386,7 @@ public class Player implements Model {
 	}
 
 	public boolean canTeleport() {
-		return prayerPoints >= teleportCost;
+		return prayerPoints >= getTeleportCost();
 	}
 
 	public void useBattleCard(BattleCard card) {
@@ -395,7 +397,7 @@ public class Player implements Model {
 	}
 
 	public void checkToRecuperateAllBattleCards() {
-		
+
 		// half of all cards are used
 		if (usedBattleCards.size() >= BattleCard.CARD_COUNT / 2) {
 			if (game.printActivations) {
@@ -623,27 +625,26 @@ public class Player implements Model {
 		builder.append("\n");
 
 		builder.append("\tUsed Battle Cards  : ");
-		for (BattleCard used: usedBattleCards) {
+		for (BattleCard used : usedBattleCards) {
 			builder.append(" ");
 			builder.append(used.index);
 		}
 		builder.append("\n");
 
 		builder.append("\tDiscard Battle Cards  : ");
-		for (BattleCard used: discardedBattleCards) {
+		for (BattleCard used : discardedBattleCards) {
 			builder.append(" ");
 			builder.append(used.index);
 		}
 		builder.append("\n");
 
 		builder.append("\tAvailable Battle Cards  : ");
-		for (BattleCard used: availableBattleCards) {
+		for (BattleCard used : availableBattleCards) {
 			builder.append(" ");
 			builder.append(used.index);
 		}
 		builder.append("\n");
 
-		
 		for (Army army : armyList) {
 			army.describeArmy(builder);
 		}
@@ -717,13 +718,13 @@ public class Player implements Model {
 
 		// otherwise, increment our own index, unless we are bigger than the target
 		// player index.
-		
+
 		// 2 player game
 		// target : 0, current 0 - return 0
 		// target : 0, current 1 - return 1
 		// target : 1, current 0 - return 1
 		// target : 1, current 1 - return 0
-		
+
 		// 3 player game example,
 		// target : 0, current 0 - return 0
 		// target : 0, current 1 - return 1
@@ -741,72 +742,69 @@ public class Player implements Model {
 		return index + 1;
 
 	}
-	
+
 	@Override
 	public String toString() {
 		return "Player " + name + " index " + index;
 	}
 
 	public void fillCanonicalForm(ByteCanonicalForm canonicalForm, int playerIndex) {
-		
+
 		int canonicalPlayerIndex = getCanonicalPlayerIndex(playerIndex);
-		
+
 		canonicalForm.set(BoardInventory.PLAYER_VICTORY_POINTS + canonicalPlayerIndex, victoryPoints);
 		canonicalForm.set(BoardInventory.PLAYER_BATTLE_POINTS + canonicalPlayerIndex, battlePoints);
 		canonicalForm.set(BoardInventory.PLAYER_PRAYER_POINTS + canonicalPlayerIndex, prayerPoints);
 		canonicalForm.set(BoardInventory.PLAYER_AVAILABLE_ARMY_TOKENS + canonicalPlayerIndex, availableArmyTokens);
-		canonicalForm.set(BoardInventory.PLAYER_ROW_ONE_MOVE_USED + canonicalPlayerIndex, (byte) (rowOneMoveUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_ONE_RECRUIT_USED + canonicalPlayerIndex, (byte) (rowOneRecruitUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_TWO_MOVE_USED + canonicalPlayerIndex, (byte) (rowTwoMoveUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_TWO_UPGRADE_PYRAMID_USED + canonicalPlayerIndex, (byte) (rowTwoUpgradePyramidUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_TWO_PRAY_USED + canonicalPlayerIndex, (byte) (rowTwoPrayUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_PRAY_USED + canonicalPlayerIndex, (byte) (rowThreePrayUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_WHITE_USED + canonicalPlayerIndex, (byte) (rowThreeBuildWhiteUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_RED_USED + canonicalPlayerIndex, (byte) (rowThreeBuildRedUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_BLUE_USED + canonicalPlayerIndex, (byte) (rowThreeBuildBlueUsed ? 1: 0));
-		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_BLACK_USED + canonicalPlayerIndex, (byte) (rowThreeBuildBlackUsed ? 1: 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_ONE_MOVE_USED + canonicalPlayerIndex,
+				(byte) (rowOneMoveUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_ONE_RECRUIT_USED + canonicalPlayerIndex,
+				(byte) (rowOneRecruitUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_TWO_MOVE_USED + canonicalPlayerIndex,
+				(byte) (rowTwoMoveUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_TWO_UPGRADE_PYRAMID_USED + canonicalPlayerIndex,
+				(byte) (rowTwoUpgradePyramidUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_TWO_PRAY_USED + canonicalPlayerIndex,
+				(byte) (rowTwoPrayUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_PRAY_USED + canonicalPlayerIndex,
+				(byte) (rowThreePrayUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_WHITE_USED + canonicalPlayerIndex,
+				(byte) (rowThreeBuildWhiteUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_RED_USED + canonicalPlayerIndex,
+				(byte) (rowThreeBuildRedUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_BLUE_USED + canonicalPlayerIndex,
+				(byte) (rowThreeBuildBlueUsed ? 1 : 0));
+		canonicalForm.set(BoardInventory.PLAYER_ROW_THREE_BUILD_BLACK_USED + canonicalPlayerIndex,
+				(byte) (rowThreeBuildBlackUsed ? 1 : 0));
 		canonicalForm.set(BoardInventory.PLAYER_ACTION_TOKEN_LEFT + canonicalPlayerIndex, actionTokenLeft);
 		canonicalForm.set(BoardInventory.PLAYER_TEMPLE_COUNT + canonicalPlayerIndex, templeOccupationPoints);
-		
+		canonicalForm.set(BoardInventory.PLAYER_DAWN_TOKEN + canonicalPlayerIndex, initiativeTokens);
+		canonicalForm.set(BoardInventory.PLAYER_ORDER + canonicalPlayerIndex * BoardInventory.PLAYER_COUNT
+				+ game.getPlayerOrder(index), (byte) 1);
+
 		for (BattleCard card : availableBattleCards) {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) 1);
 		}
-		
+
 		for (BattleCard card : usedBattleCards) {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
 		}
-		
+
 		byte discardCardStatus = -1;
-		
-		if( playerIndex != index ) {
+
+		if (playerIndex != index) {
 			// make discarded cards appear available only for other players.
 			discardCardStatus = 1;
 		}
+
 		for (BattleCard card : discardedBattleCards) {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), discardCardStatus);
 		}
 
-//		public byte templePermanentPoints = 0;
-//		public byte highLevelPyramidOccupationPoints = 0;
-//		public byte initiativeTokens = 0;
-//		public byte maximumArmySize = 5;
-//		public byte fightBonus = 0;
-//		public byte attackBonus = 0;
-//		public byte defenseBonus = 0;
-//		public byte bloodBonus = 0;
-//		public byte shieldBonus = 0;
-//		public byte moveCapacity = 1;
-//		public byte teleportCost = 2;
-//		public boolean canTeleportFromObelisk = false;
-//		public boolean canBreachWalls = false;
-//
-//		public List<DiCard> diCards = new ArrayList<>();
-//		public List<Beast> availableBeasts = new ArrayList<>();
-//		public boolean goldTokenUsed = false;
-//		public boolean goldTokenAvailable = false;
-//		public boolean silverTokenUsed = false;
-//		public boolean silverTokenAvailable = false;
-
+		for (Power power : powerList) {
+			index = BoardInventory.PLAYER_POWERS + power.index * BoardInventory.PLAYER_COUNT + canonicalPlayerIndex;
+			canonicalForm.set(index, (byte) 1);
+		}
 	}
 
 	public static int getCardStatusIndex(int canonicalPlayerIndex, BattleCard card) {
@@ -814,11 +812,87 @@ public class Player implements Model {
 	}
 
 	public void enterSimulationMode(int playerIndex) {
-		if( index != playerIndex ) {
-			// return all discard battle cards for simulations to act as if those cards were available.
+		if (index != playerIndex) {
+			// return all discard battle cards for simulations to act as if those cards were
+			// available.
 			recoverAllDiscardedBattleCards();
 		}
+
+	}
+
+	public void removeInitiativeToken(byte tokenCount) {
+		initiativeTokens -= tokenCount;
+		if (initiativeTokens < 0) {
+			log.error("Initiative token was consumed that lead to a resulting count of {}", initiativeTokens);
+			initiativeTokens = 0;
+		}
+
+	}
+
+	public byte getPyramidLevel(Color color) {
+		byte level = 0;
+		for (Tile cityTile : cityTiles) {
+			if (cityTile.pyramidColor.equals(color)) {
+				byte pyramidLevel = cityTile.getPyramidLevel();
+				if (pyramidLevel > level) {
+					level = pyramidLevel;
+				}
+			}
+		}
+
+		for (Army army : armyList) {
+			Tile tile = army.tile;
+			if (tile != null && tile.pyramidColor.equals(color)) {
+				byte pyramidLevel = tile.getPyramidLevel();
+				if (pyramidLevel > level) {
+					level = pyramidLevel;
+				}
+			}
+		}
+
+		return level;
+	}
+
+	public byte getPowerCost(Power power) {
+		byte returnValue = (byte) -power.level;
+		if (hasPower(PowerList.WHITE_1_PRIESTESS_1)) {
+			returnValue += 1;
+		}
+		return returnValue;
+	}
+
+	public byte getNightPrayerPoints() {
+		byte points = 2;
+		if (hasPower(PowerList.WHITE_2_GREAT_PRIEST)) {
+			points += 2;
+		}
 		
+		if (hasPower(PowerList.WHITE_4_PRIEST_OF_AMON)) {
+			points += 5;
+		}
+		
+		return points;
+	}
+
+	public byte applyPriestOfRaBonus(byte cost) {
+		if (cost > 0 && hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
+			cost -= 1;
+		}
+		return cost;
+	}
+
+	public byte getTeleportCost() {
+		byte cost = 2;
+		cost = applyPriestOfRaBonus(cost);
+		cost = applyStargateBonus(cost);
+		return cost;
+	}
+
+	private byte applyStargateBonus(byte cost) {
+		if (cost > 0 && hasPower(PowerList.RED_1_STARGATE)) {
+			cost -= 1;
+		}
+		return cost;
 	}
 
 }

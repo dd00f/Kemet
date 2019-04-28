@@ -2,6 +2,7 @@ package kemet.model.action.choice;
 
 import kemet.model.BattleCard;
 import kemet.model.BoardInventory;
+import kemet.model.PowerList;
 
 public class ChoiceInventory {
 	/*
@@ -17,7 +18,7 @@ public class ChoiceInventory {
 	public static final int NON_AI_CHOICE = -1;
 
 	// 1 pick for this
-	public static final int PASS_CHOICE_INDEX = INDEXER++;
+	public static final int ZERO_ARMY_SIZE_CHOICE_INDEX = INDEXER++;
 
 	// 7 picks for this
 	public static final int ARMY_SIZE_CHOICE = INDEXER++;
@@ -49,10 +50,10 @@ public class ChoiceInventory {
 		INDEXER += BattleCard.INDEXER;
 	}
 
-	// 1 picks for this
+	// 1 picks for recall
 	public static final int RECALL_CHOICE = INDEXER++;
 
-	// 10 picks for this
+	// 10 picks for token selection
 	public static final int PICK_ROW_ONE_MOVE = INDEXER++;
 	public static final int PICK_ROW_ONE_RECRUIT = INDEXER++;
 	public static final int PICK_ROW_TWO_MOVE = INDEXER++;
@@ -64,15 +65,36 @@ public class ChoiceInventory {
 	public static final int PICK_ROW_THREE_BUILD_BLUE = INDEXER++;
 	public static final int PICK_ROW_THREE_BUILD_BLACK = INDEXER++;
 
-	// 13 picks for this, redundant with tiles, commenting out
-	// public static final int PICK_ARMY_CHOICE = PICK_PYRAMID_LEVEL_CHOICE + 4;
+	// dawn token selection range
+	public static final int PICK_DAWN_TOKEN = INDEXER;
+	static {
+		INDEXER += BoardInventory.MAX_DAWN_TOKEN + 1;
+	}
+	
+	public static final int PICK_PLAYER_ORDER = INDEXER;
+	static {
+		INDEXER += BoardInventory.PLAYER_COUNT;
+	}
+	
+	// 1 pick for this
+	public static final int PASS_RECRUIT_CHOICE_INDEX = INDEXER++;
 
+	// 1 pick for this
+	public static final int PASS_RECALL_CHOICE_INDEX = INDEXER++;
+
+	
+	public static final int BUY_POWER = INDEXER;
+	static {
+		INDEXER += PowerList.POWER_INDEXER;
+	}
+	
 	public static final int TOTAL_CHOICE = INDEXER;
+
 
 	public static void main(String[] args) {
 
 		System.out.println("Choice Index List");
-		System.out.println("PASS_CHOICE_INDEX " + PASS_CHOICE_INDEX);
+		System.out.println("PASS_CHOICE_INDEX " + ZERO_ARMY_SIZE_CHOICE_INDEX);
 		System.out.println("ARMY_SIZE_CHOICE " + ARMY_SIZE_CHOICE);
 		System.out.println("PICK_TILE_CHOICE " + PICK_TILE_CHOICE);
 		System.out.println("PICK_COLOR_CHOICE " + PICK_COLOR_CHOICE);
@@ -89,7 +111,14 @@ public class ChoiceInventory {
 		System.out.println("PICK_ROW_THREE_BUILD_RED " + PICK_ROW_THREE_BUILD_RED);
 		System.out.println("PICK_ROW_THREE_BUILD_BLUE " + PICK_ROW_THREE_BUILD_BLUE);
 		System.out.println("PICK_ROW_THREE_BUILD_BLACK " + PICK_ROW_THREE_BUILD_BLACK);
+		System.out.println("PICK_DAWN_TOKEN " + PICK_DAWN_TOKEN);
+		System.out.println("PICK_PLAYER_ORDER " + PICK_PLAYER_ORDER);
+		System.out.println("PASS_RECRUIT_CHOICE_INDEX " + PASS_RECRUIT_CHOICE_INDEX);
+		System.out.println("PASS_RECALL_CHOICE_INDEX " + PASS_RECALL_CHOICE_INDEX);
+		System.out.println("BUY_POWER " + BUY_POWER);
 
+		
+		
 //		Choice Index List
 //		PASS_CHOICE_INDEX 0
 //		ARMY_SIZE_CHOICE 1

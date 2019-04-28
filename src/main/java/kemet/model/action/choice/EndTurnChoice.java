@@ -35,7 +35,7 @@ public class EndTurnChoice extends PlayerChoice {
 
 	@Override
 	public int getIndex() {
-		return ChoiceInventory.PASS_CHOICE_INDEX;
+		return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
 	}
 
 }

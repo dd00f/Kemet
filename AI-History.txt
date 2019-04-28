@@ -599,9 +599,19 @@
 		Another side benefit of this simultaneous choice is the elimination of the opponent battle card discard
 		selection as it brings no value to the current state of the simulation.
 
-	
+
+2019-04-13
+
+	1 week of training
+		After 1 week of training, the AI is now able to play an ok game. It's able to attack weak points, 
+		focus on temples, retreat his armies, recruit new ones that aren't too dispersed. It's not much of a 
+		gambler. One flaw in the current game rules is that the second player is at a disadvantage
+		compared to the first player since there is no battle for initiative. The second player always has
+		the last move in a turn, allowing it to capture free temples more easily.
+		 
+
 TODO High priority: 
-		
+		- Game feature : Battle for initiative with dawn tokens.
 
 TODO Low priority: 
 		
@@ -611,5 +621,14 @@ TODO Low priority:
 		
 		- allocate new action index for various purpose ( end turn in move, vs recruit, vs buy, etc..., army size in recruit vs move )
 		
-		- add all base game powers
+		- Game feature : Power Tiles - Basic
+
+		- Game feature : Power Tiles - Beasts
+		
+		- Game feature : DI Cards - Battle
+		
+		- Game feature : DI Cards - Non-Battle
+		
+		- Game expansion : Seth !
+		
 

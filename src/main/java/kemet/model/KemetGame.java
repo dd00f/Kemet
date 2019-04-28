@@ -21,7 +21,9 @@ import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 import kemet.util.Game;
 import kemet.util.StackingMCTS;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class KemetGame implements Model, Game {
 
 	public static final int VICTORY_POINTS_OBJECTIVE = 8;
@@ -90,6 +92,8 @@ public class KemetGame implements Model, Game {
 		availableDiCardList.clear();
 		discardedDiCardList.clear();
 		availablePowerList.clear();
+		
+		PowerList.initializeGame(this);
 
 		recordActionIndex = 0;
 		if (actions != null) {
@@ -315,6 +319,16 @@ public class KemetGame implements Model, Game {
 		}
 		return null;
 	}
+	
+
+	/**
+	 * 
+	 * @param index The player by initiative index, starting at zero to number_of_player -1.
+	 * @return The player.
+	 */
+	public Player getPlayerByInitiativeIndex(int index) {
+		return playerByInitiativeList.get(index);
+	}
 
 	public Tile getTileByPlayerAndDistrictIndex(int playerIndex, int districtIndex) {
 		for (Tile tile : tileList) {
@@ -334,7 +348,7 @@ public class KemetGame implements Model, Game {
 
 		if (player.victoryPoints >= victoryPointObjective) {
 			for (Player otherPlayer : playerByInitiativeList) {
-				if (otherPlayer != player && otherPlayer.victoryPoints >= player.victoryPoints) {
+				if (otherPlayer != player && otherPlayer.victoryPoints > player.victoryPoints) {
 					return false;
 				}
 			}
@@ -379,7 +393,7 @@ public class KemetGame implements Model, Game {
 	}
 
 	public boolean isFirstTurn() {
-		return roundNumber > 1;
+		return roundNumber <= 1;
 	}
 
 	public void provideNightTemplePrayerPoints() {
@@ -410,7 +424,10 @@ public class KemetGame implements Model, Game {
 
 	public void provideNightPrayerPoints() {
 		for (Player player : playerByInitiativeList) {
-			player.modifyPrayerPoints((byte) 2, "night state");
+			
+			byte points = player.getNightPrayerPoints();
+			
+			player.modifyPrayerPoints(points, "night state");
 		}
 
 	}
@@ -722,6 +739,39 @@ public class KemetGame implements Model, Game {
 		for (Player player : playerByInitiativeList) {
 			player.enterSimulationMode( playerIndex );
 		}
+	}
+
+	/**
+	 * 
+	 * @param index the player index
+	 * @return the order of the player in the game, zero based.
+	 */
+	public int getPlayerOrder(int index) {
+		for( int i=0;i<playerByInitiativeList.size();++i) {
+			if( playerByInitiativeList.get(i).index == index ) {
+				return i;
+			}
+		}
+		
+		log.error("Couldn't determine player order of player index {}", index);
+		return -1;
+	}
+
+	public void movePowerToPlayer(Player player, Power power) {
+		if( power == null ) {
+			return;
+		}
+		
+		Power removedPower = availablePowerList.set(power.index, null);
+		if( removedPower == null ) {
+			log.error("Attempted to mover power {} to player {} but it's already gone.", power, player);
+			throw new IllegalStateException("Invalid power to move");
+		}
+		
+		player.powerList.add(power);
+		
+		power.applyToPlayer(player);
+		
 	}
 
 }

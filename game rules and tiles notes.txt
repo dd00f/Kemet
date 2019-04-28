@@ -1,0 +1,67 @@
+[INFO ]    0 1 5 3 3 score 1480.75 : Player "blue" : Use Battle card "Cavalry Blitz" Attack 4 Shield 0 Blood 1 Army Cost 0
+
+
+[INFO ]    0 1 4 4 0 5 score 1625.0 : Player "blue" : End Turn
+[INFO ]    0 1 4 4 0 score 1625.0 : Player "blue" : Moving "blue army 2 of 5 soldiers on tile Medium Temple" from tile Medium Temple to tile Medium Temple Entrance. 1 movement left.
+
+
+Level 1 tile Units Corruption : Do stolen units benefit from the powers of their corresponding player ?
+	Example : Seth has a troup of 5 purple & 1 red unit. The red player has the power tile that gives him +1 in combat. Does the Seth Troup also get +1 ?
+	NO
+
+Occupying alliance pyramids to buy purple tiles :
+	Can an alliance player occupy other alliance player pyramids in order to get 3 pyramid of a higher level to purchase purple tiles ?
+	Example 1 : Yellow has 3 pyramids : Level 4 White, Level 4 Black, Level 1 Red. Green has a Red pyramid level 4. If yellow is able to occupy green's tile that has the level 4 Red pyramid, can he then proceed to buy level 4 purple tiles since he occupies 3 different pyramids at level 4, even though one of his own pyramid is still at level 1 ?
+	
+	Example 1 : Yellow has 3 pyramids : Level 4 White, Level 4 Black, Level 1 Red. Green has a White pyramid level 4. If yellow is able to occupy green's tile that has the level 4 White pyramid, can he then proceed to buy level 4 purple tiles since he occupies 3 pyramids at level 4, even though two of them have the same color ?
+	
+Can alliance players purchase the level 3 alliance power tiles if they have the right pyramid, without doing a ritual ?
+	Example : Yellow has a level 3 red pyramid. He spends an action to buy a red power tile, spends 3 prayer points and gets the Osiris tile.
+	Yes
+	
+	Follow up question : are those powers automatically shared with all alliance members on the osiris board ?
+	Yes
+	
+
+	
+Can a player own both a gray token and a transparent token ?
+Can a player play both a gray token & a transparent token in the same turn ?
+
+Can a player have 2 gray token by owning both the power tile and the new sacred temple power ?
+If yes, can they both be played in the same action ?
+
+
+
+Game changing tiles
+
+
+HIGH
+		- purple - MUST - 1 - Energy drain - +1 on all other prayers
+		- Blue - 3 - Prescience - See opponent card first
+		- Red - 4 - Initiative - 2 damage pre battle
+		- purple MUST - 2 - kill them all - +1 move +1 damage
+		- purple - 2 - Annexation - steal a di card at night
+		- Black - 1 - Enforced recruitmement
+		- Red - 2 - Open Gates
+
+MEDIUM
+		- Black - 4 - Bestial Fury + 1 strength + 1 damage + 1 move
+		- Red - 3 - Blades of neith +1 strength
+		- Red - 3 - Divine Wounds +1 per DI discarded after fight
+		- Blue - 3 - Defensive Victory
+		- purple - 3 - Ambush - Swap attack cards
+		- Blue - 4 - Divine Will - Gold move/recruit
+		- Black - 3 - Forced March gold move.
+		- purple - Seth only - 4 - Magic Versatility - Transparent token.
+		
+LOW
+		- Red - 1 - +1 strength on attack
+		- Blue - 2 - Legion - 7 Army size
+		- White - average - 2 - Divine Boon - +1 DI at night
+		- White - average - 3 - Vision - +1/5 DI draw pick one at night.
+		- White - average - 4 - Mummy - +1 DI at night
+		- purple - 3 - Divine advantage - +1/2 di at night
+		- purple - average - 1 - servile corruption - all corruptiono +1 attack
+
+
+		

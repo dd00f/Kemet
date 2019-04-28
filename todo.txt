@@ -1,25 +1,67 @@
 
-
-- Trial AI : 
-	- Remember best choice path to avoid recalculations
-	- Battle trial, calculate odds instead of playing out every scenario
-	- factor in other player decisions instead of planning for the best outcome.
-
-- Game cloning code using preallocated objects to speed things up
+		
+- Game feature : Power Tiles - Basic
 
 
 
-- dawn phase
-	- initiative
+	- Black : 1 : Enforced Recruitment : Recruit on exist army. 
+	- Black : 2 : Honor in battle : +1 pray per reach troop destroyed by your opponent in battle.
+	- Black : 2 : Dedication to battle : +2 pray when moving to a tile with an enemy army
+	- Black : 3 : Deadly Trap : Destroy 1 enemy troop when they move to a tile you occupy. 
+	- Black : 4 : Bestial Fury : +1 move, +1damage, +1strength
+	- Black : 4 : Divine Strength : +1 prayer every time you gain prayer points during day
 
-- DI Cards
-- Power cards
-	- silver token
-	- gold token
+
+- Game feature : Power Tiles - Advanced
+	- Blue : 4 : Reinforcements : +4 troops at night
+	- Red : 2 : Offensive Strategy : 3 attack 3 blood battle card
+	- Blue : 2 : Defensive Strategy : Add Battle card : +3 strength +3 protection
+	- White : 3 : Hand of God : +1 pyramid upgrade per night
+	- White : 4 : Act of God : add gray action token
+	- Red : 4 : Act of God : add gray action token
+	- Blue : 3 : Prescience : Opponent plays battle card before you
+	- Blue : 4 : Divine Will : Gold Token : Recruit, Move
+	- Blue : 4 : Act of God : add gray action token
+	- Black : 1 : Dark Ritual : Gold token : Pray
+	- Black : 3 : Forced March : Gold Token : Move
+	- Black : 2 : Twin Ceremony : Gold token : Reuse Buy action : +1 cost on tile 
+	- Black : 4 : Act of God : add gray action token
+	- Black : 1 : Mercenaries : +3 troops, recruited X2
+
+- Game feature : Power Tiles - Beasts
+	- White : 4 : Beast : Mummy : +1 move, +2 attack, +1 DI card at night 
+	- Red : 3 : Beast : Royal Scarab : +2 move, +2 attack
+	- Red : 4 : Beast : Giant Scorpion : +1 move, +2 strength, +2 damage
+	- Red : 4 : Beast : Phoenix : +1 move, +2 Strength, ignore walls
+	- Blue : 2 : Beast : Ancestral Elephant : +1 move, +1 strength, +1 protection
+	- Blue : 2 : Beast : Deep Desert Snake : +1 move, ignore other creatures
+	- Blue : 4 : Beast : Sphinx : +1 VP, +2 Strength
+	- Black : 2 : Beast : Khnum's Sphinx : +1 move, +1 stregth, opponent cost 2 prayer point to move on tile
+	- Black : 3 : Beast : Griffin Sphinx : +2 strength, teleport from obelisk
+	- Black : 4 : Beast : Devourer : +1 move, +2 strength, +1 VP on battle win & destroy 2 enemy troups
+
+
+- Game feature : Power Tiles - DI
+	- White : 2 : Divine Boon : +1 DI card at night
+	- White : 3 : Vision : draw 5 DI card at night, pick one
+	- Red : 3 : Divine Wound : +1 strength per DI card spent
+
+- Game feature : Power Tiles - Extra
+	- blue power tile level 1: - Protective aura: ignore any damage outside of combat
+	- white power tile level 2: - Reminiscence: At the end of battle, if the opponent has played at least one DI card, you may take one of them in your hand
+	- Black : 2 : Piety : +1 VP when holding 2 temples at night time.
 	
 
-- Beasts
-- Ta-Seti path
+- Game feature : DI Cards - Battle
 
+- Game feature : DI Cards - Non-Battle
 
-- AI - Machine learning
+- Game expansion : Seth !
+
+- Game feature : Power Tiles - Dice tower promo
+	- Divine Prescience (1red/1blue): Your opponent must reveal the Divine Intervention cards he will play during a battle, before you choose your Battle and Divine Intervention cards. If your opponent has the Prescience blue tile, the revelation of your Battle card and his Divine Intervention cards are done simultaneously.
+	- Renewal (2white/1red): During the night phase, before the new Divine Intervention cards are dealt, discard as many Divine Intervention cards as you want and draw the same number plus one.
+	- Disciple of Ptah (2blue/2white): Each pyramid you control gives you a temporary VP at level 3 instead of level 4.
+
+- Game feature : Ta-Seti path
+

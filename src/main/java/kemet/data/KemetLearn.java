@@ -1,6 +1,7 @@
 package kemet.data;
 
 import kemet.ai.KemetNeuralNetwork;
+import kemet.ai.KemetRecurrentNeuralNetBuilder;
 import kemet.util.Coach;
 import kemet.util.GameFactory;
 import kemet.util.NeuralNet;
@@ -11,16 +12,12 @@ public class KemetLearn {
 
 	public static void main(String[] args) {
 		
-//		Logger log = LogManager.getLogger("hello.world");
-//		log.error("error");
-//		log.warn("warn");
-//		log.info("info");
-//		log.debug("debug");
-//		log.trace("trace");
-//		log.fatal("fatal");
-		
-//		KemetNeuralNetBuilder.NESTEROV_LEARN_RATE = 0.002;
-//		KemetNeuralNetBuilder.NESTEROV_MOMENTUM = 0.5;
+// original values
+//		public static double NESTEROV_MOMENTUM = 0.9;
+//		public static double NESTEROV_LEARN_RATE = 0.006;
+
+		KemetRecurrentNeuralNetBuilder.NESTEROV_MOMENTUM = 0.15;
+		KemetRecurrentNeuralNetBuilder.NESTEROV_LEARN_RATE = 0.001;
 		
 	    GameFactory gameFactory = new TwoPlayerGame();
 	    

@@ -1,12 +1,12 @@
 package kemet.model.action;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import kemet.model.Army;
 import kemet.model.BoardInventory;
 import kemet.model.KemetGame;
 import kemet.model.Player;
+import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
@@ -15,7 +15,9 @@ import kemet.model.action.choice.EndTurnChoice;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class ArmyMoveAction extends EndableAction {
 
 	/**
@@ -153,8 +155,6 @@ public class ArmyMoveAction extends EndableAction {
 		return parent;
 	}
 
-	public static final Logger LOGGER = Logger.getLogger(ArmyMoveAction.class.getName());
-
 	public String describe() {
 
 		StringBuilder builder = new StringBuilder();
@@ -253,10 +253,10 @@ public class ArmyMoveAction extends EndableAction {
 			subChoice.pickDestinationTile = tile;
 			subChoice.pickIsTeleport = false;
 
-			if (tile.isWalledByEnemy(player) && !firstMove) {
+			if (tile.isWalledByEnemy(player) && !firstMove && !player.hasPower(PowerList.RED_2_OPEN_GATE)) {
 				// moving into a city tile with walls
-				LOGGER.info("Army " + army + " can't move to tile " + tile.name
-						+ " because it has walls and it isn't the first move.");
+				log.debug("Army {} can't move to tile {} because it has walls and it isn't the first move.", army,
+						tile.name);
 				continue;
 			}
 
@@ -264,7 +264,7 @@ public class ArmyMoveAction extends EndableAction {
 
 		}
 
-		if (army.tile.getPyramidLevel() > 0 && player.canTeleport()) {
+		if (armyCanTeleport()) {
 			for (Tile tile : game.tileList) {
 				if (tile.hasObelisk) {
 
@@ -275,11 +275,29 @@ public class ArmyMoveAction extends EndableAction {
 					TileMoveChoice subChoice = new TileMoveChoice(game, player);
 					subChoice.pickDestinationTile = tile;
 					subChoice.pickIsTeleport = true;
-					subChoice.pickPowerCost = player.teleportCost;
+					subChoice.pickPowerCost = player.getTeleportCost();
 					choiceList.add(subChoice);
 				}
 			}
 		}
+	}
+
+	private boolean armyCanTeleport() {
+
+		if (!player.canTeleport()) {
+			// not enough power points to teleport
+			return false;
+		}
+
+		if (army.tile.getPyramidLevel() > 0) {
+			return true;
+		}
+
+		if (army.tile.hasObelisk && player.hasPower(PowerList.RED_2_TELEPORT)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private static boolean isTargetTileFriendlyAndFull(Player player, Tile tile, Army armyToMove) {
@@ -305,6 +323,7 @@ public class ArmyMoveAction extends EndableAction {
 		public void choiceActivate() {
 
 			army = armyPick;
+			movementLeft = army.getMoveCount();
 
 		}
 
@@ -354,16 +373,15 @@ public class ArmyMoveAction extends EndableAction {
 
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 				addArmyTileMoveChoice(pick.choiceList);
-				
-				if( pick.choiceList.size() == 0 ) {
+
+				if (pick.choiceList.size() == 0) {
 					// no possible destination tile (usually because move landed on a island )
 					return null;
 				}
-				
+
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
 				return pick.validate();
-			}
-			else {
+			} else {
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 				addArmySizeMoveChoice(pick.choiceList);
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
@@ -494,11 +512,30 @@ public class ArmyMoveAction extends EndableAction {
 					Tile previousTile = army.tile;
 					army.moveToTile(null);
 					createArmyLeftBehind(previousTile);
+					boolean battleContinues = true;
 
-					battle = BattleAction.create(game, ArmyMoveAction.this);
-					battle.attackingArmy = army;
-					battle.defendingArmy = destinationTile.getArmy();
-					battle.tile = destinationTile;
+					if (army.owningPlayer.hasPower(PowerList.RED_4_INITIATIVE)) {
+
+						byte enemyArmySize = destinationTile.getArmy().armySize;
+						byte damageDone = (byte) Math.min(2, enemyArmySize);
+						destinationTile.getArmy().bleedArmy(damageDone, PowerList.RED_4_INITIATIVE.toString());
+
+						if (damageDone == enemyArmySize) {
+							battleContinues = false;
+							destinationTile.getArmy().destroyArmy();
+						} 
+					}
+
+					if (battleContinues) {
+						battle = BattleAction.create(game, ArmyMoveAction.this);
+						battle.attackingArmy = army;
+						battle.defendingArmy = destinationTile.getArmy();
+						battle.tile = destinationTile;
+					}
+					else {
+						army.moveToTile(destinationTile);
+						armyThatKeepsMoving = army;
+					}
 
 				}
 			} else {
@@ -554,7 +591,7 @@ public class ArmyMoveAction extends EndableAction {
 		public int getIndex() {
 
 			if (moveSoldierCount == 0) {
-				LOGGER.severe("Move army size of 0 isn't valid yet in the AI choices");
+				log.error("Move army size of 0 isn't valid yet in the AI choices");
 			}
 
 			return ChoiceInventory.ARMY_SIZE_CHOICE + moveSoldierCount - 1;

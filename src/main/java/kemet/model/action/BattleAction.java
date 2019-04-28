@@ -12,6 +12,7 @@ import kemet.model.BoardInventory;
 import kemet.model.DiCard;
 import kemet.model.KemetGame;
 import kemet.model.Player;
+import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.Validation;
 import kemet.model.action.choice.ChoiceInventory;
@@ -208,7 +209,7 @@ public class BattleAction implements Action {
 
 	public byte calculateAttackerBleed() {
 		byte score = attackingUsedBattleCard.bloodBonus;
-		score += attackingArmy.owningPlayer.bloodBonus;
+		score += attackingArmy.owningPlayer.damageBonus;
 
 		if (attackingArmy.beast != null) {
 			score += attackingArmy.beast.bloodBonus;
@@ -219,7 +220,7 @@ public class BattleAction implements Action {
 
 	public byte calculateDefenderBleed() {
 		byte score = defendingUsedBattleCard.bloodBonus;
-		score += defendingArmy.owningPlayer.bloodBonus;
+		score += defendingArmy.owningPlayer.damageBonus;
 
 		if (defendingArmy.beast != null) {
 			score += defendingArmy.beast.bloodBonus;
@@ -290,6 +291,11 @@ public class BattleAction implements Action {
 		defenderScore = calculateDefenderScore();
 
 		attackerWins = attackerScore > defenderScore;
+		if (attackerWins) {
+			applyHolyWarBonus(attackingArmy.owningPlayer);
+		} else {
+			applyHolyWarBonus(defendingArmy.owningPlayer);
+		}
 
 		if (game.printActivations) {
 			if (attackerWins) {
@@ -305,11 +311,23 @@ public class BattleAction implements Action {
 		defendingArmy.owningPlayer.checkToRecuperateAllBattleCards();
 	}
 
+	private void applyHolyWarBonus(Player owningPlayer) {
+		if (owningPlayer.hasPower(PowerList.WHITE_3_HOLY_WAR)) {
+			owningPlayer.modifyPrayerPoints((byte) 4, PowerList.WHITE_3_HOLY_WAR.toString());
+		}
+	}
+
 	public void giveBattleVictoryPoints() {
 		// give winner victory point if attacker & still alive
 		if (attackerWins) {
 			if (!attackerDestroyed) {
 				attackingArmy.owningPlayer.addBattleVictoryPoint();
+			}
+		} else {
+			if (!defenderDestroyed) {
+				if (defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_DEFENSIVE_VICTORY)) {
+					defendingArmy.owningPlayer.addBattleVictoryPoint();
+				}
 			}
 		}
 	}
@@ -329,8 +347,20 @@ public class BattleAction implements Action {
 		byte defenderBleed = calculateDamageOnDefender();
 
 		// apply bleeds
-		attackingArmy.bleedArmy(attackerBleed, "defender bleed score");
-		defendingArmy.bleedArmy(defenderBleed, "attacker bleed score");
+		attackingArmy.bleedArmy(attackerBleed, "defender damage score");
+
+		applyCrusadePowerBonusToDamage(attackerBleed, defendingArmy.owningPlayer);
+
+		defendingArmy.bleedArmy(defenderBleed, "attacker damage score");
+
+		applyCrusadePowerBonusToDamage(defenderBleed, attackingArmy.owningPlayer);
+	}
+
+	private void applyCrusadePowerBonusToDamage(byte attackerBleed, Player owningPlayer) {
+		if (owningPlayer.hasPower(PowerList.WHITE_2_CRUSADE)) {
+			byte powerBonus = (byte) (attackerBleed * 2);
+			owningPlayer.modifyPrayerPoints(powerBonus, "White Power Tile Level 2 : Crusade. +2 power per damage.");
+		}
 	}
 
 	public void applyAttackCardBleed() {
@@ -578,7 +608,7 @@ public class BattleAction implements Action {
 				}
 			}
 
-			if (validMoves[ChoiceInventory.PASS_CHOICE_INDEX] == true) {
+			if (validMoves[ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX] == true) {
 				String message = "Pass choice is a valid move, even though we should be picking a battle card.";
 				log.error(message, card.index, validMoves);
 
@@ -719,7 +749,7 @@ public class BattleAction implements Action {
 			if (recall) {
 				return ChoiceInventory.RECALL_CHOICE;
 			}
-			return ChoiceInventory.PASS_CHOICE_INDEX;
+			return ChoiceInventory.PASS_RECALL_CHOICE_INDEX;
 		}
 
 	}
@@ -930,9 +960,9 @@ public class BattleAction implements Action {
 
 			resolveBattleWinner();
 
-			applyAttackCardBleed();
-
 			applyBattleBleed();
+
+			applyAttackCardBleed();
 
 			checkIfAmyIsDestroyed();
 
