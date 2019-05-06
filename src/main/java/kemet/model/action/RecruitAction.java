@@ -457,7 +457,7 @@ public class RecruitAction extends EndableAction {
 		public int getIndex() {
 			if (pickArmySize == 0) {
 				return ChoiceInventory.PASS_RECRUIT_CHOICE_INDEX;
-			}
+			} 
 			return ChoiceInventory.ARMY_SIZE_CHOICE + pickArmySize - 1;
 		}
 
@@ -508,19 +508,31 @@ public class RecruitAction extends EndableAction {
 
 		for (Tile tile : player.cityTiles) {
 
-			if (isTargetTileFriendlyAndFull(tile)) {
-				continue;
-			}
-
-			if (pickedTiles.contains(tile)) {
-				// skip tiles already recruited on
-				continue;
-			}
-
-			RecruitPickTileChoice subChoice = new RecruitPickTileChoice(game, player);
-			subChoice.pickTile = tile;
-			choiceList.add(subChoice);
+			checkToAddRecruitChoice(choiceList, tile);
 		}
+		
+		if( player.hasPower(PowerList.BLACK_1_ENFORCED_RECRUITMENT)) {
+			
+			for( Army army : player.armyList ) {
+				if( ! player.cityTiles.contains( army.tile ) ) {
+					checkToAddRecruitChoice(choiceList, army.tile);
+				}
+			}
+		}
+	}
+
+	private void checkToAddRecruitChoice(List<Choice> choiceList, Tile tile) {
+		if (isTargetTileFriendlyAndFull(tile)) {
+			return;
+		}
+
+		if (pickedTiles.contains(tile)) {
+			return;
+		}
+
+		RecruitPickTileChoice subChoice = new RecruitPickTileChoice(game, player);
+		subChoice.pickTile = tile;
+		choiceList.add(subChoice);
 	}
 
 	public class RecruitPickTileChoice extends PlayerChoice {

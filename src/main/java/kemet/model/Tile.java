@@ -199,6 +199,10 @@ public class Tile implements Model {
 				army.owningPlayer.addTemplePermanentVictoryPoint("temple bonus point of " + name);
 			}
 
+			if (army.owningPlayer.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
+				army.owningPlayer.modifyPrayerPoints((byte) 1, PowerList.BLACK_4_DIVINE_STRENGTH.toString());
+			}
+
 			if (templeArmyCost > 0) {
 				army.bleedArmy(templeArmyCost, "army cost of " + name);
 				army.checkToDisbandArmy();

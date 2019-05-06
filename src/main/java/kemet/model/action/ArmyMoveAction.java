@@ -513,6 +513,31 @@ public class ArmyMoveAction extends EndableAction {
 					army.moveToTile(null);
 					createArmyLeftBehind(previousTile);
 					boolean battleContinues = true;
+					boolean battleCancelledAttackerDestroyed = false;
+
+					if (army.owningPlayer.hasPower(PowerList.BLACK_2_DEDICATION_TO_BATTLE)) {
+						army.owningPlayer.modifyPrayerPoints((byte) 2,
+								PowerList.BLACK_2_DEDICATION_TO_BATTLE.toString());
+
+						if (army.owningPlayer.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
+							army.owningPlayer.modifyPrayerPoints((byte) 1,
+									PowerList.BLACK_4_DIVINE_STRENGTH.toString());
+						}
+
+					
+					}
+					
+					if (destinationTile.getArmy().owningPlayer.hasPower(PowerList.BLACK_3_DEADLY_TRAP)) {
+
+						byte enemyArmySize = army.armySize;
+						byte damageDone = (byte) Math.min(1, enemyArmySize);
+						army.bleedArmy(damageDone, PowerList.BLACK_3_DEADLY_TRAP.toString());
+
+						if (damageDone == enemyArmySize) {
+							battleCancelledAttackerDestroyed = true;
+							army.destroyArmy();
+						}
+					}
 
 					if (army.owningPlayer.hasPower(PowerList.RED_4_INITIATIVE)) {
 
@@ -523,7 +548,7 @@ public class ArmyMoveAction extends EndableAction {
 						if (damageDone == enemyArmySize) {
 							battleContinues = false;
 							destinationTile.getArmy().destroyArmy();
-						} 
+						}
 					}
 
 					if (battleContinues) {
@@ -531,8 +556,7 @@ public class ArmyMoveAction extends EndableAction {
 						battle.attackingArmy = army;
 						battle.defendingArmy = destinationTile.getArmy();
 						battle.tile = destinationTile;
-					}
-					else {
+					} else if ( ! battleCancelledAttackerDestroyed ) {
 						army.moveToTile(destinationTile);
 						armyThatKeepsMoving = army;
 					}
@@ -554,7 +578,7 @@ public class ArmyMoveAction extends EndableAction {
 				movementLeft--;
 			}
 
-			if (armyThatKeepsMoving != null && movementLeft > 1 || powerCost > 0) {
+			if (armyThatKeepsMoving != null && movementLeft > 0 || powerCost > 0) {
 
 				army = armyThatKeepsMoving;
 				powerCost = 0;

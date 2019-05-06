@@ -858,6 +858,15 @@ public class Player implements Model {
 		if (hasPower(PowerList.WHITE_1_PRIESTESS_1)) {
 			returnValue += 1;
 		}
+		
+		if (hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
+			returnValue += 1;
+		}
+		
+		if( returnValue > 0 ) {
+			returnValue = 0;
+		}
+		
 		return returnValue;
 	}
 

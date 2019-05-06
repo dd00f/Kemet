@@ -1,5 +1,6 @@
 package kemet.model;
 
+import kemet.model.power.BestialFuryPower;
 import kemet.model.power.BladesOfNeithPower;
 import kemet.model.power.CarnagePower;
 import kemet.model.power.ChargePower;
@@ -45,8 +46,8 @@ public class PowerList {
 	// TODO fill up
 //	public static final String WHITE_2_CRUSADE_NAME = "Crusade";
 //	public static final String WHITE_2_CRUSADE_DESCRIPTION = "+2 power for each unit you destroy in battle.";
-	public static final Power WHITE_2_MISSING = new Power(POWER_INDEXER++, WHITE_2_CRUSADE_NAME, (byte) 2, Color.WHITE,
-			WHITE_2_CRUSADE_DESCRIPTION);
+//	public static final Power WHITE_2_MISSING = new Power(POWER_INDEXER++, WHITE_2_CRUSADE_NAME, (byte) 2, Color.WHITE,
+//			WHITE_2_CRUSADE_DESCRIPTION);
 
 	public static final String WHITE_3_HOLY_WAR_NAME = "Holy War";
 	public static final String WHITE_3_HOLY_WAR_DESCRIPTION = "+4 power per battle won.";
@@ -142,10 +143,49 @@ public class PowerList {
 
 	public static final Power BLUE_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.BLUE, VICTORY_POINT_DESCRIPTION);
+	
+	
+
+//	- Black : 2 : Dedication to battle : +2 pray when moving to a tile with an enemy army
+
+	public static final String BLACK_1_ENFORCED_RECRUITMENT_NAME = "Enforced Recruitment";
+	public static final String BLACK_1_ENFORCED_RECRUITMENT_DESCRIPTION = "Recruit on any existing army. ";
+	public static final Power BLACK_1_ENFORCED_RECRUITMENT = new Power(POWER_INDEXER++, BLACK_1_ENFORCED_RECRUITMENT_NAME, (byte) 1, Color.BLACK,
+			BLACK_1_ENFORCED_RECRUITMENT_DESCRIPTION);
+	
+	public static final String BLACK_2_HONOR_IN_BATTLE_NAME = "Honor in battle";
+	public static final String BLACK_2_HONOR_IN_BATTLE_DESCRIPTION = "+1 power per reach troop destroyed by your opponent in battle.";
+	public static final Power BLACK_2_HONOR_IN_BATTLE = new Power(POWER_INDEXER++, BLACK_2_HONOR_IN_BATTLE_NAME, (byte) 2, Color.BLACK,
+			BLACK_2_HONOR_IN_BATTLE_DESCRIPTION);
+	
+	public static final String BLACK_2_DEDICATION_TO_BATTLE_NAME = "Dedication to battle";
+	public static final String BLACK_2_DEDICATION_TO_BATTLE_DESCRIPTION = "+2 power when moving to a tile with an enemy army.";
+	public static final Power BLACK_2_DEDICATION_TO_BATTLE = new Power(POWER_INDEXER++, BLACK_2_DEDICATION_TO_BATTLE_NAME, (byte) 2, Color.BLACK,
+			BLACK_2_DEDICATION_TO_BATTLE_DESCRIPTION);
 
 	public static final Power BLACK_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.BLACK, VICTORY_POINT_DESCRIPTION);
 
+	public static final String BLACK_3_DEADLY_TRAP_NAME = "Deadly Trap";
+	public static final String BLACK_3_DEADLY_TRAP_DESCRIPTION = "Destroy 1 enemy troop when they move to a tile you occupy.";
+	public static final Power BLACK_3_DEADLY_TRAP = new Power(POWER_INDEXER++, BLACK_3_DEADLY_TRAP_NAME, (byte) 3, Color.BLACK,
+			BLACK_3_DEADLY_TRAP_DESCRIPTION);
+
+	
+	public static final String BLACK_4_BESTIAL_FURY_NAME = "Bestial Fury";
+	public static final String BLACK_4_BESTIAL_FURY_DESCRIPTION = "+1 move, +1damage, +1strength.";
+	public static final Power BLACK_4_BESTIAL_FURY = new BestialFuryPower(POWER_INDEXER++, BLACK_4_BESTIAL_FURY_NAME, (byte) 4, Color.BLACK,
+			BLACK_4_BESTIAL_FURY_DESCRIPTION);
+
+	public static final String BLACK_4_DIVINE_STRENGTH_NAME = "Divine Strength";
+	public static final String BLACK_4_DIVINE_STRENGTH_DESCRIPTION = "+1 power every time you gain power points during day.";
+	public static final Power BLACK_4_DIVINE_STRENGTH = new Power(POWER_INDEXER++, BLACK_4_DIVINE_STRENGTH_NAME, (byte) 4, Color.BLACK,
+			BLACK_4_DIVINE_STRENGTH_DESCRIPTION);
+
+	
+//	- Black : 4 : Divine Strength : +1 prayer every time you gain prayer points during day
+
+	
 	public static void initializeGame(KemetGame game) {
 
 		game.availablePowerList.add(WHITE_1_PRIEST_1);
@@ -208,7 +248,35 @@ public class PowerList {
 		// TODO missing one
 		// TODO missing one
 
+		
+		game.availablePowerList.add(BLACK_1_ENFORCED_RECRUITMENT);
+		// TODO missing one
+		// TODO missing one
+		// TODO missing one
+		
+		game.availablePowerList.add(BLACK_2_HONOR_IN_BATTLE);
+		game.availablePowerList.add(BLACK_2_DEDICATION_TO_BATTLE);
+		// TODO missing one
+		// TODO missing one
+		
 		game.availablePowerList.add(BLACK_3_VICTORY_POINT);
+		game.availablePowerList.add(BLACK_3_DEADLY_TRAP);
+		// TODO missing one
+		// TODO missing one
+		
+		
+		game.availablePowerList.add(BLACK_4_BESTIAL_FURY);
+		game.availablePowerList.add(BLACK_4_DIVINE_STRENGTH);
+		// TODO missing one
+		// TODO missing one
+		
+		
+		for( int i = 0; i< game.availablePowerList.size();++i) {
+			Power power = game.availablePowerList.get(i);
+			if (power.index != i ) {
+				throw new IllegalStateException(power + " is not at index " + i);
+			}
+		}
 
 	}
 

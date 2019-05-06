@@ -250,6 +250,12 @@ public class PlayerActionTokenPick implements Action {
 		@Override
 		public void choiceActivate() {
 			player.modifyPrayerPoints(increasedPower, "prayer action");
+			
+			if (player.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
+				player.modifyPrayerPoints((byte) 1,
+						PowerList.BLACK_4_DIVINE_STRENGTH.toString());
+			}
+			
 			if (row == 2) {
 				player.rowTwoPrayUsed = true;
 			} else {
@@ -385,7 +391,7 @@ public class PlayerActionTokenPick implements Action {
 
 		@Override
 		public int getIndex() {
-			return ChoiceInventory.BUY_POWER + power.index;
+			return power.getActionIndex();
 		}
 
 	}

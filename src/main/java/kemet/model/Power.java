@@ -1,5 +1,7 @@
 package kemet.model;
 
+import kemet.model.action.choice.ChoiceInventory;
+
 public class Power implements Model {
 	
 	/**
@@ -47,6 +49,10 @@ public class Power implements Model {
 	@Override
 	public String toString() {
 		return index + " : " + color + " : " + level + " : " + name + " : " + description;
+	}
+
+	public int getActionIndex() {
+		return  ChoiceInventory.BUY_POWER + index;
 	}
 
 }

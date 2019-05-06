@@ -350,16 +350,25 @@ public class BattleAction implements Action {
 		attackingArmy.bleedArmy(attackerBleed, "defender damage score");
 
 		applyCrusadePowerBonusToDamage(attackerBleed, defendingArmy.owningPlayer);
+		applyHonorInBattlePowerBonusToDamage(attackerBleed, attackingArmy.owningPlayer);
 
 		defendingArmy.bleedArmy(defenderBleed, "attacker damage score");
 
 		applyCrusadePowerBonusToDamage(defenderBleed, attackingArmy.owningPlayer);
+		applyHonorInBattlePowerBonusToDamage(defenderBleed, defendingArmy.owningPlayer);
 	}
 
 	private void applyCrusadePowerBonusToDamage(byte attackerBleed, Player owningPlayer) {
 		if (owningPlayer.hasPower(PowerList.WHITE_2_CRUSADE)) {
 			byte powerBonus = (byte) (attackerBleed * 2);
-			owningPlayer.modifyPrayerPoints(powerBonus, "White Power Tile Level 2 : Crusade. +2 power per damage.");
+			owningPlayer.modifyPrayerPoints(powerBonus, PowerList.WHITE_2_CRUSADE.toString());
+		}
+	}
+	
+	private void applyHonorInBattlePowerBonusToDamage(byte attackerBleed, Player owningPlayer) {
+		if (owningPlayer.hasPower(PowerList.BLACK_2_HONOR_IN_BATTLE)) {
+			byte powerBonus = (byte) (attackerBleed * 1);
+			owningPlayer.modifyPrayerPoints(powerBonus, PowerList.BLACK_2_HONOR_IN_BATTLE.toString());
 		}
 	}
 

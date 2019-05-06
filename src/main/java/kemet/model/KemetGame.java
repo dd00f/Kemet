@@ -575,7 +575,7 @@ public class KemetGame implements Model, Game {
 			}
 		}
 
-		String message = "Unable to find action that matches index : " + actionIndex;
+		String message = "Unable to find action that matches index : " + actionIndex + "\n" + "Choice List :\n" + currentPlayerChoicePick.choiceList.toString();
 		LOGGER.error(message);
 		throw new IllegalArgumentException(message);
 	}
