@@ -32,12 +32,14 @@ public class RecruitAction extends EndableAction {
 	public Beast beast;
 	public byte cost;
 	public byte recruitSize = -1;
+	public boolean allowPaidRecruit = true;
+	public boolean canRecruitOnAnyArmy = false;
 	public Player player;
 	public List<Tile> pickedTiles = new ArrayList<>();
 	public ChainedAction battles;
 	private KemetGame game;
 	private Action parent;
-	private byte freeRecruitLeft = -1;
+	public byte freeRecruitLeft = -1;
 
 	public static Cache<RecruitAction> CACHE = new Cache<RecruitAction>(() -> new RecruitAction());
 
@@ -47,7 +49,14 @@ public class RecruitAction extends EndableAction {
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		cannonicalForm.set(BoardInventory.STATE_RECRUIT, player.getState(playerIndex));
+
+		if (allowPaidRecruit) {
+			cannonicalForm.set(BoardInventory.STATE_RECRUIT, player.getState(playerIndex));
+		} else {
+			cannonicalForm.set(BoardInventory.STATE_FREE_RECRUIT, player.getState(playerIndex));
+		}
+
+		cannonicalForm.set(BoardInventory.FREE_RECRUIT_LEFT, freeRecruitLeft);
 
 		if (isEnded()) {
 			// trigger battle actions
@@ -55,7 +64,7 @@ public class RecruitAction extends EndableAction {
 			return;
 
 		}
-		
+
 		for (Tile tile : pickedTiles) {
 			// reverse selection for tiles that were already picked
 			tile.setSelected(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
@@ -64,8 +73,7 @@ public class RecruitAction extends EndableAction {
 		if (tile == null) {
 			// pick tile
 			cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
-		}
-		else if (recruitSize < 0) {
+		} else if (recruitSize < 0) {
 			// pick size
 			cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
 			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
@@ -90,6 +98,8 @@ public class RecruitAction extends EndableAction {
 		recruitSize = -1;
 		pickedTiles.clear();
 		battles = null;
+		allowPaidRecruit = true;
+		canRecruitOnAnyArmy = false;
 	}
 
 	@Override
@@ -144,6 +154,8 @@ public class RecruitAction extends EndableAction {
 		clone.cost = cost;
 		clone.freeRecruitLeft = freeRecruitLeft;
 		clone.recruitSize = recruitSize;
+		clone.allowPaidRecruit = allowPaidRecruit;
+		clone.canRecruitOnAnyArmy = canRecruitOnAnyArmy;
 
 		clone.pickedTiles.clear();
 		clone.pickedTiles.addAll(pickedTiles);
@@ -236,16 +248,14 @@ public class RecruitAction extends EndableAction {
 		if (returnValue == null) {
 			returnValue = player.createArmy();
 		}
-		
-
 
 		player.modifyPrayerPoints((byte) -cost, "recruit action");
-		
-		freeRecruitLeft-= recruitSize;
-		if( freeRecruitLeft < 0 ) {
+
+		freeRecruitLeft -= recruitSize;
+		if (freeRecruitLeft < 0) {
 			freeRecruitLeft = 0;
 		}
-		
+
 		returnValue.recruit(recruitSize);
 		if (beast != null) {
 			returnValue.addBeast(beast);
@@ -361,17 +371,16 @@ public class RecruitAction extends EndableAction {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
-		
-		if( freeRecruitLeft < 0 ) {
+
+		if (freeRecruitLeft < 0) {
 			freeRecruitLeft = 0;
-			if( player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE)) {
+			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE)) {
 				freeRecruitLeft += 2;
 			}
-			if( player.hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
+			if (player.hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
 				freeRecruitLeft += 1;
 			}
 		}
-		
 
 		if (isEnded()) {
 			// trigger battle actions
@@ -406,7 +415,7 @@ public class RecruitAction extends EndableAction {
 
 			addRecruitPickTileChoice(pick.choiceList);
 
-			if (pick.choiceList.size() == 0 || !player.canRecruit()) {
+			if (pick.choiceList.size() == 0 || !player.canRecruit() || (!allowPaidRecruit && freeRecruitLeft == 0)) {
 
 				// no valid choices left
 				end();
@@ -457,7 +466,7 @@ public class RecruitAction extends EndableAction {
 		public int getIndex() {
 			if (pickArmySize == 0) {
 				return ChoiceInventory.PASS_RECRUIT_CHOICE_INDEX;
-			} 
+			}
 			return ChoiceInventory.ARMY_SIZE_CHOICE + pickArmySize - 1;
 		}
 
@@ -474,17 +483,22 @@ public class RecruitAction extends EndableAction {
 		}
 
 		max = (byte) Math.min(max, player.availableArmyTokens);
-		max = (byte) Math.min(max, player.getPrayerPoints());
+
+		if (allowPaidRecruit) {
+			max = (byte) Math.min(max, player.getPrayerPoints() + freeRecruitLeft);
+		} else {
+			max = (byte) Math.min(max, player.getPrayerPoints());
+		}
 
 		for (byte i = min; i <= max; ++i) {
 			RecruitArmySizeChoice subChoice = new RecruitArmySizeChoice(game, player);
 			subChoice.pickArmySize = i;
-			
+
 			byte cost = (byte) (i - freeRecruitLeft);
-			if( cost < 0 ) {
+			if (cost < 0) {
 				cost = 0;
 			}
-			
+
 			subChoice.pickCost = cost;
 
 			choiceList.add(subChoice);
@@ -510,11 +524,11 @@ public class RecruitAction extends EndableAction {
 
 			checkToAddRecruitChoice(choiceList, tile);
 		}
-		
-		if( player.hasPower(PowerList.BLACK_1_ENFORCED_RECRUITMENT)) {
-			
-			for( Army army : player.armyList ) {
-				if( ! player.cityTiles.contains( army.tile ) ) {
+
+		if (player.hasPower(PowerList.BLACK_1_ENFORCED_RECRUITMENT) || canRecruitOnAnyArmy) {
+
+			for (Army army : player.armyList) {
+				if (!player.cityTiles.contains(army.tile)) {
 					checkToAddRecruitChoice(choiceList, army.tile);
 				}
 			}
@@ -558,7 +572,7 @@ public class RecruitAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickTile.getPickChoiceIndex( player.index );
+			return pickTile.getPickChoiceIndex(player.index);
 		}
 	}
 

@@ -28,6 +28,7 @@ public class BoardInventory {
 	// GAME STATE DATA
 	// -----------------------
 	public static final int STATE_RECRUIT = INDEXER++;
+	public static final int STATE_FREE_RECRUIT = INDEXER++;
 	public static final int STATE_MOVE = INDEXER++;
 	public static final int STATE_BATTLE = INDEXER++;
 	public static final int STATE_UPGRADE_PYRAMID = INDEXER++;
@@ -51,6 +52,7 @@ public class BoardInventory {
 	public static final int STATE_PICK_INITIATIVE_DISCARD = INDEXER++;
 	public static final int STATE_PICK_INITIATIVE_DAWN_TOKEN = INDEXER++;
 	public static final int STATE_PICK_INITIATIVE_ORDER = INDEXER++;
+	public static final int STATE_PICK_BATTLECARD_TO_REMOVE = INDEXER++;
 
 	// -----------------------
 	// GAME SELECTION DATA
@@ -66,7 +68,8 @@ public class BoardInventory {
 	public static final int BATTLE_DEFENDER_SHIELD = INDEXER++;
 	public static final int BATTLE_DEFENDER_DAMAGE = INDEXER++;
 	public static final int BATTLE_ATTACKER_WON = INDEXER++; // 1 yes,  -1 no
-
+	public static final int FREE_RECRUIT_LEFT = INDEXER++;
+	
 	// Battle stats to help nudge things ? 2x2x3 = 12 datapoints
 	// - min/max attack/defense strength/shield/damage
 
@@ -232,7 +235,10 @@ public class BoardInventory {
 		INDEXER += PLAYER_COUNT * PowerList.POWER_INDEXER;
 	}
 	
+	
+
 	public static final int TOTAL_STATE_COUNT = INDEXER;
+
 
 
 

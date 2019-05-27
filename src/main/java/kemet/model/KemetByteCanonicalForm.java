@@ -33,6 +33,9 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 
 		floatCanonicalForm[BoardInventory.PICKED_SIZE] = floatCanonicalForm[BoardInventory.PICKED_SIZE]
 				/ MAX_ARMY_SIZE_PICK;
+		
+		floatCanonicalForm[BoardInventory.FREE_RECRUIT_LEFT] = floatCanonicalForm[BoardInventory.FREE_RECRUIT_LEFT]
+				/ MAX_ARMY_SIZE_PICK;
 
 		floatCanonicalForm[BoardInventory.PICKED_LEVEL] = floatCanonicalForm[BoardInventory.PICKED_LEVEL] / MAX_LEVEL;
 
@@ -98,6 +101,7 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 		printValue(board, build, BoardInventory.ROUND_NUMBER,  " ROUND_NUMBER ", Options.GAME_TURN_LIMIT);
 		
 		printValue(board, build, BoardInventory.STATE_RECRUIT,  " STATE_RECRUIT ", 1);
+		printValue(board, build, BoardInventory.STATE_FREE_RECRUIT,  " STATE_FREE_RECRUIT ", 1);
 		printValue(board, build, BoardInventory.STATE_MOVE,  " STATE_MOVE ", 1);
 		printValue(board, build, BoardInventory.STATE_BATTLE,  " STATE_BATTLE ", 1);
 		printValue(board, build, BoardInventory.STATE_UPGRADE_PYRAMID,  " STATE_UPGRADE_PYRAMID ", 1);
@@ -128,6 +132,7 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 		printValue(board, build, BoardInventory.BATTLE_DEFENDER_SHIELD,  " BATTLE_DEFENDER_SHIELD ", 1);
 		printValue(board, build, BoardInventory.BATTLE_DEFENDER_DAMAGE,  " BATTLE_DEFENDER_DAMAGE ", 1);
 		printValue(board, build, BoardInventory.BATTLE_ATTACKER_WON,  " BATTLE_ATTACKER_WON ", 1);
+		printValue(board, build, BoardInventory.FREE_RECRUIT_LEFT,  " FREE_RECRUIT_LEFT ", 1);
 		
 		printTilePlayerValue(board, build, BoardInventory.TILE_PLAYER_ARMY_SIZE,  " TILE_PLAYER_ARMY_SIZE ", 1);
 

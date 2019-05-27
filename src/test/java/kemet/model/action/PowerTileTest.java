@@ -1,6 +1,8 @@
 package kemet.model.action;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.Test;
@@ -200,6 +202,50 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(4, bluePlayer.victoryPoints);
 	}
 
+	
+	@Test
+	public void test_WHITE_3_HAND_OF_GOD() {
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_3_HAND_OF_GOD);
+		assertEquals(6, bluePlayer.getPrayerPoints());
+		
+		// burn 4 actions
+		prayRowThree();
+		prayRowThree();
+		
+		prayRowTwo();
+		prayRowTwo();
+		
+		startRecruit();
+		endRecruit();
+		startRecruit();
+		endRecruit();
+		
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+		
+		// night actions : upgrade pyramid from level 0 to 1 for free
+		
+		game.getNextPlayerChoicePick();
+		assertEquals(11, bluePlayer.getPrayerPoints());
+		Tile blueDistrict3 = bluePlayer.cityTiles.get(2);
+		assertEquals(0, blueDistrict3.getPyramidLevel());
+		game.activateAction(game.getNextPlayer(), blueDistrict3.getPickChoiceIndex(game.getNextPlayer()));
+		assertEquals(11, bluePlayer.getPrayerPoints());
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + Color.BLACK.ordinal());
+		assertEquals(11, bluePlayer.getPrayerPoints());
+		
+		// battle for initiative
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+		
+		assertEquals(11, bluePlayer.getPrayerPoints());
+		assertEquals(1, blueDistrict3.getPyramidLevel());
+		assertEquals(Color.BLACK, blueDistrict3.pyramidColor);
+		
+	}
+	
 	@Test
 	public void test_WHITE_4_PRIEST_OF_RA() {
 		buyPowerTile(PowerList.RED_1_CHARGE_1);
@@ -428,6 +474,32 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		moveNextTile(game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 		assertEquals(1, redPlayer.getPrayerPoints());
 	}
+	
+	@Test
+	public void test_RED_2_OFFENSIVE_STRATEGY() {
+
+		assertEquals(7, redPlayer.getPrayerPoints());
+		
+		assertEquals(4, redPlayer.availableBattleCards.size());
+		assertFalse( redPlayer.availableBattleCards.contains(BattleCard.OFFENSIVE_STRATEGY_CARD));
+		assertTrue( redPlayer.usedBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
+
+		
+		buyPowerTile(PowerList.RED_2_OFFENSIVE_STRATEGY);
+		game.activateAction(game.getNextPlayer(), BattleCard.FERVENT_PURGE_CARD.getPickChoiceIndex());
+
+		assertTrue( redPlayer.availableBattleCards.contains(BattleCard.OFFENSIVE_STRATEGY_CARD));
+		assertFalse( redPlayer.availableBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
+		assertFalse( redPlayer.usedBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
+		assertEquals(8, redPlayer.availableBattleCards.size());
+
+		
+		assertEquals(5, redPlayer.getPrayerPoints());
+
+		
+		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
+
+	}
 
 	@Test
 	public void test_RED_2_TELEPORT_missing() {
@@ -613,6 +685,30 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(2, bluePlayer.getPrayerPoints());
 
 	}
+	
+	@Test
+	public void test_BLUE_2_DEFENSIVE_STRATEGY() {
+
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+		
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		
+		assertEquals(4, bluePlayer.availableBattleCards.size());
+		assertFalse( bluePlayer.availableBattleCards.contains(BattleCard.DEFENSIVE_STRATEGY_CARD));
+		assertTrue( bluePlayer.usedBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
+
+		buyPowerTile(PowerList.BLUE_2_DEFENSIVE_STRATEGY);
+		game.activateAction(game.getNextPlayer(), BattleCard.FERVENT_PURGE_CARD.getPickChoiceIndex());
+
+		assertTrue( bluePlayer.availableBattleCards.contains(BattleCard.DEFENSIVE_STRATEGY_CARD));
+		assertFalse( bluePlayer.availableBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
+		assertFalse( bluePlayer.usedBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
+		assertEquals(8, bluePlayer.availableBattleCards.size());
+
+		
+		assertEquals(7, bluePlayer.getPrayerPoints());
+
+	}
 
 	@Test
 	public void test_BLUE_3_SHIELD_OF_NEITH() {
@@ -667,6 +763,83 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	}
 
 	@Test
+	public void test_BLUE_4_REINFORCEMENTS() {
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLUE_4_REINFORCEMENTS);
+		assertEquals(5, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		prayRowThree();
+		assertEquals(7, bluePlayer.getPrayerPoints());
+
+		startRecruit();
+		endRecruit();
+		startRecruit();
+		endRecruit();
+
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+
+		prayRowTwo();
+		prayRowTwo();
+		assertEquals(9, bluePlayer.getPrayerPoints());
+
+		game.getNextPlayerChoicePick();
+
+		// night prayer bonus
+		assertEquals(11, bluePlayer.getPrayerPoints());
+
+		// no cost recruit of 4 at night time
+		recruitArmy(bluePlayer.cityTiles.get(0), 4);
+		assertEquals(11, bluePlayer.getPrayerPoints());
+
+		// battle for initiative
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+	}
+	
+	@Test
+	public void test_BLUE_4_REINFORCEMENTS_dual_tile() {
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLUE_4_REINFORCEMENTS);
+		assertEquals(5, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		prayRowThree();
+		assertEquals(7, bluePlayer.getPrayerPoints());
+
+		startRecruit();
+		endRecruit();
+		startRecruit();
+		endRecruit();
+
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+
+		prayRowTwo();
+		prayRowTwo();
+		assertEquals(9, bluePlayer.getPrayerPoints());
+
+		game.getNextPlayerChoicePick();
+
+		// night prayer bonus
+		assertEquals(11, bluePlayer.getPrayerPoints());
+
+		// no cost recruit of 4 at night time
+		recruitArmy(bluePlayer.cityTiles.get(0), 2);
+		recruitArmy(bluePlayer.cityTiles.get(2), 2);
+		assertEquals(11, bluePlayer.getPrayerPoints());
+
+		// battle for initiative
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+	}
+
+	@Test
 	public void test_BLUE_3_VICTORY_POINT() {
 		buyPowerTile(PowerList.RED_1_CHARGE_1);
 		assertEquals(9, bluePlayer.getPrayerPoints());
@@ -676,6 +849,30 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(4, bluePlayer.victoryPoints);
 	}
 
+	@Test
+	public void test_BLACK_1_MERCENARIES_1() {
+		
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLACK_1_MERCENARIES_1);
+		assertEquals(6, redPlayer.getPrayerPoints());
+		
+		recruitArmy(redPlayer.cityTiles.get(0), 3);
+		prayRowThree();
+		prayRowThree();
+	}
+	
+	@Test
+	public void test_BLACK_1_MERCENARIES_2() {
+		
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLACK_1_MERCENARIES_2);
+		assertEquals(6, redPlayer.getPrayerPoints());
+		
+		recruitArmy(redPlayer.cityTiles.get(0), 3);
+		prayRowThree();
+		prayRowThree();
+	}
+	
 	@Test
 	public void test_BLACK_1_ENFORCED_RECRUITMENT() {
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -688,13 +885,12 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		// recruit where it doesn't normally work.
 		startRecruit();
-		assertEquals( 2, redPlayer.cityFront.getArmy().armySize);
+		assertEquals(2, redPlayer.cityFront.getArmy().armySize);
 		recruitArmy(redPlayer.cityFront, 2);
 		buyPowerTile(PowerList.WHITE_1_PRIEST_1);
-		assertEquals( 4, redPlayer.cityFront.getArmy().armySize);
+		assertEquals(4, redPlayer.cityFront.getArmy().armySize);
 
 	}
-
 
 	@Test
 	public void test_BLACK_2_HONOR_IN_BATTLE() {
@@ -716,7 +912,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		// 1 extra prayer point from destroyed troop.
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
-	
+
 	@Test
 	public void test_BLACK_2_DEDICATION_TO_BATTLE() {
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -736,7 +932,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
 	}
-	
+
 	@Test
 	public void test_BLACK_3_VICTORY_POINT() {
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -767,15 +963,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		
+
 		startRecruit();
 		endRecruit();
-		
+
 		assertEquals(10, bluePlayer.getPrayerPoints());
 		assertEquals(3, bluePlayer.victoryPoints);
 		assertEquals(3, redPlayer.victoryPoints);
 	}
-	
 
 	@Test
 	public void test_BLACK_4_BESTIAL_FURY() {
@@ -787,24 +982,24 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		buyPowerTile(PowerList.BLACK_4_BESTIAL_FURY);
 		assertEquals(3, redPlayer.getPrayerPoints());
-		
+
 		assertEquals(1, redPlayer.damageBonus);
 		assertEquals(1, redPlayer.strengthBonus);
 		assertEquals(2, redPlayer.moveCapacity);
 	}
-	
+
 	@Test
 	public void test_BLACK_4_DIVINE_STRENGTH_pray() {
 		assertEquals(7, redPlayer.getPrayerPoints());
 
 		buyPowerTile(PowerList.BLACK_4_DIVINE_STRENGTH);
 		assertEquals(3, redPlayer.getPrayerPoints());
-		
+
 		prayRowThree();
 		prayRowThree();
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
-	
+
 	@Test
 	public void test_BLACK_4_DIVINE_STRENGTH_and_BLACK_2_DEDICATION_TO_BATTLE() {
 		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_DIVINE_STRENGTH);
@@ -825,7 +1020,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
-	
+
 //	game.availablePowerList.add(BLACK_4_DIVINE_STRENGTH);
 
 }

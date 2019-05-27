@@ -17,7 +17,9 @@ public class BattleCard implements Model {
 	public static final String SHIELD_PUSH = "Shield Push";
 	public static final String DEFENSIVE_RETREAT = "Defensive Retreat";
 	public static final String FERVENT_PURGE = "Fervent Purge";
-	
+	public static final String DEFENSIVE_STRATEGY = "Defensive Strategy";
+	public static final String OFFENSIVE_STRATEGY = "Offensive Strategy";
+
 	public static final int CARD_COUNT = 8;
 
 	public static int INDEXER = 0;
@@ -39,6 +41,11 @@ public class BattleCard implements Model {
 			(byte) 0, INDEXER++);
 	public static final BattleCard FERVENT_PURGE_CARD = new BattleCard(FERVENT_PURGE, (byte) 3, (byte) 0, (byte) 2,
 			(byte) 0, INDEXER++);
+
+	public static final BattleCard DEFENSIVE_STRATEGY_CARD = new BattleCard(DEFENSIVE_STRATEGY, (byte) 3, (byte) 3,
+			(byte) 0, (byte) 0, INDEXER++);
+	public static final BattleCard OFFENSIVE_STRATEGY_CARD = new BattleCard(OFFENSIVE_STRATEGY, (byte) 3, (byte) 0,
+			(byte) 3, (byte) 0, INDEXER++);
 
 	public byte attackBonus = 0;
 	public byte shieldBonus = 0;

@@ -2,6 +2,7 @@ package kemet.model.action;
 
 import java.util.List;
 
+import kemet.model.Army;
 import kemet.model.BoardInventory;
 import kemet.model.Color;
 import kemet.model.KemetGame;
@@ -30,6 +31,7 @@ public class UpgradePyramidAction extends EndableAction {
 	public byte endLevel = -1;
 	public byte powerCost;
 	public Tile tile;
+	public boolean freeLevel = false;
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
@@ -55,6 +57,7 @@ public class UpgradePyramidAction extends EndableAction {
 		parent = null;
 		tile = null;
 		color = null;
+		freeLevel = false;
 		startLevel = 0;
 		endLevel = -1;
 		powerCost = 0;
@@ -104,6 +107,7 @@ public class UpgradePyramidAction extends EndableAction {
 		clone.powerCost = powerCost;
 		clone.tile = tile;
 		clone.parent = parent;
+		clone.freeLevel = freeLevel;
 
 		super.copy(clone);
 	}
@@ -171,11 +175,19 @@ public class UpgradePyramidAction extends EndableAction {
 		public void choiceActivate() {
 			tile = pickTile;
 			color = pickTile.pyramidColor;
+			if (freeLevel) {
+				endLevel = (byte) (tile.getPyramidLevel() + 1);
+
+				if (color != Color.NONE) {
+					// upgrading existing pyramid
+					activateAction();
+				}
+			}
 		}
 
 		@Override
 		public int getIndex() {
-			return pickTile.getPickChoiceIndex( player.index );
+			return pickTile.getPickChoiceIndex(player.index);
 		}
 
 	}
@@ -191,8 +203,8 @@ public class UpgradePyramidAction extends EndableAction {
 
 		@Override
 		public String describe() {
-			return "upgrade pyramid " + pickColor + " from level " + startLevel + " to " + endLevel
-					+ " on tile \"" + tile.name + "\" for " + powerCost + " prayer points.";
+			return "upgrade pyramid " + pickColor + " from level " + startLevel + " to " + endLevel + " on tile \""
+					+ tile.name + "\" for " + powerCost + " prayer points.";
 		}
 
 		@Override
@@ -234,8 +246,8 @@ public class UpgradePyramidAction extends EndableAction {
 			startLevel = pickStartLevel;
 			endLevel = pickEndLevel;
 			powerCost = pickCost;
-			
-			if( color != Color.NONE ) {
+
+			if (color != Color.NONE) {
 				// upgrading existing pyramid
 				activateAction();
 			}
@@ -248,7 +260,7 @@ public class UpgradePyramidAction extends EndableAction {
 
 	}
 
-	private void createAllColorPyramidChoices(byte pyramidInitialLevel, List<Choice> choiceList) {
+	private void createAllPyramidLevelChoices(byte pyramidInitialLevel, List<Choice> choiceList) {
 		for (byte i = 4; i > pyramidInitialLevel; --i) {
 			byte cost = calculateCost(pyramidInitialLevel, i);
 			if (player.getPrayerPoints() >= cost) {
@@ -265,13 +277,13 @@ public class UpgradePyramidAction extends EndableAction {
 		boolean hasSlaves = player.hasPower(PowerList.WHITE_2_SLAVE);
 		for (byte j = (byte) (pyramidInitialLevel + 1); j <= i; j++) {
 			cost += j;
-			if( hasSlaves ) {
+			if (hasSlaves) {
 				cost -= 1;
 			}
 		}
-		
+
 		cost = player.applyPriestOfRaBonus(cost);
-		
+
 		return cost;
 	}
 
@@ -285,12 +297,20 @@ public class UpgradePyramidAction extends EndableAction {
 			// pick tile
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
-			for (Tile tile : player.cityTiles) {
-				if (tile.canUpgradePyramid()) {
-					pick.choiceList.add(new UpgradePyramidPickTileChoice(game, player, tile));
+			for (Tile currentCityTile : player.cityTiles) {
+				if (currentCityTile.canUpgradePyramid()) {
+					pick.choiceList.add(new UpgradePyramidPickTileChoice(game, player, currentCityTile));
 				}
-
 			}
+
+			for (Army army : player.armyList) {
+				// all other city districts currently controlled
+				Tile armyTile = army.tile;
+				if (armyTile.owningPlayer != null && armyTile.owningPlayer != player && armyTile.canUpgradePyramid()) {
+					pick.choiceList.add(new UpgradePyramidPickTileChoice(game, player, armyTile));
+				}
+			}
+
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
 			return pick.validate();
 
@@ -298,7 +318,7 @@ public class UpgradePyramidAction extends EndableAction {
 			// pick level
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
-			createAllColorPyramidChoices(tile.getPyramidLevel(), pick.choiceList);
+			createAllPyramidLevelChoices(tile.getPyramidLevel(), pick.choiceList);
 
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
 

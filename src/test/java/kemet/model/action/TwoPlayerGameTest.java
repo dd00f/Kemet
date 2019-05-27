@@ -27,7 +27,7 @@ public class TwoPlayerGameTest {
 		tpg.createTiles();
 
 		game = tpg.game;
-		//game.setPrintActivations(false);
+		// game.setPrintActivations(false);
 
 		redPlayer = game.playerByInitiativeList.get(0);
 		bluePlayer = game.playerByInitiativeList.get(1);
@@ -51,6 +51,7 @@ public class TwoPlayerGameTest {
 		// prayer points.
 		// Army : red army 2 of size 5 on tile : red district 2 with pyramid BLACK of
 		// level 4
+
 		// Player : blue
 		// 9 prayer points.
 		// 3 victory points.
@@ -67,9 +68,38 @@ public class TwoPlayerGameTest {
 		// Army : blue army 2 of size 5 on tile : blue district 2 with pyramid WHITE of
 		// level 4
 
-		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 42, 14, 29, 42, 14, 29, 44, 44, 43,
-				43, 39, 14, 11, 5, 0, 39, 14, 13, 5, 41, 11, 0, 41, 0, 37, 36, 37, 36, 60, 43, 43, 44, 44, 42, 15, 29,
-				42, 15, 29, 39, 0, 39, 0, 40, 0, 40, 0, 34, 35, 34, 35, 60 });
+//		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 42, 14, 29, 42, 14, 29, 44, 44, 43,
+//				43, 39, 14, 11, 5, 0, 39, 14, 13, 5, 41, 11, 0, 41, 0, 37, 36, 37, 36, 60, 43, 43, 44, 44, 42, 15, 29,
+//				42, 15, 29, 39, 0, 39, 0, 40, 0, 40, 0, 34, 35, 34, 35, 60 });
+
+		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 44, 14, 29, 44, 14, 29, 46, 46, 45,
+				45, 41, 14, 11, 5, 0, 41, 14, 13, 5, 43, 11, 0, 43, 0, 37, 36, 37, 36, 62, 45, 45, 46, 46, 44, 15, 29,
+				44, 15, 29, 41, 0, 41, 0, 42, 0, 42, 0, 34, 35, 34, 35, 62 });
+
+//		Choice Index List
+//		PASS_CHOICE_INDEX 0
+//		ARMY_SIZE_CHOICE 1
+//		PICK_TILE_CHOICE 9
+//		PICK_COLOR_CHOICE 22
+//		PICK_PYRAMID_LEVEL_CHOICE 26
+//		PICK_BATTLE_CARD_CHOICE 30
+//		RECALL_CHOICE 40
+//		PICK_ROW_ONE_MOVE 41
+//		PICK_ROW_ONE_RECRUIT 42
+//		PICK_ROW_TWO_MOVE 43
+//		PICK_ROW_TWO_UPGRADE_PYRAMID 44
+//		PICK_ROW_TWO_PRAY 45
+//		PICK_ROW_THREE_PRAY 46
+//		PICK_ROW_THREE_BUILD_WHITE 47
+//		PICK_ROW_THREE_BUILD_RED 48
+//		PICK_ROW_THREE_BUILD_BLUE 49
+//		PICK_ROW_THREE_BUILD_BLACK 50
+//		PICK_DAWN_TOKEN 51
+//		PICK_PLAYER_ORDER 62
+//		PASS_RECRUIT_CHOICE_INDEX 64
+//		PASS_RECALL_CHOICE_INDEX 65
+//		BUY_POWER 66
+//		LAST_INDEX 106
 
 	}
 
@@ -77,21 +107,25 @@ public class TwoPlayerGameTest {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_ROW_THREE_PRAY);
 	}
 
+	public void prayRowTwo() {
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_PRAY);
+	}
+
 	public void buyPowerTile(Power white1Priest1) {
 		game.activateAction(game.getNextPlayer(), white1Priest1.getActionIndex());
 	}
 
-	public void upgradePyramid(int level, Color black, Tile tile) {
+	public void upgradePyramid(int level, Color color, Tile tile) {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
 		game.activateAction(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_PYRAMID_LEVEL_CHOICE + level - 1);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + black.ordinal());
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + color.ordinal());
 	}
 
 	public void startRecruit() {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_ROW_ONE_RECRUIT);
 	}
-	
+
 	public void endRecruit() {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
 	}
@@ -125,7 +159,6 @@ public class TwoPlayerGameTest {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.ARMY_SIZE_CHOICE + size - 1);
 	}
 
-
 	public void battlePick(BattleCard attackCard, BattleCard attackDiscard, BattleCard defenseCard,
 			BattleCard defenseDiscard) {
 		game.activateAction(game.getNextPlayer(), attackCard.getPickChoiceIndex());
@@ -135,12 +168,9 @@ public class TwoPlayerGameTest {
 
 	}
 
-	
-	
-	
 	public void recruitArmy(Tile tile, int size) {
 		game.activateAction(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.ARMY_SIZE_CHOICE + size -1);
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.ARMY_SIZE_CHOICE + size - 1);
 	}
 
 }

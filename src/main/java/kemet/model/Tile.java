@@ -256,7 +256,7 @@ public class Tile implements Model {
 	}
 
 	public boolean canUpgradePyramid() {
-		return pyramidLevel != 4;
+		return pyramidLevel != 4 && isWalled;
 	}
 
 	public void validate(KemetGame currentGame) {

@@ -1,5 +1,7 @@
 package kemet.model;
 
+import kemet.model.action.Action;
+import kemet.model.action.DoneAction;
 import kemet.model.action.choice.ChoiceInventory;
 
 public class Power implements Model {
@@ -53,6 +55,10 @@ public class Power implements Model {
 
 	public int getActionIndex() {
 		return  ChoiceInventory.BUY_POWER + index;
+	}
+
+	public Action createNextAction(Player player, Action parent, KemetGame game) {
+		return DoneAction.create(parent);
 	}
 
 }

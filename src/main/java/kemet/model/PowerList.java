@@ -1,5 +1,6 @@
 package kemet.model;
 
+import kemet.model.power.BattleCardPower;
 import kemet.model.power.BestialFuryPower;
 import kemet.model.power.BladesOfNeithPower;
 import kemet.model.power.CarnagePower;
@@ -7,6 +8,7 @@ import kemet.model.power.ChargePower;
 import kemet.model.power.DefensePower;
 import kemet.model.power.GodSpeedPower;
 import kemet.model.power.LegionPower;
+import kemet.model.power.MercenariesPower;
 import kemet.model.power.ShieldOfNeithPower;
 import kemet.model.power.VictoryPointPower;
 
@@ -59,6 +61,11 @@ public class PowerList {
 	public static final Power WHITE_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.WHITE, VICTORY_POINT_DESCRIPTION);
 
+	public static final String WHITE_3_HAND_OF_GOD_NAME = "Hand of God";
+	public static final String WHITE_3_HAND_OF_GOD_DESCRIPTION = "+1 pyramid upgrade per night.";
+	public static final Power WHITE_3_HAND_OF_GOD = new Power(POWER_INDEXER++, WHITE_3_HAND_OF_GOD_NAME, (byte) 3,
+			Color.WHITE, WHITE_3_HAND_OF_GOD_DESCRIPTION);
+
 	public static final String WHITE_4_PRIEST_OF_RA_NAME = "PRIEST_OF_RA";
 	public static final String WHITE_4_PRIEST_OF_RA_DESCRIPTION = "-1 cost on everything.";
 	public static final Power WHITE_4_PRIEST_OF_RA = new Power(POWER_INDEXER++, WHITE_4_PRIEST_OF_RA_NAME, (byte) 4,
@@ -101,6 +108,12 @@ public class PowerList {
 	public static final Power RED_2_TELEPORT = new Power(POWER_INDEXER++, RED_2_TELEPORT_NAME, (byte) 2, Color.RED,
 			RED_2_TELEPORT_DESCRIPTION);
 
+	public static final String RED_2_OFFENSIVE_STRATEGY_NAME = "Offensive Strategy";
+	public static final String RED_2_OFFENSIVE_STRATEGY_DESCRIPTION = "Recuperate battle cards, replace one with 3 attack 3 damage.";
+	public static final Power RED_2_OFFENSIVE_STRATEGY = new BattleCardPower(POWER_INDEXER++,
+			RED_2_OFFENSIVE_STRATEGY_NAME, (byte) 2, Color.RED, RED_2_OFFENSIVE_STRATEGY_DESCRIPTION,
+			BattleCard.OFFENSIVE_STRATEGY_CARD);
+
 	public static final String RED_3_BLADES_OF_NEITH_NAME = "Blades of Neith";
 	public static final String RED_3_BLADES_OF_NEITH_DESCRIPTION = "+1 strength to all armies.";
 	public static final Power RED_3_BLADES_OF_NEITH = new BladesOfNeithPower(POWER_INDEXER++,
@@ -131,6 +144,12 @@ public class PowerList {
 	public static final Power BLUE_2_LEGION = new LegionPower(POWER_INDEXER++, BLUE_2_LEGION_NAME, (byte) 2, Color.BLUE,
 			BLUE_2_LEGION_DESCRIPTION);
 
+	public static final String BLUE_2_DEFENSIVE_STRATEGY_NAME = "Defensive Strategy";
+	public static final String BLUE_2_DEFENSIVE_STRATEGY_DESCRIPTION = "Recuperate battle cards, replace one with 3 attack 3 shield.";
+	public static final Power BLUE_2_DEFENSIVE_STRATEGY = new BattleCardPower(POWER_INDEXER++,
+			BLUE_2_DEFENSIVE_STRATEGY_NAME, (byte) 2, Color.BLUE, BLUE_2_DEFENSIVE_STRATEGY_DESCRIPTION,
+			BattleCard.DEFENSIVE_STRATEGY_CARD);
+
 	public static final String BLUE_3_SHIELD_OF_NEITH_NAME = "Shield of Neith";
 	public static final String BLUE_3_SHIELD_OF_NEITH_DESCRIPTION = "+1 protection in battle.";
 	public static final Power BLUE_3_SHIELD_OF_NEITH = new ShieldOfNeithPower(POWER_INDEXER++,
@@ -143,49 +162,54 @@ public class PowerList {
 
 	public static final Power BLUE_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.BLUE, VICTORY_POINT_DESCRIPTION);
-	
-	
 
-//	- Black : 2 : Dedication to battle : +2 pray when moving to a tile with an enemy army
+	public static final String BLUE_4_REINFORCEMENTS_NAME = "Reinforcements";
+	public static final String BLUE_4_REINFORCEMENTS_DESCRIPTION = "4 free troop recruitment at night.";
+	public static final Power BLUE_4_REINFORCEMENTS = new Power(POWER_INDEXER++, BLUE_4_REINFORCEMENTS_NAME, (byte) 4,
+			Color.BLUE, BLUE_4_REINFORCEMENTS_DESCRIPTION);
 
 	public static final String BLACK_1_ENFORCED_RECRUITMENT_NAME = "Enforced Recruitment";
 	public static final String BLACK_1_ENFORCED_RECRUITMENT_DESCRIPTION = "Recruit on any existing army. ";
-	public static final Power BLACK_1_ENFORCED_RECRUITMENT = new Power(POWER_INDEXER++, BLACK_1_ENFORCED_RECRUITMENT_NAME, (byte) 1, Color.BLACK,
-			BLACK_1_ENFORCED_RECRUITMENT_DESCRIPTION);
-	
+	public static final Power BLACK_1_ENFORCED_RECRUITMENT = new Power(POWER_INDEXER++,
+			BLACK_1_ENFORCED_RECRUITMENT_NAME, (byte) 1, Color.BLACK, BLACK_1_ENFORCED_RECRUITMENT_DESCRIPTION);
+
+	public static final String BLACK_1_MERCENARIES_NAME = "Mercenaries";
+	public static final String BLACK_1_MERCENARIES_DESCRIPTION = "Add 3 troops to your army. May recruit them immediately. ";
+	public static final Power BLACK_1_MERCENARIES_1 = new MercenariesPower(POWER_INDEXER++, BLACK_1_MERCENARIES_NAME,
+			(byte) 1, Color.BLACK, BLACK_1_MERCENARIES_DESCRIPTION);
+	public static final Power BLACK_1_MERCENARIES_2 = new MercenariesPower(POWER_INDEXER++, BLACK_1_MERCENARIES_NAME,
+			(byte) 1, Color.BLACK, BLACK_1_MERCENARIES_DESCRIPTION);
+
 	public static final String BLACK_2_HONOR_IN_BATTLE_NAME = "Honor in battle";
 	public static final String BLACK_2_HONOR_IN_BATTLE_DESCRIPTION = "+1 power per reach troop destroyed by your opponent in battle.";
-	public static final Power BLACK_2_HONOR_IN_BATTLE = new Power(POWER_INDEXER++, BLACK_2_HONOR_IN_BATTLE_NAME, (byte) 2, Color.BLACK,
-			BLACK_2_HONOR_IN_BATTLE_DESCRIPTION);
-	
+	public static final Power BLACK_2_HONOR_IN_BATTLE = new Power(POWER_INDEXER++, BLACK_2_HONOR_IN_BATTLE_NAME,
+			(byte) 2, Color.BLACK, BLACK_2_HONOR_IN_BATTLE_DESCRIPTION);
+
 	public static final String BLACK_2_DEDICATION_TO_BATTLE_NAME = "Dedication to battle";
 	public static final String BLACK_2_DEDICATION_TO_BATTLE_DESCRIPTION = "+2 power when moving to a tile with an enemy army.";
-	public static final Power BLACK_2_DEDICATION_TO_BATTLE = new Power(POWER_INDEXER++, BLACK_2_DEDICATION_TO_BATTLE_NAME, (byte) 2, Color.BLACK,
-			BLACK_2_DEDICATION_TO_BATTLE_DESCRIPTION);
+	public static final Power BLACK_2_DEDICATION_TO_BATTLE = new Power(POWER_INDEXER++,
+			BLACK_2_DEDICATION_TO_BATTLE_NAME, (byte) 2, Color.BLACK, BLACK_2_DEDICATION_TO_BATTLE_DESCRIPTION);
 
 	public static final Power BLACK_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.BLACK, VICTORY_POINT_DESCRIPTION);
 
 	public static final String BLACK_3_DEADLY_TRAP_NAME = "Deadly Trap";
 	public static final String BLACK_3_DEADLY_TRAP_DESCRIPTION = "Destroy 1 enemy troop when they move to a tile you occupy.";
-	public static final Power BLACK_3_DEADLY_TRAP = new Power(POWER_INDEXER++, BLACK_3_DEADLY_TRAP_NAME, (byte) 3, Color.BLACK,
-			BLACK_3_DEADLY_TRAP_DESCRIPTION);
+	public static final Power BLACK_3_DEADLY_TRAP = new Power(POWER_INDEXER++, BLACK_3_DEADLY_TRAP_NAME, (byte) 3,
+			Color.BLACK, BLACK_3_DEADLY_TRAP_DESCRIPTION);
 
-	
 	public static final String BLACK_4_BESTIAL_FURY_NAME = "Bestial Fury";
 	public static final String BLACK_4_BESTIAL_FURY_DESCRIPTION = "+1 move, +1damage, +1strength.";
-	public static final Power BLACK_4_BESTIAL_FURY = new BestialFuryPower(POWER_INDEXER++, BLACK_4_BESTIAL_FURY_NAME, (byte) 4, Color.BLACK,
-			BLACK_4_BESTIAL_FURY_DESCRIPTION);
+	public static final Power BLACK_4_BESTIAL_FURY = new BestialFuryPower(POWER_INDEXER++, BLACK_4_BESTIAL_FURY_NAME,
+			(byte) 4, Color.BLACK, BLACK_4_BESTIAL_FURY_DESCRIPTION);
 
 	public static final String BLACK_4_DIVINE_STRENGTH_NAME = "Divine Strength";
 	public static final String BLACK_4_DIVINE_STRENGTH_DESCRIPTION = "+1 power every time you gain power points during day.";
-	public static final Power BLACK_4_DIVINE_STRENGTH = new Power(POWER_INDEXER++, BLACK_4_DIVINE_STRENGTH_NAME, (byte) 4, Color.BLACK,
-			BLACK_4_DIVINE_STRENGTH_DESCRIPTION);
+	public static final Power BLACK_4_DIVINE_STRENGTH = new Power(POWER_INDEXER++, BLACK_4_DIVINE_STRENGTH_NAME,
+			(byte) 4, Color.BLACK, BLACK_4_DIVINE_STRENGTH_DESCRIPTION);
 
-	
-//	- Black : 4 : Divine Strength : +1 prayer every time you gain prayer points during day
+//	- Blue : 2 : Defensive Strategy : Add Battle card : +3 strength +3 protection
 
-	
 	public static void initializeGame(KemetGame game) {
 
 		game.availablePowerList.add(WHITE_1_PRIEST_1);
@@ -200,7 +224,7 @@ public class PowerList {
 
 		game.availablePowerList.add(WHITE_3_HOLY_WAR);
 		game.availablePowerList.add(WHITE_3_VICTORY_POINT);
-		// TODO missing one
+		game.availablePowerList.add(WHITE_3_HAND_OF_GOD);
 		// TODO missing one
 
 		game.availablePowerList.add(WHITE_4_PRIEST_OF_RA);
@@ -216,7 +240,7 @@ public class PowerList {
 		game.availablePowerList.add(RED_2_CARNAGE);
 		game.availablePowerList.add(RED_2_OPEN_GATE);
 		game.availablePowerList.add(RED_2_TELEPORT);
-		// TODO missing one
+		game.availablePowerList.add(RED_2_OFFENSIVE_STRATEGY);
 
 		game.availablePowerList.add(RED_3_BLADES_OF_NEITH);
 		game.availablePowerList.add(RED_3_VICTORY_POINT);
@@ -234,7 +258,7 @@ public class PowerList {
 		// TODO missing one
 
 		game.availablePowerList.add(BLUE_2_LEGION);
-		// TODO missing one
+		game.availablePowerList.add(BLUE_2_DEFENSIVE_STRATEGY);
 		// TODO missing one
 		// TODO missing one
 
@@ -243,37 +267,34 @@ public class PowerList {
 		game.availablePowerList.add(BLUE_3_VICTORY_POINT);
 		// TODO missing one
 
-		// TODO missing one
+		game.availablePowerList.add(BLUE_4_REINFORCEMENTS);
 		// TODO missing one
 		// TODO missing one
 		// TODO missing one
 
-		
 		game.availablePowerList.add(BLACK_1_ENFORCED_RECRUITMENT);
+		game.availablePowerList.add(BLACK_1_MERCENARIES_1);
+		game.availablePowerList.add(BLACK_1_MERCENARIES_2);
 		// TODO missing one
-		// TODO missing one
-		// TODO missing one
-		
+
 		game.availablePowerList.add(BLACK_2_HONOR_IN_BATTLE);
 		game.availablePowerList.add(BLACK_2_DEDICATION_TO_BATTLE);
 		// TODO missing one
 		// TODO missing one
-		
+
 		game.availablePowerList.add(BLACK_3_VICTORY_POINT);
 		game.availablePowerList.add(BLACK_3_DEADLY_TRAP);
 		// TODO missing one
 		// TODO missing one
-		
-		
+
 		game.availablePowerList.add(BLACK_4_BESTIAL_FURY);
 		game.availablePowerList.add(BLACK_4_DIVINE_STRENGTH);
 		// TODO missing one
 		// TODO missing one
-		
-		
-		for( int i = 0; i< game.availablePowerList.size();++i) {
+
+		for (int i = 0; i < game.availablePowerList.size(); ++i) {
 			Power power = game.availablePowerList.get(i);
-			if (power.index != i ) {
+			if (power.index != i) {
 				throw new IllegalStateException(power + " is not at index " + i);
 			}
 		}

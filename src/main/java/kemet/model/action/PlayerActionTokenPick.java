@@ -250,12 +250,11 @@ public class PlayerActionTokenPick implements Action {
 		@Override
 		public void choiceActivate() {
 			player.modifyPrayerPoints(increasedPower, "prayer action");
-			
+
 			if (player.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
-				player.modifyPrayerPoints((byte) 1,
-						PowerList.BLACK_4_DIVINE_STRENGTH.toString());
+				player.modifyPrayerPoints((byte) 1, PowerList.BLACK_4_DIVINE_STRENGTH.toString());
 			}
-			
+
 			if (row == 2) {
 				player.rowTwoPrayUsed = true;
 			} else {
@@ -382,7 +381,7 @@ public class PlayerActionTokenPick implements Action {
 			// move the power
 			game.movePowerToPlayer(player, power);
 
-			nextAction = DoneAction.create(PlayerActionTokenPick.this);
+			nextAction = power.createNextAction(player, PlayerActionTokenPick.this, game);
 		}
 
 		private byte getPowerCost() {
@@ -413,39 +412,35 @@ public class PlayerActionTokenPick implements Action {
 	private void addAllPowerBuyOptions(Player currentPlayer, List<Choice> choiceList) {
 		List<Power> availablePowerList = game.availablePowerList;
 		for (Power power : availablePowerList) {
-			if( playerCanBuyPower(currentPlayer, power)) {
+			if (playerCanBuyPower(currentPlayer, power)) {
 				BuyPowerChoice choice = new BuyPowerChoice(game, currentPlayer, power);
 				choiceList.add(choice);
 			}
 		}
-		
+
 	}
 
 	private boolean playerCanBuyPower(Player currentPlayer, Power power) {
-		if( power == null ) {
+		if (power == null) {
 			return false;
 		}
-		
-		if( ! playerHasPyramidForPower(currentPlayer, power) )
-		{
+
+		if (!playerHasPyramidForPower(currentPlayer, power)) {
 			return false;
 		}
-		
-		if( ! playerHasActionAvailableForPower(currentPlayer, power) )
-		{
+
+		if (!playerHasActionAvailableForPower(currentPlayer, power)) {
 			return false;
 		}
-		
-		if( ! playerHasPrayerAvailableForPower(currentPlayer, power) )
-		{
+
+		if (!playerHasPrayerAvailableForPower(currentPlayer, power)) {
 			return false;
 		}
-		
-		if( playerHasPowerAlready(currentPlayer, power) )
-		{
+
+		if (playerHasPowerAlready(currentPlayer, power)) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -455,32 +450,32 @@ public class PlayerActionTokenPick implements Action {
 
 	private boolean playerHasPrayerAvailableForPower(Player currentPlayer, Power power) {
 		byte powerCost = currentPlayer.getPowerCost(power);
-		return currentPlayer.getPrayerPoints() >= - powerCost;
+		return currentPlayer.getPrayerPoints() >= -powerCost;
 	}
 
 	private boolean playerHasActionAvailableForPower(Player currentPlayer, Power power) {
-		if( power.color.equals( Color.WHITE )) {
+		if (power.color.equals(Color.WHITE)) {
 			return !currentPlayer.rowThreeBuildWhiteUsed;
 		}
-		if( power.color.equals( Color.BLACK )) {
+		if (power.color.equals(Color.BLACK)) {
 			return !currentPlayer.rowThreeBuildBlackUsed;
 		}
-		if( power.color.equals( Color.RED )) {
+		if (power.color.equals(Color.RED)) {
 			return !currentPlayer.rowThreeBuildRedUsed;
 		}
-		if( power.color.equals( Color.BLUE )) {
+		if (power.color.equals(Color.BLUE)) {
 			return !currentPlayer.rowThreeBuildBlueUsed;
 		}
-		
+
 		throw new IllegalStateException("Power without a valid color found.");
 	}
 
 	private boolean playerHasPyramidForPower(Player currentPlayer, Power power) {
 		byte level = currentPlayer.getPyramidLevel(power.color);
-		if( power.level > level ) {
+		if (power.level > level) {
 			return false;
 		}
-		
+
 		return true;
 	}
 

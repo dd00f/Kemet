@@ -559,7 +559,7 @@ public class Player implements Model {
 
 	}
 
-	private void validateCardCount() {
+	public void validateCardCount() {
 		int cardCount = availableBattleCards.size() + usedBattleCards.size() + discardedBattleCards.size();
 		if (cardCount != 8) {
 			Validation.validationFailed("Battle card count not equals 8, is " + cardCount);
@@ -667,6 +667,13 @@ public class Player implements Model {
 	public void recoverAllDiscardedBattleCards() {
 		availableBattleCards.addAll(discardedBattleCards);
 		discardedBattleCards.clear();
+
+		validateCardCount();
+	}
+	
+	public void recoverAllUsedBattleCards() {
+		availableBattleCards.addAll(usedBattleCards);
+		usedBattleCards.clear();
 
 		validateCardCount();
 	}

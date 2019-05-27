@@ -7,6 +7,7 @@ import java.util.Set;
 import kemet.Options;
 import kemet.model.KemetGame;
 import kemet.model.Player;
+import kemet.model.PowerList;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
 import kemet.util.ByteCanonicalForm;
@@ -123,6 +124,11 @@ public class GameAction implements Action {
             }
         	
             chainedActions.add(NightAction.create(game, this));
+            
+            addBlue4ReinforcementsAction();
+            
+            addWhite3HandOfGodAction();
+            
             if (!game.isFirstTurn()) {
             	chainedActions.add(DawnAction.create(game, this));
             }
@@ -136,6 +142,32 @@ public class GameAction implements Action {
 
         return nextPlayerChoicePick;
     }
+
+	private void addBlue4ReinforcementsAction() {
+		
+		for (Player player : chainedActions.getGame().playerByInitiativeList) {
+			
+			if( player.hasPower(PowerList.BLUE_4_REINFORCEMENTS)) {
+				RecruitAction action = RecruitAction.create(chainedActions.getGame(), player, chainedActions);
+				action.allowPaidRecruit = false;
+				action.freeRecruitLeft = 4;
+				action.canRecruitOnAnyArmy = true;
+				chainedActions.add(action);
+			}
+		}
+	}
+
+	private void addWhite3HandOfGodAction() {
+		
+		for (Player player : chainedActions.getGame().playerByInitiativeList) {
+			
+			if( player.hasPower(PowerList.WHITE_3_HAND_OF_GOD)) {
+				UpgradePyramidAction action = UpgradePyramidAction.create(chainedActions.getGame(), player, chainedActions);
+				action.freeLevel = true;
+				chainedActions.add(action);
+			}
+		}
+	}
 
 	private void validatePlayerChoicePickIndex(PlayerChoicePick nextPlayerChoicePick) {
 		

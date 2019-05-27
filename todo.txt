@@ -1,32 +1,22 @@
 
-		
-- Game feature : Power Tiles - Basic
-
-
-
-	- Black : 1 : Enforced Recruitment : Recruit on exist army. 
-	- Black : 2 : Honor in battle : +1 pray per reach troop destroyed by your opponent in battle.
-	- Black : 2 : Dedication to battle : +2 pray when moving to a tile with an enemy army
-	- Black : 3 : Deadly Trap : Destroy 1 enemy troop when they move to a tile you occupy. 
-	- Black : 4 : Bestial Fury : +1 move, +1damage, +1strength
-	- Black : 4 : Divine Strength : +1 prayer every time you gain prayer points during day
+- BUG : 
+	- Recruit on top of an existing army doesn't trigger attack start powers
 
 
 - Game feature : Power Tiles - Advanced
-	- Blue : 4 : Reinforcements : +4 troops at night
-	- Red : 2 : Offensive Strategy : 3 attack 3 blood battle card
-	- Blue : 2 : Defensive Strategy : Add Battle card : +3 strength +3 protection
-	- White : 3 : Hand of God : +1 pyramid upgrade per night
-	- White : 4 : Act of God : add gray action token
-	- Red : 4 : Act of God : add gray action token
+
 	- Blue : 3 : Prescience : Opponent plays battle card before you
+
 	- Blue : 4 : Divine Will : Gold Token : Recruit, Move
-	- Blue : 4 : Act of God : add gray action token
 	- Black : 1 : Dark Ritual : Gold token : Pray
 	- Black : 3 : Forced March : Gold Token : Move
 	- Black : 2 : Twin Ceremony : Gold token : Reuse Buy action : +1 cost on tile 
+	
 	- Black : 4 : Act of God : add gray action token
-	- Black : 1 : Mercenaries : +3 troops, recruited X2
+	- Blue : 4 : Act of God : add gray action token
+	- White : 4 : Act of God : add gray action token
+	- Red : 4 : Act of God : add gray action token
+
 
 - Game feature : Power Tiles - Beasts
 	- White : 4 : Beast : Mummy : +1 move, +2 attack, +1 DI card at night 
@@ -36,7 +26,7 @@
 	- Blue : 2 : Beast : Ancestral Elephant : +1 move, +1 strength, +1 protection
 	- Blue : 2 : Beast : Deep Desert Snake : +1 move, ignore other creatures
 	- Blue : 4 : Beast : Sphinx : +1 VP, +2 Strength
-	- Black : 2 : Beast : Khnum's Sphinx : +1 move, +1 stregth, opponent cost 2 prayer point to move on tile
+	- Black : 2 : Beast : Khnum's Sphinx : +1 move, +1 strength, opponent cost 2 prayer point to move on tile
 	- Black : 3 : Beast : Griffin Sphinx : +2 strength, teleport from obelisk
 	- Black : 4 : Beast : Devourer : +1 move, +2 strength, +1 VP on battle win & destroy 2 enemy troups
 
@@ -53,8 +43,30 @@
 	
 
 - Game feature : DI Cards - Battle
+	- 2x : glory : cost 0 : gain 4 prayer if you win the battle.
+	- 2x : divine protection : cost 0 : if you win battle, don't take any damage.
+	- 2x : reinforcements : cost 0 : if you win battle, recruit 3 units anywhere before retreat.
+	- 2x : tactical choice : cost 0 : play after battle cards : you can switch your revealed battle card with the discard.
+	- 3x : War rage : cost 0 : +1 strength 
+	- 3x : War fury : cost 1 : +2 strength 
+	- 3x : Blood battle : cost 0 : +1 damage 
+	- 3x : Bloodbath : cost 1 : +2 damage 
+	- 3x : Bronze Wall : cost 0 : +1 shield 
+	- 3x : Iron Wall : cost 1 : +2 shield
+	 
 
 - Game feature : DI Cards - Non-Battle
+	- 2x : swiftness : cost 0 : beginning move action : +1 move.
+	- 2x : divine memory : cost 1: take back one DI from discard pile.
+	- 4x : Raining Fire : cost 1 : destroy one enemy unit.
+	- 2x : Prayer : cost 0 : gain 2 prayer point
+	- 4x : Enlistment : cost 0 : recruit 2 units anywhere.
+	- 2x : Mana Theft : cost 0 : each opponent loses 1 pp, you gain 1pp.
+	- 3x : Teleportation : cost 1 : Teleport any army to an obelisk. Played with a movement action.
+	- 1x : Open gates : cost 1 : Ignore wall effects.  Played with a movement action.
+	- 2x : Veto : cost 0 : Cancel a DI card, not during battle.
+	- 1x : Escape : cost 0 : No battle takes place, move to a free territory.
+	
 
 - Game expansion : Seth !
 
