@@ -64,6 +64,10 @@ public class ChoiceInventory {
 	public static final int PICK_ROW_THREE_BUILD_RED = INDEXER++;
 	public static final int PICK_ROW_THREE_BUILD_BLUE = INDEXER++;
 	public static final int PICK_ROW_THREE_BUILD_BLACK = INDEXER++;
+	public static final int PASS_TOKEN_PICK = INDEXER++;
+	public static final int PICK_GOLD_PRAY = INDEXER++;
+	public static final int PICK_GOLD_MOVE = INDEXER++;
+	public static final int PICK_GOLD_RECRUIT = INDEXER++;
 
 	// dawn token selection range
 	public static final int PICK_DAWN_TOKEN = INDEXER;
@@ -111,6 +115,11 @@ public class ChoiceInventory {
 		System.out.println("PICK_ROW_THREE_BUILD_RED " + PICK_ROW_THREE_BUILD_RED);
 		System.out.println("PICK_ROW_THREE_BUILD_BLUE " + PICK_ROW_THREE_BUILD_BLUE);
 		System.out.println("PICK_ROW_THREE_BUILD_BLACK " + PICK_ROW_THREE_BUILD_BLACK);
+		System.out.println("PASS_TOKEN_PICK " + PASS_TOKEN_PICK);
+		System.out.println("PICK_GOLD_PRAY " + PICK_GOLD_PRAY);
+		System.out.println("PICK_GOLD_MOVE " + PICK_GOLD_MOVE);
+		System.out.println("PICK_GOLD_RECRUIT " + PICK_GOLD_RECRUIT);
+		
 		System.out.println("PICK_DAWN_TOKEN " + PICK_DAWN_TOKEN);
 		System.out.println("PICK_PLAYER_ORDER " + PICK_PLAYER_ORDER);
 		System.out.println("PASS_RECRUIT_CHOICE_INDEX " + PASS_RECRUIT_CHOICE_INDEX);
@@ -138,12 +147,17 @@ public class ChoiceInventory {
 //		PICK_ROW_THREE_BUILD_RED 48
 //		PICK_ROW_THREE_BUILD_BLUE 49
 //		PICK_ROW_THREE_BUILD_BLACK 50
-//		PICK_DAWN_TOKEN 51
-//		PICK_PLAYER_ORDER 62
-//		PASS_RECRUIT_CHOICE_INDEX 64
-//		PASS_RECALL_CHOICE_INDEX 65
-//		BUY_POWER 66
-//		LAST_INDEX 106
+//		PASS_TOKEN_PICK 51
+//		PICK_GOLD_PRAY 52
+//		PICK_GOLD_MOVE 53
+//		PICK_GOLD_RECRUIT 54
+//		PICK_DAWN_TOKEN 55
+//		PICK_PLAYER_ORDER 66
+//		PASS_RECRUIT_CHOICE_INDEX 68
+//		PASS_RECALL_CHOICE_INDEX 69
+//		BUY_POWER 70
+//		LAST_INDEX 119
+
 	}
 
 }

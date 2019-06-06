@@ -1,5 +1,6 @@
 package kemet.model;
 
+import kemet.model.power.ActOfGodPower;
 import kemet.model.power.BattleCardPower;
 import kemet.model.power.BestialFuryPower;
 import kemet.model.power.BladesOfNeithPower;
@@ -7,6 +8,7 @@ import kemet.model.power.CarnagePower;
 import kemet.model.power.ChargePower;
 import kemet.model.power.DefensePower;
 import kemet.model.power.GodSpeedPower;
+import kemet.model.power.GoldTokenPower;
 import kemet.model.power.LegionPower;
 import kemet.model.power.MercenariesPower;
 import kemet.model.power.ShieldOfNeithPower;
@@ -15,6 +17,9 @@ import kemet.model.power.VictoryPointPower;
 public class PowerList {
 
 	public static int POWER_INDEXER = 0;
+
+	public static final String ACT_OF_GOD_NAME = "Act of God";
+	public static final String ACT_OF_GOD_DESCRIPTION = "Add a silver token to play at the same time as a normal token.";
 
 	public static final String WHITE_1_PRIEST_NAME = "Priest";
 	public static final String WHITE_1_PRIEST_DESCRIPTION = "+1 power point on pray action.";
@@ -45,12 +50,6 @@ public class PowerList {
 	public static final Power WHITE_2_CRUSADE = new Power(POWER_INDEXER++, WHITE_2_CRUSADE_NAME, (byte) 2, Color.WHITE,
 			WHITE_2_CRUSADE_DESCRIPTION);
 
-	// TODO fill up
-//	public static final String WHITE_2_CRUSADE_NAME = "Crusade";
-//	public static final String WHITE_2_CRUSADE_DESCRIPTION = "+2 power for each unit you destroy in battle.";
-//	public static final Power WHITE_2_MISSING = new Power(POWER_INDEXER++, WHITE_2_CRUSADE_NAME, (byte) 2, Color.WHITE,
-//			WHITE_2_CRUSADE_DESCRIPTION);
-
 	public static final String WHITE_3_HOLY_WAR_NAME = "Holy War";
 	public static final String WHITE_3_HOLY_WAR_DESCRIPTION = "+4 power per battle won.";
 	public static final Power WHITE_3_HOLY_WAR = new Power(POWER_INDEXER++, WHITE_3_HOLY_WAR_NAME, (byte) 3,
@@ -75,6 +74,9 @@ public class PowerList {
 	public static final String WHITE_4_PRIEST_OF_AMON_DESCRIPTION = "+5 power at night.";
 	public static final Power WHITE_4_PRIEST_OF_AMON = new Power(POWER_INDEXER++, WHITE_4_PRIEST_OF_AMON_NAME, (byte) 4,
 			Color.WHITE, WHITE_4_PRIEST_OF_AMON_DESCRIPTION);
+
+	public static final Power WHITE_4_ACT_OF_GOD = new ActOfGodPower(POWER_INDEXER++, ACT_OF_GOD_NAME, (byte) 4,
+			Color.WHITE, ACT_OF_GOD_DESCRIPTION);
 
 	public static final String RED_1_CHARGE_NAME = "Charge";
 	public static final String RED_1_CHARGE_DESCRIPTION = "+1 strength when attacking.";
@@ -127,6 +129,9 @@ public class PowerList {
 	public static final Power RED_4_INITIATIVE = new Power(POWER_INDEXER++, RED_4_INITIATIVE_NAME, (byte) 4, Color.RED,
 			RED_4_INITIATIVE_DESCRIPTION);
 
+	public static final Power RED_4_ACT_OF_GOD = new ActOfGodPower(POWER_INDEXER++, ACT_OF_GOD_NAME, (byte) 4,
+			Color.RED, ACT_OF_GOD_DESCRIPTION);
+
 	public static final String BLUE_1_RECRUITING_SCRIBE_NAME = "Recruiting Scribe";
 	public static final String BLUE_1_RECRUITING_SCRIBE_DESCRIPTION = "2 free troops on recruit action.";
 	public static final Power BLUE_1_RECRUITING_SCRIBE = new Power(POWER_INDEXER++, BLUE_1_RECRUITING_SCRIBE_NAME,
@@ -163,10 +168,23 @@ public class PowerList {
 	public static final Power BLUE_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.BLUE, VICTORY_POINT_DESCRIPTION);
 
+	public static final String BLUE_3_PRESCIENCE_NAME = "Prescience";
+	public static final String BLUE_3_PRESCIENCE_DESCRIPTION = "Opponent plays battle card before you.";
+	public static final Power BLUE_3_PRESCIENCE = new Power(POWER_INDEXER++, BLUE_3_PRESCIENCE_NAME, (byte) 3,
+			Color.BLUE, BLUE_3_PRESCIENCE_DESCRIPTION);
+
 	public static final String BLUE_4_REINFORCEMENTS_NAME = "Reinforcements";
 	public static final String BLUE_4_REINFORCEMENTS_DESCRIPTION = "4 free troop recruitment at night.";
 	public static final Power BLUE_4_REINFORCEMENTS = new Power(POWER_INDEXER++, BLUE_4_REINFORCEMENTS_NAME, (byte) 4,
 			Color.BLUE, BLUE_4_REINFORCEMENTS_DESCRIPTION);
+
+	public static final Power BLUE_4_ACT_OF_GOD = new ActOfGodPower(POWER_INDEXER++, ACT_OF_GOD_NAME, (byte) 4,
+			Color.BLUE, ACT_OF_GOD_DESCRIPTION);
+
+	public static final String BLUE_4_DIVINE_WILL_NAME = "Divine Will";
+	public static final String BLUE_4_DIVINE_WILL_DESCRIPTION = "Gold Token : Recruit, Move.";
+	public static final Power BLUE_4_DIVINE_WILL = new GoldTokenPower(POWER_INDEXER++, BLUE_4_DIVINE_WILL_NAME,
+			(byte) 4, Color.BLUE, BLUE_4_DIVINE_WILL_DESCRIPTION);
 
 	public static final String BLACK_1_ENFORCED_RECRUITMENT_NAME = "Enforced Recruitment";
 	public static final String BLACK_1_ENFORCED_RECRUITMENT_DESCRIPTION = "Recruit on any existing army. ";
@@ -180,6 +198,11 @@ public class PowerList {
 	public static final Power BLACK_1_MERCENARIES_2 = new MercenariesPower(POWER_INDEXER++, BLACK_1_MERCENARIES_NAME,
 			(byte) 1, Color.BLACK, BLACK_1_MERCENARIES_DESCRIPTION);
 
+	public static final String BLACK_1_DARK_RITUAL_NAME = "Dark Ritual";
+	public static final String BLACK_1_DARK_RITUAL_DESCRIPTION = "Gold token : Pray.";
+	public static final Power BLACK_1_DARK_RITUAL = new GoldTokenPower(POWER_INDEXER++, BLACK_1_DARK_RITUAL_NAME,
+			(byte) 1, Color.BLACK, BLACK_1_DARK_RITUAL_DESCRIPTION);
+
 	public static final String BLACK_2_HONOR_IN_BATTLE_NAME = "Honor in battle";
 	public static final String BLACK_2_HONOR_IN_BATTLE_DESCRIPTION = "+1 power per reach troop destroyed by your opponent in battle.";
 	public static final Power BLACK_2_HONOR_IN_BATTLE = new Power(POWER_INDEXER++, BLACK_2_HONOR_IN_BATTLE_NAME,
@@ -190,6 +213,11 @@ public class PowerList {
 	public static final Power BLACK_2_DEDICATION_TO_BATTLE = new Power(POWER_INDEXER++,
 			BLACK_2_DEDICATION_TO_BATTLE_NAME, (byte) 2, Color.BLACK, BLACK_2_DEDICATION_TO_BATTLE_DESCRIPTION);
 
+	public static final String BLACK_2_TWIN_CEREMONY_NAME = "Twin Ceremony";
+	public static final String BLACK_2_TWIN_CEREMONY_DESCRIPTION = "Gold Token : Reuse Buy action +2 cost on tile.";
+	public static final Power BLACK_2_TWIN_CEREMONY = new GoldTokenPower(POWER_INDEXER++, BLACK_2_TWIN_CEREMONY_NAME,
+			(byte) 2, Color.BLACK, BLACK_2_TWIN_CEREMONY_DESCRIPTION);
+
 	public static final Power BLACK_3_VICTORY_POINT = new VictoryPointPower(POWER_INDEXER++, VICTORY_POINT_NAME,
 			(byte) 3, Color.BLACK, VICTORY_POINT_DESCRIPTION);
 
@@ -197,6 +225,11 @@ public class PowerList {
 	public static final String BLACK_3_DEADLY_TRAP_DESCRIPTION = "Destroy 1 enemy troop when they move to a tile you occupy.";
 	public static final Power BLACK_3_DEADLY_TRAP = new Power(POWER_INDEXER++, BLACK_3_DEADLY_TRAP_NAME, (byte) 3,
 			Color.BLACK, BLACK_3_DEADLY_TRAP_DESCRIPTION);
+
+	public static final String BLACK_3_FORCED_MARCH_NAME = "Forced March";
+	public static final String BLACK_3_FORCED_MARCH_DESCRIPTION = " Gold Token : Move.";
+	public static final Power BLACK_3_FORCED_MARCH = new GoldTokenPower(POWER_INDEXER++, BLACK_3_FORCED_MARCH_NAME,
+			(byte) 3, Color.BLACK, BLACK_3_FORCED_MARCH_DESCRIPTION);
 
 	public static final String BLACK_4_BESTIAL_FURY_NAME = "Bestial Fury";
 	public static final String BLACK_4_BESTIAL_FURY_DESCRIPTION = "+1 move, +1damage, +1strength.";
@@ -208,7 +241,8 @@ public class PowerList {
 	public static final Power BLACK_4_DIVINE_STRENGTH = new Power(POWER_INDEXER++, BLACK_4_DIVINE_STRENGTH_NAME,
 			(byte) 4, Color.BLACK, BLACK_4_DIVINE_STRENGTH_DESCRIPTION);
 
-//	- Blue : 2 : Defensive Strategy : Add Battle card : +3 strength +3 protection
+	public static final Power BLACK_4_ACT_OF_GOD = new ActOfGodPower(POWER_INDEXER++, ACT_OF_GOD_NAME, (byte) 4,
+			Color.BLACK, ACT_OF_GOD_DESCRIPTION);
 
 	public static void initializeGame(KemetGame game) {
 
@@ -229,7 +263,7 @@ public class PowerList {
 
 		game.availablePowerList.add(WHITE_4_PRIEST_OF_RA);
 		game.availablePowerList.add(WHITE_4_PRIEST_OF_AMON);
-		// TODO missing one
+		game.availablePowerList.add(WHITE_4_ACT_OF_GOD);
 		// TODO missing one
 
 		game.availablePowerList.add(RED_1_CHARGE_1);
@@ -248,7 +282,7 @@ public class PowerList {
 		// TODO missing one
 
 		game.availablePowerList.add(RED_4_INITIATIVE);
-		// TODO missing one
+		game.availablePowerList.add(RED_4_ACT_OF_GOD);
 		// TODO missing one
 		// TODO missing one
 
@@ -265,31 +299,31 @@ public class PowerList {
 		game.availablePowerList.add(BLUE_3_SHIELD_OF_NEITH);
 		game.availablePowerList.add(BLUE_3_DEFENSIVE_VICTORY);
 		game.availablePowerList.add(BLUE_3_VICTORY_POINT);
-		// TODO missing one
+		game.availablePowerList.add(BLUE_3_PRESCIENCE);
 
 		game.availablePowerList.add(BLUE_4_REINFORCEMENTS);
-		// TODO missing one
-		// TODO missing one
+		game.availablePowerList.add(BLUE_4_ACT_OF_GOD);
+		game.availablePowerList.add(BLUE_4_DIVINE_WILL);
 		// TODO missing one
 
 		game.availablePowerList.add(BLACK_1_ENFORCED_RECRUITMENT);
 		game.availablePowerList.add(BLACK_1_MERCENARIES_1);
 		game.availablePowerList.add(BLACK_1_MERCENARIES_2);
-		// TODO missing one
+		game.availablePowerList.add(BLACK_1_DARK_RITUAL);
 
 		game.availablePowerList.add(BLACK_2_HONOR_IN_BATTLE);
 		game.availablePowerList.add(BLACK_2_DEDICATION_TO_BATTLE);
-		// TODO missing one
+		game.availablePowerList.add(BLACK_2_TWIN_CEREMONY);
 		// TODO missing one
 
 		game.availablePowerList.add(BLACK_3_VICTORY_POINT);
 		game.availablePowerList.add(BLACK_3_DEADLY_TRAP);
-		// TODO missing one
+		game.availablePowerList.add(BLACK_3_FORCED_MARCH);
 		// TODO missing one
 
 		game.availablePowerList.add(BLACK_4_BESTIAL_FURY);
 		game.availablePowerList.add(BLACK_4_DIVINE_STRENGTH);
-		// TODO missing one
+		game.availablePowerList.add(BLACK_4_ACT_OF_GOD);
 		// TODO missing one
 
 		for (int i = 0; i < game.availablePowerList.size(); ++i) {

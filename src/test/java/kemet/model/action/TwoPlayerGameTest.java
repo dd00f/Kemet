@@ -73,8 +73,8 @@ public class TwoPlayerGameTest {
 //				42, 15, 29, 39, 0, 39, 0, 40, 0, 40, 0, 34, 35, 34, 35, 60 });
 
 		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 44, 14, 29, 44, 14, 29, 46, 46, 45,
-				45, 41, 14, 11, 5, 0, 41, 14, 13, 5, 43, 11, 0, 43, 0, 37, 36, 37, 36, 62, 45, 45, 46, 46, 44, 15, 29,
-				44, 15, 29, 41, 0, 41, 0, 42, 0, 42, 0, 34, 35, 34, 35, 62 });
+				45, 41, 14, 11, 5, 0, 41, 14, 13, 5, 43, 11, 0, 43, 0, 37, 36, 37, 36, 63, 45, 45, 46, 46, 44, 15, 29,
+				44, 15, 29, 41, 0, 41, 0, 42, 0, 42, 0, 34, 35, 34, 35, 63 });
 
 //		Choice Index List
 //		PASS_CHOICE_INDEX 0
@@ -94,8 +94,9 @@ public class TwoPlayerGameTest {
 //		PICK_ROW_THREE_BUILD_RED 48
 //		PICK_ROW_THREE_BUILD_BLUE 49
 //		PICK_ROW_THREE_BUILD_BLACK 50
-//		PICK_DAWN_TOKEN 51
-//		PICK_PLAYER_ORDER 62
+//		DONE_PICKING 51
+//		PICK_DAWN_TOKEN 52
+//		PICK_PLAYER_ORDER 63
 //		PASS_RECRUIT_CHOICE_INDEX 64
 //		PASS_RECALL_CHOICE_INDEX 65
 //		BUY_POWER 66
@@ -105,14 +106,18 @@ public class TwoPlayerGameTest {
 
 	public void prayRowThree() {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_ROW_THREE_PRAY);
+		game.getNextPlayerChoicePick();
 	}
 
 	public void prayRowTwo() {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_PRAY);
+		game.getNextPlayerChoicePick();
 	}
 
-	public void buyPowerTile(Power white1Priest1) {
-		game.activateAction(game.getNextPlayer(), white1Priest1.getActionIndex());
+	public void buyPowerTile(Power powerToBuy) {
+		int buyPowerActionIndex = PlayerActionTokenPick.getBuyPowerActionIndex(powerToBuy.color);
+		game.activateAction(game.getNextPlayer(), buyPowerActionIndex);
+		game.activateAction(game.getNextPlayer(), powerToBuy.getActionIndex());
 	}
 
 	public void upgradePyramid(int level, Color color, Tile tile) {

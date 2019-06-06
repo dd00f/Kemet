@@ -364,7 +364,7 @@ public class BattleAction implements Action {
 			owningPlayer.modifyPrayerPoints(powerBonus, PowerList.WHITE_2_CRUSADE.toString());
 		}
 	}
-	
+
 	private void applyHonorInBattlePowerBonusToDamage(byte attackerBleed, Player owningPlayer) {
 		if (owningPlayer.hasPower(PowerList.BLACK_2_HONOR_IN_BATTLE)) {
 			byte powerBonus = (byte) (attackerBleed * 1);
@@ -463,6 +463,15 @@ public class BattleAction implements Action {
 			if (game.isSimulation()) {
 				if (game.simulatedPlayerIndex == player.index) {
 
+					if (player.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
+						// defender cards should be fully picked
+						if (attackingUsedBattleCard != null && attackingDiscardBattleCard != null) {
+							return;
+						}
+						String message = "Defender has Blue 3 Prescience, yet the attacker hasn't picked cards yet, {} pick, {} discard";
+						log.error(message, attackingUsedBattleCard, attackingDiscardBattleCard);
+					}
+					
 					Player attacker = attackingArmy.owningPlayer;
 
 					if (!attacker.discardedBattleCards.isEmpty()) {
@@ -500,6 +509,16 @@ public class BattleAction implements Action {
 		private void pickDefenderCardBasedOnNeuralNetworkIfSimulation() {
 			if (game.isSimulation()) {
 				if (game.simulatedPlayerIndex == player.index) {
+					
+					if (player.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
+						// defender cards should be fully picked
+						if (defendingUsedBattleCard != null && defendingDiscardBattleCard != null) {
+							return;
+						}
+						String message = "Attacker has Blue 3 Prescience, yet the defender hasn't picked cards yet, {} pick, {} discard";
+						log.error(message, defendingUsedBattleCard, defendingDiscardBattleCard);
+					}
+					
 					// force defense card & discard selection based on neural network policy
 					Player defender = defendingArmy.owningPlayer;
 
@@ -837,8 +856,7 @@ public class BattleAction implements Action {
 
 		// force defender to go first if this game is a simulation from the defender
 		// perspective
-		if (attackingUsedBattleCard == null && game.isSimulation()
-				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.index) {
+		if (isDefenderFirstToPick()) {
 			if (defendingUsedBattleCard == null) {
 				return addPickBattleCardChoice(defendingArmy.owningPlayer, false, false).validate();
 			} else if (defendingDiscardBattleCard == null) {
@@ -895,6 +913,19 @@ public class BattleAction implements Action {
 		return null;
 	}
 
+	private boolean isDefenderFirstToPick() {
+		if (attackingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
+			return true;
+		}
+
+		if (defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
+			return false;
+		}
+		
+		return attackingUsedBattleCard == null && game.isSimulation()
+				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.index;
+	}
+
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
@@ -913,8 +944,7 @@ public class BattleAction implements Action {
 		}
 
 		boolean stateSimulationOverride = false;
-		if (attackingUsedBattleCard == null && game.isSimulation()
-				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.index) {
+		if (isDefenderFirstToPick()) {
 			if (defendingUsedBattleCard == null) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
 						defendingArmy.owningPlayer.getState(playerIndex));

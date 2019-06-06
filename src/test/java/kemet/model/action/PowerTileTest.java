@@ -737,6 +737,38 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	}
 
 	@Test
+	public void test_BLUE_3_PRESCIENCE() {
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLUE_3_PRESCIENCE);
+		assertEquals(6, bluePlayer.getPrayerPoints());
+		
+		prayRowThree();
+
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+
+		assertEquals(3, bluePlayer.victoryPoints);
+		
+		// ensure the red defender goes first, unlike the normal flow.
+		game.activateAction(game.getNextPlayer(), BattleCard.CAVALRY_BLITZ_CARD.getPickChoiceIndex());
+		game.activateAction(game.getNextPlayer(), BattleCard.PHALANX_DEFENSE_CARD.getPickChoiceIndex());
+		
+		assertTrue( redPlayer.discardedBattleCards.contains(BattleCard.PHALANX_DEFENSE_CARD));
+		assertTrue( redPlayer.usedBattleCards.contains(BattleCard.CAVALRY_BLITZ_CARD));
+
+		game.activateAction(game.getNextPlayer(), BattleCard.CAVALRY_BLITZ_CARD.getPickChoiceIndex());
+		game.activateAction(game.getNextPlayer(), BattleCard.PHALANX_DEFENSE_CARD.getPickChoiceIndex());
+
+		assertTrue( bluePlayer.discardedBattleCards.contains(BattleCard.PHALANX_DEFENSE_CARD));
+		assertTrue( bluePlayer.usedBattleCards.contains(BattleCard.CAVALRY_BLITZ_CARD));
+		
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		assertEquals(3, bluePlayer.victoryPoints);
+	}
+	
+	@Test
 	public void test_BLUE_3_DEFENSIVE_VICTORY() {
 		assertEquals(7, redPlayer.getPrayerPoints());
 		assertEquals(0, redPlayer.attackBonus);
@@ -784,9 +816,6 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowTwo();
 		prayRowTwo();
-		assertEquals(9, bluePlayer.getPrayerPoints());
-
-		game.getNextPlayerChoicePick();
 
 		// night prayer bonus
 		assertEquals(11, bluePlayer.getPrayerPoints());
@@ -822,9 +851,6 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowTwo();
 		prayRowTwo();
-		assertEquals(9, bluePlayer.getPrayerPoints());
-
-		game.getNextPlayerChoicePick();
 
 		// night prayer bonus
 		assertEquals(11, bluePlayer.getPrayerPoints());
@@ -997,6 +1023,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowThree();
 		prayRowThree();
+		game.getNextPlayerChoicePick();
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
 
@@ -1020,7 +1047,63 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
+	
+	@Test
+	public void test_BLACK_4_ACT_OF_GOD() {
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLACK_4_ACT_OF_GOD);
+		assertEquals(3, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
+		
+		prayRowThree();
+		prayRowTwo();
+		assertEquals(7, redPlayer.getPrayerPoints());
+		
+	}
 
-//	game.availablePowerList.add(BLACK_4_DIVINE_STRENGTH);
+	@Test
+	public void test_RED_4_ACT_OF_GOD() {
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.RED_4_ACT_OF_GOD);
+		assertEquals(3, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
+		
+		prayRowThree();
+		prayRowTwo();
+		assertEquals(7, redPlayer.getPrayerPoints());
+		
+	}
+	
+	@Test
+	public void test_BLUE_4_ACT_OF_GOD() {
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
 
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLUE_4_ACT_OF_GOD);
+		assertEquals(5, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		
+		assertEquals(5, bluePlayer.getPrayerPoints());
+		prayRowThree();
+		prayRowTwo();
+		assertEquals(9, bluePlayer.getPrayerPoints());
+	}
+	
+	@Test
+	public void test_WHITE_4_ACT_OF_GOD() {
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_4_ACT_OF_GOD);
+		assertEquals(5, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		
+		assertEquals(5, bluePlayer.getPrayerPoints());
+		prayRowThree();
+		prayRowTwo();
+		assertEquals(9, bluePlayer.getPrayerPoints());
+	}
+	
 }

@@ -8,7 +8,6 @@ import kemet.model.BoardInventory;
 import kemet.model.Color;
 import kemet.model.KemetGame;
 import kemet.model.Player;
-import kemet.model.Power;
 import kemet.model.PowerList;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
@@ -16,12 +15,14 @@ import kemet.model.action.choice.ChoiceInventory;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import lombok.extern.log4j.Log4j2;
 
 /**
- * InitializationPlayerRecruitAction
+ * PlayerActionTokenPick
  * 
  * @author Steve McDuff
  */
+@Log4j2
 public class PlayerActionTokenPick implements Action {
 	/**
 	 * 
@@ -33,6 +34,9 @@ public class PlayerActionTokenPick implements Action {
 
 	public Action nextAction;
 	private Action parent;
+	private boolean donePicking = false;
+	private boolean firstPick = true;
+	private boolean mainTokenPicked = false;
 
 	public static Cache<PlayerActionTokenPick> CACHE = new Cache<PlayerActionTokenPick>(
 			() -> new PlayerActionTokenPick());
@@ -56,6 +60,9 @@ public class PlayerActionTokenPick implements Action {
 		player = null;
 		nextAction = null;
 		parent = null;
+		donePicking = false;
+		firstPick = true;
+		mainTokenPicked = false;
 	}
 
 	@Override
@@ -80,6 +87,9 @@ public class PlayerActionTokenPick implements Action {
 		clone.game = game;
 		clone.player = player;
 		clone.parent = parent;
+		clone.donePicking = donePicking;
+		clone.firstPick = firstPick;
+		clone.mainTokenPicked = mainTokenPicked;
 
 		// deep clone all owned objects
 		clone.nextAction = null;
@@ -143,7 +153,7 @@ public class PlayerActionTokenPick implements Action {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
-		if (nextAction != null) {
+		if (donePicking && nextAction != null) {
 			PlayerChoicePick nextPlayerChoicePick = nextAction.getNextPlayerChoicePick();
 			if (nextPlayerChoicePick == null) {
 				game.checkForWinningCondition();
@@ -164,7 +174,7 @@ public class PlayerActionTokenPick implements Action {
 
 		List<Choice> choiceList = pick.choiceList;
 
-		if (player.actionTokenLeft == 1) {
+		if (getPlayerActionTokenLeft() == 1) {
 			if (!player.isRowOneUsed()) {
 				addRowOneActions(player, choiceList);
 			} else if (!player.isRowTwoUsed()) {
@@ -175,7 +185,7 @@ public class PlayerActionTokenPick implements Action {
 				addAllActions(player, choiceList);
 			}
 
-		} else if (player.actionTokenLeft == 2 && player.getUsedRowCount() == 1) {
+		} else if (getPlayerActionTokenLeft() == 2 && player.getUsedRowCount() == 1) {
 			if (!player.isRowOneUsed()) {
 				addRowOneActions(player, choiceList);
 			}
@@ -188,11 +198,43 @@ public class PlayerActionTokenPick implements Action {
 
 		} else {
 			addAllActions(player, choiceList);
+		}
 
+		addAllGoldTokenActions(player, choiceList);
+
+		if (mainTokenPicked) {
+			choiceList.add(new DonePickingChoice(game, player));
 		}
 
 		return pick.validate();
 
+	}
+
+	private void addAllGoldTokenActions(Player currentPlayer, List<Choice> choiceList) {
+		if (currentPlayer.canUseGoldToken()) {
+			boolean hasDivineWill = currentPlayer.hasPower(PowerList.BLUE_4_DIVINE_WILL);
+			boolean hasForcedMarch = currentPlayer.hasPower(PowerList.BLACK_3_FORCED_MARCH);
+			if (hasDivineWill || hasForcedMarch) {
+				// TODO add gold move
+			}
+			if (hasDivineWill) {
+				// TODO add gold recruit
+			}
+			if (currentPlayer.hasPower(PowerList.BLACK_1_DARK_RITUAL)) {
+				// add pray
+				choiceList.add(new PrayerChoice(game, player, (byte) 0, true));
+			}
+		}
+
+	}
+
+	private int getPlayerActionTokenLeft() {
+		int tokenLeft = player.actionTokenLeft;
+
+		if (player.canUseSilverToken()) {
+			tokenLeft += 1;
+		}
+		return tokenLeft;
 	}
 
 	public class MoveChoice extends PlayerChoice {
@@ -217,9 +259,9 @@ public class PlayerActionTokenPick implements Action {
 			} else {
 				player.rowTwoMoveUsed = true;
 			}
-			player.actionTokenLeft--;
 
-			nextAction = ArmyMoveAction.create(game, player, PlayerActionTokenPick.this);
+			ArmyMoveAction action = ArmyMoveAction.create(game, player, PlayerActionTokenPick.this);
+			addNextAction(action, false);
 
 		}
 
@@ -235,12 +277,19 @@ public class PlayerActionTokenPick implements Action {
 
 	public class PrayerChoice extends PlayerChoice {
 
-		public PrayerChoice(KemetGame game, Player player, byte row) {
+		private boolean isGold;
+
+		public PrayerChoice(KemetGame game, Player player, byte row, boolean isGold) {
 			super(game, player);
 			this.row = row;
+			this.isGold = isGold;
 
 			if (player.hasPower(PowerList.WHITE_1_PRIEST_1)) {
-				increasedPower = 3;
+				increasedPower += 1;
+			}
+
+			if (player.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
+				increasedPower += 1;
 			}
 		}
 
@@ -249,25 +298,26 @@ public class PlayerActionTokenPick implements Action {
 
 		@Override
 		public void choiceActivate() {
-			player.modifyPrayerPoints(increasedPower, "prayer action");
 
-			if (player.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
-				player.modifyPrayerPoints((byte) 1, PowerList.BLACK_4_DIVINE_STRENGTH.toString());
+			if (!isGold) {
+				if (row == 2) {
+					player.rowTwoPrayUsed = true;
+				} else {
+					player.rowThreePrayUsed = true;
+				}
 			}
 
-			if (row == 2) {
-				player.rowTwoPrayUsed = true;
-			} else {
-				player.rowThreePrayUsed = true;
-			}
-			player.actionTokenLeft--;
-
-			nextAction = DoneAction.create(PlayerActionTokenPick.this);
+			PrayAction action = PrayAction.create(PlayerActionTokenPick.this, player, increasedPower);
+			addNextAction(action, isGold);
 		}
 
 		@Override
 		public String describe() {
 
+			if( isGold ) {
+				return "Prayer action, gold token, with " + player.getPrayerPoints() + " prayer points, pray for "
+						+ increasedPower + " prayer points";
+			}
 			return "Prayer action, row " + row + ", with " + player.getPrayerPoints() + " prayer points, pray for "
 					+ increasedPower + " prayer points";
 
@@ -275,6 +325,9 @@ public class PlayerActionTokenPick implements Action {
 
 		@Override
 		public int getIndex() {
+			if( isGold ) {
+				return ChoiceInventory.PICK_GOLD_PRAY;
+			}
 			if (row == 2) {
 				return ChoiceInventory.PICK_ROW_TWO_PRAY;
 			}
@@ -293,9 +346,9 @@ public class PlayerActionTokenPick implements Action {
 		public void choiceActivate() {
 
 			player.rowTwoUpgradePyramidUsed = true;
-			player.actionTokenLeft--;
 
-			nextAction = UpgradePyramidAction.create(game, player, PlayerActionTokenPick.this);
+			UpgradePyramidAction action = UpgradePyramidAction.create(game, player, PlayerActionTokenPick.this);
+			addNextAction(action, false);
 
 		}
 
@@ -331,9 +384,9 @@ public class PlayerActionTokenPick implements Action {
 		@Override
 		public void choiceActivate() {
 			player.rowOneRecruitUsed = true;
-			player.actionTokenLeft--;
 
-			nextAction = RecruitAction.create(game, player, PlayerActionTokenPick.this);
+			RecruitAction action = RecruitAction.create(game, player, PlayerActionTokenPick.this);
+			addNextAction(action, false);
 
 		}
 
@@ -346,52 +399,93 @@ public class PlayerActionTokenPick implements Action {
 
 	public class BuyPowerChoice extends PlayerChoice {
 
-		public Power power;
+		public Color color;
+		public boolean isGold;
 
-		public BuyPowerChoice(KemetGame game, Player player, Power power) {
+		public BuyPowerChoice(KemetGame game, Player player, Color color, boolean isGold) {
 			super(game, player);
-			this.power = power;
+			this.color = color;
+			this.isGold = isGold;
 		}
 
 		public byte row;
 
 		@Override
 		public String describe() {
-			return "Buy Power action row 3 : " + power + " for " + getPowerCost() + " prayer points.";
+			if (isGold) {
+				return "Buy Power with Gold Token : " + color;
+			}
+			return "Buy Power action row 3 : " + color;
 		}
 
 		@Override
 		public void choiceActivate() {
-			player.actionTokenLeft--;
-
-			if (power.color == Color.WHITE) {
-				player.rowThreeBuildWhiteUsed = true;
-			} else if (power.color == Color.RED) {
-				player.rowThreeBuildRedUsed = true;
-			} else if (power.color == Color.BLACK) {
-				player.rowThreeBuildBlackUsed = true;
-			} else if (power.color == Color.BLUE) {
-				player.rowThreeBuildBlueUsed = true;
+			byte costBoost = 0;
+			if (isGold) {
+				costBoost = 1;
+			} else {
+				if (color == Color.WHITE) {
+					player.rowThreeBuildWhiteUsed = true;
+				} else if (color == Color.RED) {
+					player.rowThreeBuildRedUsed = true;
+				} else if (color == Color.BLACK) {
+					player.rowThreeBuildBlackUsed = true;
+				} else if (color == Color.BLUE) {
+					player.rowThreeBuildBlueUsed = true;
+				} else {
+					log.error("unknown color to buy power {}", color);
+				}
 			}
 
-			// pay the cost
-			byte cost = getPowerCost();
-			player.modifyPrayerPoints(cost, "Buy power " + power);
+			BuyPowerAction action = BuyPowerAction.create(game, player, parent, color, costBoost);
 
-			// move the power
-			game.movePowerToPlayer(player, power);
-
-			nextAction = power.createNextAction(player, PlayerActionTokenPick.this, game);
-		}
-
-		private byte getPowerCost() {
-			return player.getPowerCost(power);
+			addNextAction(action, isGold);
 		}
 
 		@Override
 		public int getIndex() {
-			return power.getActionIndex();
+			return getBuyPowerActionIndex(color);
 		}
+
+	}
+
+	public class DonePickingChoice extends PlayerChoice {
+
+		public DonePickingChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
+		@Override
+		public String describe() {
+			return "Done picking actions.";
+		}
+
+		@Override
+		public void choiceActivate() {
+			donePicking = true;
+		}
+
+		@Override
+		public int getIndex() {
+			return ChoiceInventory.PASS_TOKEN_PICK;
+		}
+
+	}
+
+	public static int getBuyPowerActionIndex(Color color) {
+
+		if (color == Color.WHITE) {
+			return ChoiceInventory.PICK_ROW_THREE_BUILD_WHITE;
+		} else if (color == Color.RED) {
+			return ChoiceInventory.PICK_ROW_THREE_BUILD_RED;
+		} else if (color == Color.BLACK) {
+			return ChoiceInventory.PICK_ROW_THREE_BUILD_BLACK;
+		} else if (color == Color.BLUE) {
+			return ChoiceInventory.PICK_ROW_THREE_BUILD_BLUE;
+		}
+		log.error("unknown color to buy power {}", color);
+
+		throw new IllegalArgumentException();
 
 	}
 
@@ -401,82 +495,85 @@ public class PlayerActionTokenPick implements Action {
 		addRowThreeActions(player, choiceList);
 	}
 
+	public void addNextAction(Action action, boolean goldToken) {
+		firstPick = false;
+
+		if (goldToken) {
+			player.goldTokenUsed = true;
+		} else {
+			if (mainTokenPicked) {
+				player.silverTokenUsed = true;
+			} else {
+				player.actionTokenLeft--;
+				mainTokenPicked = true;
+			}
+		}
+
+		if (!mainTokenPicked || player.canUseGoldToken() || player.canUseSilverToken()) {
+			// chain picks
+			ChainedAction next = null;
+			if (nextAction == null) {
+				next = ChainedAction.create(game, this);
+				nextAction = next;
+			} else {
+				next = (ChainedAction) nextAction;
+			}
+			next.add(action);
+		} else {
+			donePicking = true;
+
+			if (nextAction == null) {
+				nextAction = action;
+			} else {
+				ChainedAction next = (ChainedAction) nextAction;
+				next.add(action);
+			}
+		}
+	}
+
 	private void addRowThreeActions(Player player, List<Choice> choiceList) {
 		if (!player.rowThreePrayUsed) {
-			choiceList.add(new PrayerChoice(game, player, (byte) 3));
+			choiceList.add(new PrayerChoice(game, player, (byte) 3, false));
 		}
 
 		addAllPowerBuyOptions(player, choiceList);
 	}
 
 	private void addAllPowerBuyOptions(Player currentPlayer, List<Choice> choiceList) {
-		List<Power> availablePowerList = game.availablePowerList;
-		for (Power power : availablePowerList) {
-			if (playerCanBuyPower(currentPlayer, power)) {
-				BuyPowerChoice choice = new BuyPowerChoice(game, currentPlayer, power);
-				choiceList.add(choice);
-			}
+
+		boolean canBuyWithGoldToken = currentPlayer.canUseGoldToken()
+				&& currentPlayer.hasPower(PowerList.BLACK_2_TWIN_CEREMONY);
+
+		if (!player.rowThreeBuildWhiteUsed && playerHasPyramidColor(currentPlayer, Color.WHITE)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.WHITE, false));
+		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.WHITE)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.WHITE, true));
+		}
+
+		if (!player.rowThreeBuildRedUsed && playerHasPyramidColor(currentPlayer, Color.RED)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.RED, false));
+		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.RED)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.RED, true));
+		}
+
+		if (!player.rowThreeBuildBlackUsed && playerHasPyramidColor(currentPlayer, Color.BLACK)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.BLACK, false));
+		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.BLACK)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.BLACK, true));
+		}
+
+		if (!player.rowThreeBuildBlueUsed && playerHasPyramidColor(currentPlayer, Color.BLUE)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.BLUE, false));
+		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.BLUE)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.BLUE, true));
 		}
 
 	}
 
-	private boolean playerCanBuyPower(Player currentPlayer, Power power) {
-		if (power == null) {
-			return false;
-		}
+	private boolean playerHasPyramidColor(Player currentPlayer, Color color) {
+		byte level = currentPlayer.getPyramidLevel(color);
 
-		if (!playerHasPyramidForPower(currentPlayer, power)) {
-			return false;
-		}
-
-		if (!playerHasActionAvailableForPower(currentPlayer, power)) {
-			return false;
-		}
-
-		if (!playerHasPrayerAvailableForPower(currentPlayer, power)) {
-			return false;
-		}
-
-		if (playerHasPowerAlready(currentPlayer, power)) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private boolean playerHasPowerAlready(Player currentPlayer, Power power) {
-		return currentPlayer.hasPower(power);
-	}
-
-	private boolean playerHasPrayerAvailableForPower(Player currentPlayer, Power power) {
-		byte powerCost = currentPlayer.getPowerCost(power);
-		return currentPlayer.getPrayerPoints() >= -powerCost;
-	}
-
-	private boolean playerHasActionAvailableForPower(Player currentPlayer, Power power) {
-		if (power.color.equals(Color.WHITE)) {
-			return !currentPlayer.rowThreeBuildWhiteUsed;
-		}
-		if (power.color.equals(Color.BLACK)) {
-			return !currentPlayer.rowThreeBuildBlackUsed;
-		}
-		if (power.color.equals(Color.RED)) {
-			return !currentPlayer.rowThreeBuildRedUsed;
-		}
-		if (power.color.equals(Color.BLUE)) {
-			return !currentPlayer.rowThreeBuildBlueUsed;
-		}
-
-		throw new IllegalStateException("Power without a valid color found.");
-	}
-
-	private boolean playerHasPyramidForPower(Player currentPlayer, Power power) {
-		byte level = currentPlayer.getPyramidLevel(power.color);
-		if (power.level > level) {
-			return false;
-		}
-
-		return true;
+		return level > 0;
 	}
 
 	private void addRowTwoActions(Player player, List<Choice> choiceList) {
@@ -484,7 +581,7 @@ public class PlayerActionTokenPick implements Action {
 			choiceList.add(new MoveChoice(game, player, (byte) 2));
 		}
 		if (!player.rowTwoPrayUsed) {
-			choiceList.add(new PrayerChoice(game, player, (byte) 2));
+			choiceList.add(new PrayerChoice(game, player, (byte) 2, false));
 		}
 		if (!player.rowTwoUpgradePyramidUsed) {
 			choiceList.add(new UpgradePyramidChoice(game, player));

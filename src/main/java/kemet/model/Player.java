@@ -911,4 +911,12 @@ public class Player implements Model {
 		return cost;
 	}
 
+	public boolean canUseGoldToken() {
+		return goldTokenAvailable && ! goldTokenUsed;
+	}
+	
+	public boolean canUseSilverToken() {
+		return silverTokenAvailable && ! silverTokenUsed;
+	}
+
 }

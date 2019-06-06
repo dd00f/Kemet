@@ -10,28 +10,23 @@ import kemet.model.Validation;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
-import lombok.extern.log4j.Log4j2;
 
-@Log4j2
 public class RemoveBattleCardAction implements Action {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 5934665242964291185L;
 
-
 	public static final Logger LOGGER = Logger.getLogger(RemoveBattleCardAction.class.getName());
-
 
 	private KemetGame game;
 
 	private Player player;
-	
+
 	private Action parent;
 
 	public BattleCard newBattleCard;
 	public BattleCard removedBattleCard;
-	
 
 	@Override
 	public void initialize() {
@@ -46,7 +41,8 @@ public class RemoveBattleCardAction implements Action {
 
 	}
 
-	public static Cache<RemoveBattleCardAction> CACHE = new Cache<RemoveBattleCardAction>(() -> new RemoveBattleCardAction());
+	public static Cache<RemoveBattleCardAction> CACHE = new Cache<RemoveBattleCardAction>(
+			() -> new RemoveBattleCardAction());
 
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
@@ -85,7 +81,7 @@ public class RemoveBattleCardAction implements Action {
 		player = null;
 		newBattleCard = null;
 		removedBattleCard = null;
-		
+
 		CACHE.release(this);
 
 	}
@@ -157,11 +153,10 @@ public class RemoveBattleCardAction implements Action {
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
 
-
 		if (removedBattleCard == null) {
 			return addPickBattleCardChoice(player).validate();
 		}
-		
+
 		// action is over
 		return null;
 	}
@@ -172,7 +167,6 @@ public class RemoveBattleCardAction implements Action {
 		cannonicalForm.set(BoardInventory.STATE_PICK_BATTLECARD_TO_REMOVE, player.getState(playerIndex));
 
 	}
-
 
 	@Override
 	public void setParent(Action parent) {

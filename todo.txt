@@ -1,24 +1,21 @@
 
 - BUG : 
-	- Recruit on top of an existing army doesn't trigger attack start powers
+	- Recruit on top of an existing army doesn't trigger attack start powers, night/day
+
 
 
 - Game feature : Power Tiles - Advanced
 
-	- Blue : 3 : Prescience : Opponent plays battle card before you
+	46 of 64 tiles done !
 
 	- Blue : 4 : Divine Will : Gold Token : Recruit, Move
 	- Black : 1 : Dark Ritual : Gold token : Pray
 	- Black : 3 : Forced March : Gold Token : Move
 	- Black : 2 : Twin Ceremony : Gold token : Reuse Buy action : +1 cost on tile 
 	
-	- Black : 4 : Act of God : add gray action token
-	- Blue : 4 : Act of God : add gray action token
-	- White : 4 : Act of God : add gray action token
-	- Red : 4 : Act of God : add gray action token
 
 
-- Game feature : Power Tiles - Beasts
+- Game feature : Power Tiles - Beasts - 10 tiles
 	- White : 4 : Beast : Mummy : +1 move, +2 attack, +1 DI card at night 
 	- Red : 3 : Beast : Royal Scarab : +2 move, +2 attack
 	- Red : 4 : Beast : Giant Scorpion : +1 move, +2 strength, +2 damage
@@ -31,7 +28,7 @@
 	- Black : 4 : Beast : Devourer : +1 move, +2 strength, +1 VP on battle win & destroy 2 enemy troups
 
 
-- Game feature : Power Tiles - DI
+- Game feature : Power Tiles - DI - 3 tiles
 	- White : 2 : Divine Boon : +1 DI card at night
 	- White : 3 : Vision : draw 5 DI card at night, pick one
 	- Red : 3 : Divine Wound : +1 strength per DI card spent
