@@ -8,11 +8,14 @@ import kemet.model.action.Endable;
 import kemet.model.action.EndableAction;
 
 public class EndTurnChoice extends PlayerChoice {
-	
-	public Endable  endChoice = null;
 
-	public EndTurnChoice(KemetGame game, Player player) {
+	public Endable endChoice = null;
+
+	public int index;
+
+	public EndTurnChoice(KemetGame game, Player player, int index) {
 		super(game, player);
+		this.index = index;
 	}
 
 	@Override
@@ -22,20 +25,21 @@ public class EndTurnChoice extends PlayerChoice {
 
 	@Override
 	public void choiceActivate() {
-		if(endChoice != null ) {
+		if (endChoice != null) {
 			endChoice.end();
 		}
 	}
-	
-	public static void addEndTurnChoice(KemetGame game, Player player, List<Choice> choiceList, EndableAction end ) {
-		EndTurnChoice endTurnChoice = new EndTurnChoice(game, player);
+
+	public static void addEndTurnChoice(KemetGame game, Player player, List<Choice> choiceList, EndableAction end,
+			int index) {
+		EndTurnChoice endTurnChoice = new EndTurnChoice(game, player, index);
 		endTurnChoice.endChoice = end;
 		choiceList.add(endTurnChoice);
 	}
 
 	@Override
 	public int getIndex() {
-		return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
+		return index;
 	}
 
 }

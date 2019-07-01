@@ -9,6 +9,7 @@ import kemet.model.Player;
 import kemet.model.Power;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
+import kemet.model.action.choice.ChoiceInventory;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
@@ -160,6 +161,9 @@ public class BuyPowerAction implements Action {
 		
 		addAllPowerBuyOptions(player, choiceList, color);
 		
+		BuyNothingChoice nothing = new BuyNothingChoice(game, player);
+		choiceList.add(nothing);
+		
 		return pick;
 	}
 
@@ -216,7 +220,7 @@ public class BuyPowerAction implements Action {
 	}
 
 	private boolean playerHasPrayerAvailableForPower(Player currentPlayer, Power power) {
-		byte powerCost = (byte) (currentPlayer.getPowerCost(power) + costBoost);
+		byte powerCost = (byte) (currentPlayer.getPowerCost(power) - costBoost);
 		return currentPlayer.getPrayerPoints() >= -powerCost;
 	}
 
@@ -227,6 +231,34 @@ public class BuyPowerAction implements Action {
 		}
 
 		return true;
+	}
+	
+
+	public class BuyNothingChoice extends PlayerChoice {
+
+
+		public BuyNothingChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
+
+		@Override
+		public String describe() {
+			return "Buy nothing";
+		}
+
+		@Override
+		public void choiceActivate() {
+
+			nextAction = DoneAction.create(parent);
+			
+		}
+
+		@Override
+		public int getIndex() {
+			return ChoiceInventory.BUY_NOTHING;
+		}
+
 	}
 	
 	public class BuyPowerChoice extends PlayerChoice {
@@ -262,7 +294,7 @@ public class BuyPowerAction implements Action {
 		}
 
 		private byte getPowerCost() {
-			return (byte) (player.getPowerCost(power) + costBoost);
+			return (byte) (player.getPowerCost(power) - costBoost);
 		}
 
 		@Override

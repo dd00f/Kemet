@@ -187,7 +187,7 @@ public class UpgradePyramidAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickTile.getPickChoiceIndex(player.index);
+			return pickTile.getPickChoiceIndex(player.getIndex());
 		}
 
 	}
@@ -311,7 +311,7 @@ public class UpgradePyramidAction extends EndableAction {
 				}
 			}
 
-			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 			return pick.validate();
 
 		} else if (endLevel == -1) {
@@ -320,7 +320,7 @@ public class UpgradePyramidAction extends EndableAction {
 
 			createAllPyramidLevelChoices(tile.getPyramidLevel(), pick.choiceList);
 
-			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();
 
@@ -340,7 +340,7 @@ public class UpgradePyramidAction extends EndableAction {
 			if (!player.hasPyramid(Color.RED)) {
 				pick.choiceList.add(new UpgradePyramidPickColorChoice(game, player, Color.RED));
 			}
-			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();
 

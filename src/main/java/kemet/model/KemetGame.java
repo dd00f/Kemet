@@ -313,7 +313,7 @@ public class KemetGame implements Model, Game {
 	public Player getPlayerByIndex(int index) {
 
 		for (Player player : playerByInitiativeList) {
-			if (player.index == index) {
+			if (player.getIndex() == index) {
 				return player;
 			}
 		}
@@ -332,7 +332,7 @@ public class KemetGame implements Model, Game {
 
 	public Tile getTileByPlayerAndDistrictIndex(int playerIndex, int districtIndex) {
 		for (Tile tile : tileList) {
-			if (tile.districtIndex == districtIndex && tile.owningPlayer.index == playerIndex) {
+			if (tile.districtIndex == districtIndex && tile.owningPlayer.getIndex() == playerIndex) {
 				return tile;
 			}
 		}
@@ -412,10 +412,6 @@ public class KemetGame implements Model, Game {
 				player.addTemplePermanentVictoryPoint("the occupation of " + controlledTempleCount + " temples");
 			}
 		}
-	}
-
-	public void activateNightPowers() {
-
 	}
 
 	public void provideNightDiCards() {
@@ -563,7 +559,7 @@ public class KemetGame implements Model, Game {
 
 		PlayerChoicePick currentPlayerChoicePick = getNextPlayerChoicePick();
 
-		if (currentPlayerChoicePick.player.index != player) {
+		if (currentPlayerChoicePick.player.getIndex() != player) {
 			LOGGER.warn("Next player index for action doesn't match");
 		}
 
@@ -575,9 +571,19 @@ public class KemetGame implements Model, Game {
 			}
 		}
 
-		String message = "Unable to find action that matches index : " + actionIndex + "\n" + "Choice List :\n" + currentPlayerChoicePick.choiceList.toString();
+		String message = "Unable to find action that matches index : " + actionIndex + "\n" + "Choice List :" + printChoiceList(currentPlayerChoicePick);
 		LOGGER.error(message);
 		throw new IllegalArgumentException(message);
+	}
+
+	private String printChoiceList(PlayerChoicePick currentPlayerChoicePick) {
+		StringBuilder build = new StringBuilder();
+		List<Choice> choiceList = currentPlayerChoicePick.choiceList;
+		for (Choice choice : choiceList) {
+			build.append("\n\t");
+			build.append(choice.toString());
+		}
+		return build.toString();
 	}
 
 	public PlayerChoicePick getNextPlayerChoicePick() {
@@ -622,7 +628,7 @@ public class KemetGame implements Model, Game {
 		if (nextPlayerChoicePick == null) {
 			return -1;
 		}
-		return nextPlayerChoicePick.player.index;
+		return nextPlayerChoicePick.player.getIndex();
 	}
 
 	@Override
@@ -659,7 +665,7 @@ public class KemetGame implements Model, Game {
 		if (winner == null) {
 			return 0;
 		}
-		if (winner.index == playerIndex) {
+		if (winner.getIndex() == playerIndex) {
 			return 1;
 		}
 		return -1;
@@ -748,7 +754,7 @@ public class KemetGame implements Model, Game {
 	 */
 	public int getPlayerOrder(int index) {
 		for( int i=0;i<playerByInitiativeList.size();++i) {
-			if( playerByInitiativeList.get(i).index == index ) {
+			if( playerByInitiativeList.get(i).getIndex() == index ) {
 				return i;
 			}
 		}

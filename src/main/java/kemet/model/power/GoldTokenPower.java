@@ -16,8 +16,10 @@ public class GoldTokenPower extends Power {
 	}
 
 	public void applyToPlayer(Player player) {
-		player.goldTokenAvailable = true;
-		player.goldTokenUsed = false;
+		if (player.goldTokenAvailable == false) {
+			player.goldTokenAvailable = true;
+			player.goldTokenUsed = false;
+		}
 	}
 
 }

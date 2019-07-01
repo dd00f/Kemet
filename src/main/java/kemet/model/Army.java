@@ -1,14 +1,12 @@
 package kemet.model;
 
-import java.util.logging.Logger;
-
 import kemet.util.Cache;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class Army implements Model {
 
 	private static final long serialVersionUID = -4443577609612057529L;
-
-	public static final Logger LOGGER = Logger.getLogger(Army.class.getName());
 
 	public String name;
 	public Beast beast = null;
@@ -79,7 +77,7 @@ public class Army implements Model {
 	public byte getScore(boolean isAttacking) {
 		byte score = armySize;
 		if (beast != null) {
-			score += beast.fightBonus;
+			score += beast.combatBonus;
 		}
 		score += owningPlayer.strengthBonus;
 
@@ -143,7 +141,7 @@ public class Army implements Model {
 	public void transferBeastToArmy(Army otherArmy) {
 		if (beast != null) {
 			if (otherArmy.beast != null) {
-				LOGGER.warning("Trying to transfer beast to army that already has a beast.");
+				log.warn("Trying to transfer beast to army that already has a beast.");
 				return;
 			}
 
@@ -162,10 +160,10 @@ public class Army implements Model {
 
 	private void validateArmySize() {
 		if (armySize > owningPlayer.maximumArmySize) {
-			LOGGER.warning("validateArmySize lead to armySize > owningPlayer.maximumArmySize ." + name);
+			log.warn("validateArmySize lead to armySize > owningPlayer.maximumArmySize ." + name);
 		}
 		if (armySize < 0) {
-			LOGGER.warning("validateArmySize lead to armySize = 0." + name);
+			log.warn("validateArmySize lead to armySize = 0." + name);
 		}
 	}
 
@@ -178,16 +176,23 @@ public class Army implements Model {
 
 	private void validateAvailableArmyToken() {
 		if (owningPlayer.availableArmyTokens < 0) {
-			LOGGER.warning("owningPlayer.availableArmyTokens < 0  after recruit.");
+			log.warn("owningPlayer.availableArmyTokens < 0  after recruit.");
 		}
 	}
 
 	public void addBeast(Beast beastAdd) {
+		if( beast != null ) {
+			log.warn("Army.addBeast with beast {} on army {} that already has a beast ", beastAdd.name, describeArmy());
+			return;
+		}
+		
 		if (beastAdd != null) {
-			beast = beastAdd;
 			boolean success = owningPlayer.availableBeasts.remove(beastAdd);
-			if (!success) {
-				LOGGER.warning("Army.addBeast on beast that wasnt in player inventory " + beastAdd.name);
+			if( success ) {
+				beast = beastAdd;
+			}
+			else {
+				log.warn("Army.addBeast on beast that wasnt in player inventory " + beastAdd.name);
 			}
 		}
 	}
@@ -199,7 +204,7 @@ public class Army implements Model {
 		}
 
 		if (newTile != null && newTile.getArmy() != null) {
-			LOGGER.warning("Army.moveToTile " + name + " already has army " + newTile.getArmy().name);
+			log.warn("Army.moveToTile " + name + " already has army " + newTile.getArmy().name);
 			return;
 		}
 		if (newTile != null) {
@@ -261,6 +266,12 @@ public class Army implements Model {
 
 		return false;
 
+	}
+	
+	public String describeArmy() {
+		StringBuilder build = new StringBuilder();
+		describeArmy(build);
+		return build.toString();
 	}
 
 	public void describeArmy(StringBuilder builder) {

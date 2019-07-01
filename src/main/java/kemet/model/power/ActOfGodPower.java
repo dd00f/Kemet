@@ -16,8 +16,10 @@ public class ActOfGodPower extends Power {
 	}
 
 	public void applyToPlayer(Player player) {
-		player.silverTokenAvailable = true;
-		player.silverTokenUsed = false;
+		if (player.silverTokenAvailable == false) {
+			player.silverTokenAvailable = true;
+			player.silverTokenUsed = false;
+		}
 	}
 
 }

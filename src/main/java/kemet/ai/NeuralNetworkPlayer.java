@@ -50,7 +50,7 @@ public class NeuralNetworkPlayer extends PlayerActor {
 		int pickBestAction = actionProbability.pickBestAction();
 
 		actionProbability.printActionProbabilities(game);
-		game.activateAction(player.index, pickBestAction);
+		game.activateAction(player.getIndex(), pickBestAction);
 		
 		mcts.cleanupOldCycles();
 		mcts.incrementCycle();

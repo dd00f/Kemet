@@ -1,7 +1,5 @@
 package kemet.model.action;
 
-import java.util.logging.Logger;
-
 import kemet.model.BattleCard;
 import kemet.model.BoardInventory;
 import kemet.model.KemetGame;
@@ -16,8 +14,6 @@ public class RemoveBattleCardAction implements Action {
 	 * 
 	 */
 	private static final long serialVersionUID = 5934665242964291185L;
-
-	public static final Logger LOGGER = Logger.getLogger(RemoveBattleCardAction.class.getName());
 
 	private KemetGame game;
 

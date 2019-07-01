@@ -3,20 +3,32 @@
 	- Recruit on top of an existing army doesn't trigger attack start powers, night/day
 
 
-
-- Game feature : Power Tiles - Advanced
-
-	46 of 64 tiles done !
-
-	- Blue : 4 : Divine Will : Gold Token : Recruit, Move
-	- Black : 1 : Dark Ritual : Gold token : Pray
-	- Black : 3 : Forced March : Gold Token : Move
-	- Black : 2 : Twin Ceremony : Gold token : Reuse Buy action : +1 cost on tile 
+	51 of 64 tiles done !
 	
+	- insta-recruit action
 
+	- move : add option to move beast & move bonus
+		- move with partial army left behind
+	
+	- battle : add beast bonus
+		- army death/recall : insta-recall beast
+	- recruit
+		- insta-recruit beast
+		- recruit beast on top of already full army during recruit action
+
+	- special : 
+		- Red : 4 : Beast : ignore walls
+		- Blue : 2 : Beast : Deep Desert Snake : ignore other creatures
+		- Black : 2 : Beast : Khnum's Sphinx : opponent cost 2 prayer point to move on tile
+		- Black : 3 : Beast : Griffin Sphinx : teleport from obelisk
+		- Black : 4 : Beast : Devourer : +1 VP on battle win & destroy 2 enemy troups
+		- White : 4 : Beast : Mummy : +1 DI card at night 
+
+- Check that power tiles have a unique flag per player ( no negative )
+
+- State goes negative based on player - change to individual state fields
 
 - Game feature : Power Tiles - Beasts - 10 tiles
-	- White : 4 : Beast : Mummy : +1 move, +2 attack, +1 DI card at night 
 	- Red : 3 : Beast : Royal Scarab : +2 move, +2 attack
 	- Red : 4 : Beast : Giant Scorpion : +1 move, +2 strength, +2 damage
 	- Red : 4 : Beast : Phoenix : +1 move, +2 Strength, ignore walls
@@ -32,6 +44,8 @@
 	- White : 2 : Divine Boon : +1 DI card at night
 	- White : 3 : Vision : draw 5 DI card at night, pick one
 	- Red : 3 : Divine Wound : +1 strength per DI card spent
+	- White : 4 : Beast : Mummy : +1 move, +2 attack, +1 DI card at night 
+
 
 - Game feature : Power Tiles - Extra
 	- blue power tile level 1: - Protective aura: ignore any damage outside of combat

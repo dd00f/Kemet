@@ -41,6 +41,7 @@ public class BoardInventory {
 	public static final int STATE_PICK_DEFENSE_DISCARD = INDEXER++;
 	public static final int STATE_PICK_ARMY_SIZE = INDEXER++;
 	public static final int STATE_PICK_TILE = INDEXER++;
+	public static final int STATE_PICK_BEAST = INDEXER++;
 	public static final int STATE_PICK_SOURCE_TILE = INDEXER++;
 	public static final int STATE_PICK_PYRAMID_COLOR = INDEXER++;
 	public static final int STATE_PICK_PYRAMID_LEVEL = INDEXER++;
@@ -235,6 +236,15 @@ public class BoardInventory {
 		INDEXER += PLAYER_COUNT * PowerList.POWER_INDEXER;
 	}
 	
+	public static final int RECRUIT_BEAST = INDEXER;
+	static {
+		INDEXER += BeastList.BEAST_INDEXER;
+	}
+	
+	public static final int BEAST_POSITION = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT * BeastList.BEAST_INDEXER * TILE_COUNT;
+	}
 	
 
 	public static final int TOTAL_STATE_COUNT = INDEXER;

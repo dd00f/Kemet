@@ -300,7 +300,21 @@ public class Tile implements Model {
 		if( army != null ) {
 			int owningPlayerCanonicalIndex = army.owningPlayer.getCanonicalPlayerIndex(playerIndex);
 			
-			canonicalForm.set(BoardInventory.TILE_PLAYER_ARMY_SIZE + owningPlayerCanonicalIndex * BoardInventory.TILE_COUNT + tileCanonicalIndex, army.armySize);
+			int startArmySizeOffset = BoardInventory.TILE_PLAYER_ARMY_SIZE;
+			int armySizePlayerOffset = owningPlayerCanonicalIndex * BoardInventory.TILE_COUNT;
+			int armySizePlayerTileOffset = startArmySizeOffset + armySizePlayerOffset + tileCanonicalIndex;
+			canonicalForm.set(armySizePlayerTileOffset, army.armySize);
+
+			if( army.beast != null ) {
+
+				int startOffset = BoardInventory.BEAST_POSITION;
+				int playerOffset =armySizePlayerOffset * BeastList.BEAST_INDEXER;
+				int beastOffset = army.beast.index * BoardInventory.TILE_COUNT;
+				int finalOffset = startOffset + playerOffset + beastOffset + index;
+				
+				canonicalForm.set(finalOffset, (byte) 1);
+			}
+
 		}
 		
 		if( pyramidColor != Color.NONE ) {

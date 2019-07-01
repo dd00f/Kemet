@@ -27,7 +27,7 @@ public class Player implements Model {
 	/**
 	 * zero based player index in the game
 	 */
-	public int index;
+	private int index;
 	public KemetGame game;
 
 	public byte victoryPoints = 0;
@@ -122,7 +122,7 @@ public class Player implements Model {
 		defenseBonus = 0;
 		damageBonus = 0;
 		shieldBonus = 0;
-		index = 0;
+		setIndex(0);
 		moveCapacity = 1;
 		availableArmyTokens = 12;
 		armyCounter = 1;
@@ -165,7 +165,7 @@ public class Player implements Model {
 		clone.game = game;
 		clone.name = name;
 		clone.actor = actor;
-		clone.index = index;
+		clone.setIndex(index);
 		clone.cityFront = cityFront;
 
 		clone.victoryPoints = victoryPoints;
@@ -705,7 +705,7 @@ public class Player implements Model {
 	}
 
 	public byte getState(int playerIndex) {
-		if (playerIndex == index) {
+		if (playerIndex == getIndex()) {
 			return 1;
 		}
 		return -1;
@@ -719,7 +719,7 @@ public class Player implements Model {
 	 *         always at index zero.
 	 */
 	public int getCanonicalPlayerIndex(int targetPlayerIndex) {
-		if (targetPlayerIndex == index) {
+		if (targetPlayerIndex == getIndex()) {
 			return 0;
 		}
 
@@ -743,16 +743,16 @@ public class Player implements Model {
 		// target : 2, current 1 - return 2
 		// target : 2, current 2 - return 0
 
-		if (targetPlayerIndex < index) {
-			return index;
+		if (targetPlayerIndex < getIndex()) {
+			return getIndex();
 		}
-		return index + 1;
+		return getIndex() + 1;
 
 	}
 
 	@Override
 	public String toString() {
-		return "Player " + name + " index " + index;
+		return "Player " + name + " index " + getIndex();
 	}
 
 	public void fillCanonicalForm(ByteCanonicalForm canonicalForm, int playerIndex) {
@@ -787,7 +787,7 @@ public class Player implements Model {
 		canonicalForm.set(BoardInventory.PLAYER_TEMPLE_COUNT + canonicalPlayerIndex, templeOccupationPoints);
 		canonicalForm.set(BoardInventory.PLAYER_DAWN_TOKEN + canonicalPlayerIndex, initiativeTokens);
 		canonicalForm.set(BoardInventory.PLAYER_ORDER + canonicalPlayerIndex * BoardInventory.PLAYER_COUNT
-				+ game.getPlayerOrder(index), (byte) 1);
+				+ game.getPlayerOrder(getIndex()), (byte) 1);
 
 		for (BattleCard card : availableBattleCards) {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) 1);
@@ -799,7 +799,7 @@ public class Player implements Model {
 
 		byte discardCardStatus = -1;
 
-		if (playerIndex != index) {
+		if (playerIndex != getIndex()) {
 			// make discarded cards appear available only for other players.
 			discardCardStatus = 1;
 		}
@@ -809,8 +809,8 @@ public class Player implements Model {
 		}
 
 		for (Power power : powerList) {
-			index = BoardInventory.PLAYER_POWERS + power.index * BoardInventory.PLAYER_COUNT + canonicalPlayerIndex;
-			canonicalForm.set(index, (byte) 1);
+			int powerIndex = (BoardInventory.PLAYER_POWERS + power.index * BoardInventory.PLAYER_COUNT + canonicalPlayerIndex);
+			canonicalForm.set(powerIndex, (byte) 1);
 		}
 	}
 
@@ -819,7 +819,7 @@ public class Player implements Model {
 	}
 
 	public void enterSimulationMode(int playerIndex) {
-		if (index != playerIndex) {
+		if (getIndex() != playerIndex) {
 			// return all discard battle cards for simulations to act as if those cards were
 			// available.
 			recoverAllDiscardedBattleCards();
@@ -917,6 +917,14 @@ public class Player implements Model {
 	
 	public boolean canUseSilverToken() {
 		return silverTokenAvailable && ! silverTokenUsed;
+	}
+
+	public int getIndex() {
+		return index;
+	}
+
+	public void setIndex(int index) {
+		this.index = index;
 	}
 
 }

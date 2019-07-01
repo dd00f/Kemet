@@ -2,7 +2,6 @@ package kemet.model.action;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -26,7 +25,6 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class BattleAction implements Action {
-	public static final Logger LOGGER = Logger.getLogger(BattleAction.class.getName());
 
 	/**
 	 * 
@@ -60,6 +58,8 @@ public class BattleAction implements Action {
 	public boolean attackerRetreatTilePicked;
 	public boolean defenderRetreatPicked;
 	public boolean defenderRetreatTilePicked;
+
+	public ChainedAction pendingActions;
 
 	private boolean incrementedCounter = false;
 
@@ -95,6 +95,8 @@ public class BattleAction implements Action {
 		defenderRetreatTilePicked = false;
 		incrementedCounter = false;
 
+		pendingActions = null;
+
 	}
 
 	public static Cache<BattleAction> CACHE = new Cache<BattleAction>(() -> new BattleAction());
@@ -109,6 +111,10 @@ public class BattleAction implements Action {
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
+
+		if (pendingActions != null) {
+			pendingActions.validate(this, game);
+		}
 	}
 
 	@Override
@@ -117,7 +123,9 @@ public class BattleAction implements Action {
 
 		attackingArmy = clone.getArmyByCopy(attackingArmy);
 		defendingArmy = clone.getArmyByCopy(defendingArmy);
-
+		if (pendingActions != null) {
+			pendingActions.relink(clone);
+		}
 		tile = clone.getTileByCopy(tile);
 	}
 
@@ -151,6 +159,11 @@ public class BattleAction implements Action {
 		clone.defendingUsedDiCard.addAll(defendingUsedDiCard);
 		clone.incrementedCounter = incrementedCounter;
 
+		if (pendingActions != null) {
+			clone.pendingActions = pendingActions.deepCacheClone();
+			clone.pendingActions.setParent(clone);
+		}
+
 		return clone;
 	}
 
@@ -167,6 +180,10 @@ public class BattleAction implements Action {
 		attackingUsedBattleCard = null;
 		defendingDiscardBattleCard = null;
 		defendingUsedBattleCard = null;
+
+		if (pendingActions != null) {
+			pendingActions.release();
+		}
 
 		CACHE.release(this);
 
@@ -207,23 +224,23 @@ public class BattleAction implements Action {
 		return score;
 	}
 
-	public byte calculateAttackerBleed() {
+	public byte calculateAttackerDamage() {
 		byte score = attackingUsedBattleCard.bloodBonus;
 		score += attackingArmy.owningPlayer.damageBonus;
 
 		if (attackingArmy.beast != null) {
-			score += attackingArmy.beast.bloodBonus;
+			score += attackingArmy.beast.damageBonus;
 		}
 
 		return score;
 	}
 
-	public byte calculateDefenderBleed() {
+	public byte calculateDefenderDamage() {
 		byte score = defendingUsedBattleCard.bloodBonus;
 		score += defendingArmy.owningPlayer.damageBonus;
 
 		if (defendingArmy.beast != null) {
-			score += defendingArmy.beast.bloodBonus;
+			score += defendingArmy.beast.damageBonus;
 		}
 		return score;
 	}
@@ -251,12 +268,12 @@ public class BattleAction implements Action {
 	}
 
 	public byte calculateDamageOnAttacker() {
-		return (byte) Math.min(Math.max(calculateDefenderBleed() - calculateAttackerShield(), 0),
+		return (byte) Math.min(Math.max(calculateDefenderDamage() - calculateAttackerShield(), 0),
 				attackingArmy.armySize);
 	}
 
 	public byte calculateDamageOnDefender() {
-		return (byte) Math.min(Math.max(calculateAttackerBleed() - calculateDefenderShield(), 0),
+		return (byte) Math.min(Math.max(calculateAttackerDamage() - calculateDefenderShield(), 0),
 				defendingArmy.armySize);
 	}
 
@@ -272,6 +289,10 @@ public class BattleAction implements Action {
 		attackerDestroyed = attackingArmy.armySize <= 0;
 
 		if (attackerDestroyed) {
+
+			addRecruitBeastFromRemovedArmy(attackingArmy);
+
+			
 			attackingArmy.destroyArmy();
 			attackerRetreatPicked = true;
 			attackerRetreatTilePicked = true;
@@ -279,9 +300,26 @@ public class BattleAction implements Action {
 
 		defenderDestroyed = defendingArmy.armySize <= 0;
 		if (defenderDestroyed) {
+			
+			addRecruitBeastFromRemovedArmy(defendingArmy);
+			
 			defendingArmy.destroyArmy();
 			defenderRetreatPicked = true;
 			defenderRetreatTilePicked = true;
+		}
+	}
+
+	public void addRecruitBeastFromRemovedArmy(Army removedArmy) {
+		if (removedArmy.beast != null) {
+			createPendingActions();
+			pendingActions.add(BeastRecruitAction.create(game, removedArmy.owningPlayer, pendingActions,
+					removedArmy.beast));
+		}
+	}
+
+	private void createPendingActions() {
+		if( pendingActions == null ) {
+			pendingActions = ChainedAction.create(game, this);
 		}
 	}
 
@@ -408,7 +446,7 @@ public class BattleAction implements Action {
 					pickDefenderCardBasedOnNeuralNetworkIfSimulation();
 				} else {
 					if (game.isSimulation()) {
-						if (game.simulatedPlayerIndex != player.index) {
+						if (game.simulatedPlayerIndex != player.getIndex()) {
 							// skip discard card selection for other players during simulations
 							String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden ATTACK card which should be simulated by the MCTS.";
 							log.error(message);
@@ -435,7 +473,7 @@ public class BattleAction implements Action {
 
 				} else {
 
-					if (game.isSimulation() && game.simulatedPlayerIndex != player.index) {
+					if (game.isSimulation() && game.simulatedPlayerIndex != player.getIndex()) {
 						// skip discard card selection for other players during simulations
 						String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.";
 						log.error(message);
@@ -461,7 +499,7 @@ public class BattleAction implements Action {
 
 		private void pickAttackerCardsBasedOnNeuralNetworkIfSimulation() {
 			if (game.isSimulation()) {
-				if (game.simulatedPlayerIndex == player.index) {
+				if (game.simulatedPlayerIndex == player.getIndex()) {
 
 					if (player.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
 						// defender cards should be fully picked
@@ -471,7 +509,7 @@ public class BattleAction implements Action {
 						String message = "Defender has Blue 3 Prescience, yet the attacker hasn't picked cards yet, {} pick, {} discard";
 						log.error(message, attackingUsedBattleCard, attackingDiscardBattleCard);
 					}
-					
+
 					Player attacker = attackingArmy.owningPlayer;
 
 					if (!attacker.discardedBattleCards.isEmpty()) {
@@ -508,8 +546,8 @@ public class BattleAction implements Action {
 
 		private void pickDefenderCardBasedOnNeuralNetworkIfSimulation() {
 			if (game.isSimulation()) {
-				if (game.simulatedPlayerIndex == player.index) {
-					
+				if (game.simulatedPlayerIndex == player.getIndex()) {
+
 					if (player.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
 						// defender cards should be fully picked
 						if (defendingUsedBattleCard != null && defendingDiscardBattleCard != null) {
@@ -518,7 +556,7 @@ public class BattleAction implements Action {
 						String message = "Attacker has Blue 3 Prescience, yet the defender hasn't picked cards yet, {} pick, {} discard";
 						log.error(message, defendingUsedBattleCard, defendingDiscardBattleCard);
 					}
-					
+
 					// force defense card & discard selection based on neural network policy
 					Player defender = defendingArmy.owningPlayer;
 
@@ -542,7 +580,7 @@ public class BattleAction implements Action {
 		private BattleCard pickCardForPlayerBasedOnNeuralNetwork(Player defender) {
 			game.resetCachedChoices();
 
-			ByteCanonicalForm canonicalForm = game.getCanonicalForm(defender.index);
+			ByteCanonicalForm canonicalForm = game.getCanonicalForm(defender.getIndex());
 
 			List<BattleCard> availableBattleCards = defender.availableBattleCards;
 
@@ -580,19 +618,19 @@ public class BattleAction implements Action {
 		}
 
 		private void validateCanonicalFormForSimulatedMove(Player defender, ByteCanonicalForm canonicalForm) {
-			int canonicalPlayerIndex = defender.getCanonicalPlayerIndex(defender.index);
+			int canonicalPlayerIndex = defender.getCanonicalPlayerIndex(defender.getIndex());
 
 			String message = "available battle card {} not showing up in canonical form {}";
-			if (defender.index == defendingArmy.owningPlayer.index) {
+			if (defender.getIndex() == defendingArmy.owningPlayer.getIndex()) {
 				// pick defender card
 				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD] != defender
-						.getState(defender.index)) {
+						.getState(defender.getIndex())) {
 					log.error(message, card.index, canonicalForm);
 				}
 			} else {
 				// pick attacker card
 				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD] != defender
-						.getState(defender.index)) {
+						.getState(defender.getIndex())) {
 					log.error(message, card.index, canonicalForm);
 				}
 			}
@@ -716,7 +754,7 @@ public class BattleAction implements Action {
 
 		@Override
 		public int getIndex() {
-			return destinationTile.getPickChoiceIndex(player.index);
+			return destinationTile.getPickChoiceIndex(player.getIndex());
 		}
 
 	}
@@ -748,6 +786,7 @@ public class BattleAction implements Action {
 				attackerRecall = recall;
 				attackerRetreatPicked = true;
 				if (recall) {
+					addRecruitBeastFromRemovedArmy(army);
 					army.recall();
 					attackerRetreatTilePicked = true;
 				} else {
@@ -761,6 +800,7 @@ public class BattleAction implements Action {
 				defenderRecall = recall;
 				defenderRetreatPicked = true;
 				if (recall) {
+					addRecruitBeastFromRemovedArmy(army);
 					army.recall();
 					defenderRetreatTilePicked = true;
 				} else {
@@ -905,6 +945,13 @@ public class BattleAction implements Action {
 			}
 		}
 
+		if (pendingActions != null) {
+			PlayerChoicePick nextPlayerChoicePick = pendingActions.getNextPlayerChoicePick();
+			if (nextPlayerChoicePick != null) {
+				return nextPlayerChoicePick;
+			}
+		}
+
 		if (!incrementedCounter) {
 			incrementedCounter = true;
 			game.battleCount++;
@@ -921,9 +968,9 @@ public class BattleAction implements Action {
 		if (defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
 			return false;
 		}
-		
+
 		return attackingUsedBattleCard == null && game.isSimulation()
-				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.index;
+				&& game.simulatedPlayerIndex == defendingArmy.owningPlayer.getIndex();
 	}
 
 	@Override
@@ -989,6 +1036,10 @@ public class BattleAction implements Action {
 			else if (!defenderRetreatTilePicked) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
 						attackingArmy.owningPlayer.getState(playerIndex));
+			} else {
+				if (pendingActions != null) {
+					pendingActions.fillCanonicalForm(cannonicalForm, playerIndex);
+				}
 			}
 		}
 	}
@@ -1036,6 +1087,7 @@ public class BattleAction implements Action {
 			PlayerChoicePick retreatTilePick = addArmyTileRetreatMoveChoice(true, tile);
 			if (!attackerWins && retreatTilePick.choiceList.size() == 0) {
 				// force a recall
+				addRecruitBeastFromRemovedArmy(attackingArmy);
 				attackingArmy.recall();
 				attackerRecall = true;
 				attackerRetreatPicked = true;
@@ -1048,6 +1100,7 @@ public class BattleAction implements Action {
 
 			if (attackerWins && !attackerDestroyed && retreatTilePick.choiceList.size() == 0) {
 				// force a recall
+				addRecruitBeastFromRemovedArmy(defendingArmy);
 				defendingArmy.recall();
 				defenderRecall = true;
 				defenderRetreatPicked = true;

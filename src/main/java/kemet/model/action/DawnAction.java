@@ -44,7 +44,7 @@ public class DawnAction implements Action {
 		boolean stepSet = false;
 
 		int playerCount = game.playerByInitiativeList.size();
-		for (int playerIndexByInitiative = playerCount; playerIndexByInitiative >= 0; --playerIndexByInitiative) {
+		for (int playerIndexByInitiative = playerCount - 1; playerIndexByInitiative >= 0; --playerIndexByInitiative) {
 
 			Player player = game.getPlayerByInitiativeIndex(playerIndexByInitiative);
 
@@ -86,21 +86,22 @@ public class DawnAction implements Action {
 			}
 		}
 
-		for (int playerIndexByInitiative = playerCount; playerIndexByInitiative >= 0; --playerIndexByInitiative) {
+		for (int playerIndexByInitiative = playerCount - 1; playerIndexByInitiative >= 0; --playerIndexByInitiative) {
 			byte dawnStrength = getPlayerDawnBattleStrengthByInitiativeIndex(playerIndexByInitiative);
 			Player player = game.getPlayerByInitiativeIndex(playerIndexByInitiative);
 			int canonicalPlayerIndex = player.getCanonicalPlayerIndex(playerIndex);
 			cannonicalForm.set(BoardInventory.PLAYER_DAWN_STRENGTH + canonicalPlayerIndex, dawnStrength);
 		}
 
-		if( initiativeSelectionOrderPlayerIndex != null ) {
-			
-			for (int currentPlayerIndex = playerCount; currentPlayerIndex >= 0; --currentPlayerIndex) {
+		if (initiativeSelectionOrderPlayerIndex != null) {
+
+			for (int currentPlayerIndex = playerCount -1; currentPlayerIndex >= 0; --currentPlayerIndex) {
 				byte order = selectedPlayerOrderByCurrentPlayerIndex[currentPlayerIndex];
-				if( order != -1 ) {
+				if (order != -1) {
 					Player player = game.getPlayerByIndex(currentPlayerIndex);
 					int canonicalPlayerIndex = player.getCanonicalPlayerIndex(playerIndex);
-					cannonicalForm.set(BoardInventory.PLAYER_SELECTED_ORDER + canonicalPlayerIndex * BoardInventory.PLAYER_COUNT + order -1, (byte)1);
+					cannonicalForm.set(BoardInventory.PLAYER_SELECTED_ORDER
+							+ canonicalPlayerIndex * BoardInventory.PLAYER_COUNT + order - 1, (byte) 1);
 				}
 			}
 		}
@@ -138,18 +139,18 @@ public class DawnAction implements Action {
 
 		if (selectedCardByCurrentPlayerIndex != null) {
 
-			selectedCardByCurrentPlayerIndex = Arrays.copyOf(selectedCardByCurrentPlayerIndex,
+			clone.selectedCardByCurrentPlayerIndex = Arrays.copyOf(selectedCardByCurrentPlayerIndex,
 					selectedCardByCurrentPlayerIndex.length);
-			discardedCardByCurrentPlayerIndex = Arrays.copyOf(discardedCardByCurrentPlayerIndex,
+			clone.discardedCardByCurrentPlayerIndex = Arrays.copyOf(discardedCardByCurrentPlayerIndex,
 					discardedCardByCurrentPlayerIndex.length);
-			dawnTokenByCurrentPlayerIndex = Arrays.copyOf(dawnTokenByCurrentPlayerIndex,
+			clone.dawnTokenByCurrentPlayerIndex = Arrays.copyOf(dawnTokenByCurrentPlayerIndex,
 					dawnTokenByCurrentPlayerIndex.length);
-			selectedPlayerOrderByCurrentPlayerIndex = Arrays.copyOf(selectedPlayerOrderByCurrentPlayerIndex,
+			clone.selectedPlayerOrderByCurrentPlayerIndex = Arrays.copyOf(selectedPlayerOrderByCurrentPlayerIndex,
 					selectedPlayerOrderByCurrentPlayerIndex.length);
 		}
 
-		if (initiativeSelectionOrderPlayerIndex == null) {
-			initiativeSelectionOrderPlayerIndex = Arrays.copyOf(initiativeSelectionOrderPlayerIndex,
+		if (initiativeSelectionOrderPlayerIndex != null) {
+			clone.initiativeSelectionOrderPlayerIndex = Arrays.copyOf(initiativeSelectionOrderPlayerIndex,
 					initiativeSelectionOrderPlayerIndex.length);
 		}
 
@@ -194,7 +195,7 @@ public class DawnAction implements Action {
 		// in reverse player order, pick attack card & dawn token
 
 		int playerCount = game.playerByInitiativeList.size();
-		for (int playerIndexByInitiative = playerCount-1; playerIndexByInitiative >= 0; --playerIndexByInitiative) {
+		for (int playerIndexByInitiative = playerCount - 1; playerIndexByInitiative >= 0; --playerIndexByInitiative) {
 
 			Player player = game.getPlayerByInitiativeIndex(playerIndexByInitiative);
 
@@ -237,7 +238,7 @@ public class DawnAction implements Action {
 
 		return null;
 	}
-	
+
 	private void checkToForceLastOrderSelection() {
 		int playerCount = game.playerByInitiativeList.size();
 		int choiceLeft = 0;
@@ -249,8 +250,8 @@ public class DawnAction implements Action {
 				remainingPlayerIndex = currentSelectingPlayerIndex;
 			}
 		}
-		
-		if( choiceLeft == 1 ) {
+
+		if (choiceLeft == 1) {
 			for (byte initiativeOrder = 1; initiativeOrder <= playerCount; ++initiativeOrder) {
 				if (!isPositionAlreadySelected(initiativeOrder)) {
 					selectedPlayerOrderByCurrentPlayerIndex[remainingPlayerIndex] = initiativeOrder;
@@ -259,7 +260,6 @@ public class DawnAction implements Action {
 			}
 		}
 	}
-
 
 	private void adjustPlayerOrder() {
 		int playerCount = game.playerByInitiativeList.size();
@@ -310,11 +310,10 @@ public class DawnAction implements Action {
 
 		@Override
 		public void choiceActivate() {
-			selectedPlayerOrderByCurrentPlayerIndex[player.index] = playerOrder;
-			
+			selectedPlayerOrderByCurrentPlayerIndex[player.getIndex()] = playerOrder;
+
 			checkToForceLastOrderSelection();
 		}
-
 
 		@Override
 		public int getIndex() {
@@ -344,15 +343,21 @@ public class DawnAction implements Action {
 
 			for (int i = 0; i < playerCount; ++i) {
 				int indexOfLargest = getIndexOfLargest(scoreByPlayerInitiativeIndex);
-				initiativeSelectionOrderPlayerIndex[i] = (byte) game.getPlayerByInitiativeIndex(indexOfLargest).index;
+				initiativeSelectionOrderPlayerIndex[i] = (byte) game.getPlayerByInitiativeIndex(indexOfLargest)
+						.getIndex();
 				scoreByPlayerInitiativeIndex[indexOfLargest] = -1;
 			}
 		}
 	}
 
 	private byte getPlayerDawnBattleStrengthByInitiativeIndex(int initiativeIndex) {
-		return (byte) (selectedCardByCurrentPlayerIndex[initiativeIndex].attackBonus
-				+ dawnTokenByCurrentPlayerIndex[initiativeIndex]);
+		BattleCard battleCard = selectedCardByCurrentPlayerIndex[initiativeIndex];
+		if( battleCard == null ) {
+			return (byte)0;
+		}
+		byte attackBonus = battleCard.attackBonus;
+		byte dawnTokenCount = dawnTokenByCurrentPlayerIndex[initiativeIndex];
+		return (byte) (attackBonus + dawnTokenCount);
 	}
 
 	public int getIndexOfLargest(byte[] array) {
@@ -487,7 +492,7 @@ public class DawnAction implements Action {
 				discardedCardByCurrentPlayerIndex[playerIndexByInitiative] = card;
 			} else {
 				if (game.isSimulation()) {
-					if (game.simulatedPlayerIndex != player.index) {
+					if (game.simulatedPlayerIndex != player.getIndex()) {
 						// skip discard card selection for other players during simulations
 						discardedCardByCurrentPlayerIndex[playerIndexByInitiative] = card;
 					}

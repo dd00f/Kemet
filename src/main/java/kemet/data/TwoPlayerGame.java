@@ -99,7 +99,7 @@ public class TwoPlayerGame implements GameFactory
         player.name = name;
         player.game = game;
         player.actor = new NeuralNetworkPlayer(player, game, "./temp/", "best.pth.tar");
-        player.index =  game.playerByInitiativeList.size();
+        player.setIndex(game.playerByInitiativeList.size());
         game.playerByInitiativeList.add(player);
 
         return player;
@@ -111,7 +111,7 @@ public class TwoPlayerGame implements GameFactory
         player.name = name;
         player.game = game;
         player.actor = new HumanPlayer(player, game);
-        player.index =  game.playerByInitiativeList.size();
+        player.setIndex(game.playerByInitiativeList.size());
         game.playerByInitiativeList.add(player);
 
         return player;
@@ -123,7 +123,7 @@ public class TwoPlayerGame implements GameFactory
         player.name = name;
         player.game = game;
         player.actor = new TrialPlayerAI(player, game);
-        player.index =  game.playerByInitiativeList.size();
+        player.setIndex(game.playerByInitiativeList.size());
         game.playerByInitiativeList.add(player);
 
         return player;
@@ -135,7 +135,7 @@ public class TwoPlayerGame implements GameFactory
         player.name = name;
         player.game = game;
         player.actor = new RandomPlayerAI(player, game);
-        player.index =  game.playerByInitiativeList.size();
+        player.setIndex(game.playerByInitiativeList.size());
         game.playerByInitiativeList.add(player);
 
         return player;

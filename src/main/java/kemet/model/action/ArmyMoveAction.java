@@ -32,7 +32,8 @@ public class ArmyMoveAction extends EndableAction {
 	public Tile destinationTile;
 	public byte movementLeft = 1;
 	public Army army;
-	public BattleAction battle;
+	public Action overridingAction;
+	public Action temporaryAction;
 	public boolean isTeleport = false;
 	public byte powerCost = 0;
 
@@ -52,7 +53,8 @@ public class ArmyMoveAction extends EndableAction {
 		destinationTile = null;
 		movementLeft = 1;
 		army = null;
-		battle = null;
+		overridingAction = null;
+		temporaryAction = null;
 		isTeleport = false;
 		powerCost = 0;
 
@@ -66,8 +68,11 @@ public class ArmyMoveAction extends EndableAction {
 		currentGame.validate(destinationTile);
 		currentGame.validate(army);
 
-		if (battle != null) {
-			battle.validate(this, currentGame);
+		if (overridingAction != null) {
+			overridingAction.validate(this, currentGame);
+		}
+		if (temporaryAction != null) {
+			temporaryAction.validate(this, currentGame);
 		}
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
@@ -80,8 +85,11 @@ public class ArmyMoveAction extends EndableAction {
 		player = clone.getPlayerByCopy(player);
 		army = clone.getArmyByCopy(army);
 		destinationTile = clone.getTileByCopy(destinationTile);
-		if (battle != null) {
-			battle.relink(clone);
+		if (overridingAction != null) {
+			overridingAction.relink(clone);
+		}
+		if (temporaryAction != null) {
+			temporaryAction.relink(clone);
 		}
 		super.relink(clone);
 
@@ -104,11 +112,18 @@ public class ArmyMoveAction extends EndableAction {
 		clone.destinationTile = destinationTile;
 		clone.movementLeft = movementLeft;
 		clone.army = army;
-		clone.battle = battle;
-		if (battle != null) {
-			clone.battle = battle.deepCacheClone();
-			clone.battle.setParent(clone);
+		clone.overridingAction = overridingAction;
+		if (overridingAction != null) {
+			clone.overridingAction = overridingAction.deepCacheClone();
+			clone.overridingAction.setParent(clone);
 		}
+
+		clone.temporaryAction = temporaryAction;
+		if (temporaryAction != null) {
+			clone.temporaryAction = temporaryAction.deepCacheClone();
+			clone.temporaryAction.setParent(clone);
+		}
+
 		clone.isTeleport = isTeleport;
 		clone.powerCost = powerCost;
 		clone.parent = parent;
@@ -118,8 +133,11 @@ public class ArmyMoveAction extends EndableAction {
 
 	@Override
 	public void release() {
-		if (battle != null) {
-			battle.release();
+		if (overridingAction != null) {
+			overridingAction.release();
+		}
+		if (temporaryAction != null) {
+			temporaryAction.release();
 		}
 		clear();
 		CACHE.release(this);
@@ -131,7 +149,8 @@ public class ArmyMoveAction extends EndableAction {
 		player = null;
 		destinationTile = null;
 		army = null;
-		battle = null;
+		overridingAction = null;
+		temporaryAction = null;
 		parent = null;
 
 		super.clear();
@@ -237,7 +256,7 @@ public class ArmyMoveAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickDestinationTile.getPickChoiceIndex(player.index);
+			return pickDestinationTile.getPickChoiceIndex(player.getIndex());
 		}
 
 	}
@@ -336,7 +355,7 @@ public class ArmyMoveAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return armyPick.tile.getPickChoiceIndex(player.index);
+			return armyPick.tile.getPickChoiceIndex(player.getIndex());
 		}
 
 	}
@@ -351,19 +370,30 @@ public class ArmyMoveAction extends EndableAction {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
+
+		if (temporaryAction != null) {
+			PlayerChoicePick tempNextChoice = temporaryAction.getNextPlayerChoicePick();
+			if (tempNextChoice == null) {
+				temporaryAction = null;
+			} else {
+				return tempNextChoice;
+			}
+		}
+		
 		if (isEnded()) {
 			return null;
 		}
 
-		if (battle != null) {
-			return battle.getNextPlayerChoicePick();
+		if (overridingAction != null) {
+			return overridingAction.getNextPlayerChoicePick();
 		}
 
 		if (army == null) {
 			// pick army
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 			addArmyPickMoveChoice(pick.choiceList);
-			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
+					ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
 			return pick.validate();
 		}
 
@@ -379,12 +409,14 @@ public class ArmyMoveAction extends EndableAction {
 					return null;
 				}
 
-				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
+						ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
 				return pick.validate();
 			} else {
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 				addArmySizeMoveChoice(pick.choiceList);
-				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
+						ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
 				return pick.validate();
 			}
 
@@ -405,9 +437,12 @@ public class ArmyMoveAction extends EndableAction {
 		cannonicalForm.set(BoardInventory.MOVES_LEFT, movementLeft);
 		cannonicalForm.set(BoardInventory.IS_FIRST_MOVE, (byte) (firstMove ? 1 : 0));
 
-		if (battle != null) {
-			battle.fillCanonicalForm(cannonicalForm, playerIndex);
+		if (temporaryAction != null) {
+			temporaryAction.fillCanonicalForm(cannonicalForm, playerIndex);
+		}
 
+		if (overridingAction != null) {
+			overridingAction.fillCanonicalForm(cannonicalForm, playerIndex);
 		}
 
 		if (army == null) {
@@ -434,13 +469,14 @@ public class ArmyMoveAction extends EndableAction {
 
 		// if friendly army, limit size & beast choice
 		byte sourceArmySize = army.armySize;
-		if (destinationTile.getArmy() != null && destinationTile.getArmy().owningPlayer == player) {
+		Army destinationTileArmy = destinationTile.getArmy();
+		if (destinationTileArmy != null && destinationTileArmy.owningPlayer == player) {
 
-			int destinationRemainingCapacity = player.maximumArmySize - destinationTile.getArmy().armySize;
+			int destinationRemainingCapacity = player.maximumArmySize - destinationTileArmy.armySize;
 			byte maxSize = (byte) Math.min(sourceArmySize, destinationRemainingCapacity);
 
 			addAllArmySizeMoveChoice(choiceList, (byte) 1, maxSize, false);
-			if (army.beast != null && destinationTile.getArmy() == null) {
+			if (army.beast != null && destinationTileArmy.beast == null) {
 				// add options to move beast
 				addAllArmySizeMoveChoice(choiceList, (byte) 0, sourceArmySize, true);
 			}
@@ -494,18 +530,19 @@ public class ArmyMoveAction extends EndableAction {
 
 			Army armyThatKeepsMoving = null;
 
-			if (destinationTile.getArmy() != null) {
+			Army destinationArmy = destinationTile.getArmy();
+			if (destinationArmy != null) {
 				// there is an army at the destination
 
-				if (destinationTile.getArmy().owningPlayer == army.owningPlayer) {
+				if (destinationArmy.owningPlayer == army.owningPlayer) {
 					// player merging army
-					army.transferSoldiersToArmy(destinationTile.getArmy(), moveSoldierCount);
+					army.transferSoldiersToArmy(destinationArmy, moveSoldierCount);
 					if (moveBeast) {
-						army.transferBeastToArmy(destinationTile.getArmy());
+						army.transferBeastToArmy(destinationArmy);
 					}
 					army.checkToDisbandArmy();
 
-					armyThatKeepsMoving = destinationTile.getArmy();
+					armyThatKeepsMoving = destinationArmy;
 
 				} else {
 					// battle about to begin
@@ -524,39 +561,45 @@ public class ArmyMoveAction extends EndableAction {
 									PowerList.BLACK_4_DIVINE_STRENGTH.toString());
 						}
 
-					
 					}
-					
-					if (destinationTile.getArmy().owningPlayer.hasPower(PowerList.BLACK_3_DEADLY_TRAP)) {
+
+					if (destinationArmy.owningPlayer.hasPower(PowerList.BLACK_3_DEADLY_TRAP)) {
 
 						byte enemyArmySize = army.armySize;
 						byte damageDone = (byte) Math.min(1, enemyArmySize);
 						army.bleedArmy(damageDone, PowerList.BLACK_3_DEADLY_TRAP.toString());
 
 						if (damageDone == enemyArmySize) {
+							battleContinues = false;
 							battleCancelledAttackerDestroyed = true;
+							addRecruitBeastFromRemovedArmy(army);
 							army.destroyArmy();
+							armyThatKeepsMoving = null;
+							movementLeft = 0;
+							end();
 						}
 					}
 
 					if (army.owningPlayer.hasPower(PowerList.RED_4_INITIATIVE)) {
 
-						byte enemyArmySize = destinationTile.getArmy().armySize;
+						byte enemyArmySize = destinationArmy.armySize;
 						byte damageDone = (byte) Math.min(2, enemyArmySize);
-						destinationTile.getArmy().bleedArmy(damageDone, PowerList.RED_4_INITIATIVE.toString());
+						destinationArmy.bleedArmy(damageDone, PowerList.RED_4_INITIATIVE.toString());
 
 						if (damageDone == enemyArmySize) {
 							battleContinues = false;
-							destinationTile.getArmy().destroyArmy();
+							addRecruitBeastFromRemovedArmy(destinationArmy);
+							destinationArmy.destroyArmy();
 						}
 					}
 
 					if (battleContinues) {
-						battle = BattleAction.create(game, ArmyMoveAction.this);
-						battle.attackingArmy = army;
-						battle.defendingArmy = destinationTile.getArmy();
-						battle.tile = destinationTile;
-					} else if ( ! battleCancelledAttackerDestroyed ) {
+						BattleAction battleAction = BattleAction.create(game, ArmyMoveAction.this);
+						battleAction.attackingArmy = army;
+						battleAction.defendingArmy = destinationArmy;
+						battleAction.tile = destinationTile;
+						overridingAction = battleAction;
+					} else if (!battleCancelledAttackerDestroyed) {
 						army.moveToTile(destinationTile);
 						armyThatKeepsMoving = army;
 					}
@@ -597,6 +640,7 @@ public class ArmyMoveAction extends EndableAction {
 			if (soldierLeft == 0) {
 				// nobody left behind, simple move
 				if (!moveBeast) {
+					addRecruitBeastFromRemovedArmy(army);
 					army.returnBeastToPlayer();
 				}
 
@@ -605,7 +649,7 @@ public class ArmyMoveAction extends EndableAction {
 				Army createArmy = player.createArmy();
 				army.transferSoldiersToArmy(createArmy, soldierLeft);
 				createArmy.moveToTile(previousTile);
-				if (moveBeast) {
+				if (!moveBeast) {
 					army.transferBeastToArmy(createArmy);
 				}
 			}
@@ -615,12 +659,34 @@ public class ArmyMoveAction extends EndableAction {
 		public int getIndex() {
 
 			if (moveSoldierCount == 0) {
-				log.error("Move army size of 0 isn't valid yet in the AI choices");
+
+				if (moveBeast) {
+					return ChoiceInventory.ONLY_BEAST_MOVE;
+				} else {
+					log.error("Move army size of 0 isn't valid");
+
+					return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
+				}
+
+			}
+
+			if (moveBeast) {
+				return ChoiceInventory.ARMY_SIZE_WITH_BEAST_CHOICE + moveSoldierCount - 1;
 			}
 
 			return ChoiceInventory.ARMY_SIZE_CHOICE + moveSoldierCount - 1;
 		}
 
+	}
+
+	public void addRecruitBeastFromRemovedArmy(Army removedArmy) {
+		if (removedArmy.beast != null) {
+			if (temporaryAction == null) {
+				temporaryAction = BeastRecruitAction.create(game, removedArmy.owningPlayer, this, removedArmy.beast);
+			} else {
+				log.error("temporaryAction was expected to be empty, but was {}", temporaryAction);
+			}
+		}
 	}
 
 	@Override

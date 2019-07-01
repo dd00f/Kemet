@@ -53,6 +53,7 @@ MEDIUM
 		- Blue - 4 - Divine Will - Gold move/recruit
 		- Black - 3 - Forced March gold move.
 		- purple - Seth only - 4 - Magic Versatility - Transparent token.
+		- White 2 - crusade - +2 power per unit destroyed in combat
 		
 LOW
 		- Red - 1 - +1 strength on attack

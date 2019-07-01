@@ -2,7 +2,6 @@ package kemet.model.action;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import kemet.model.Army;
 import kemet.model.Beast;
@@ -21,13 +20,13 @@ import kemet.util.Cache;
 
 public class RecruitAction extends EndableAction {
 
+
+
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 6892956969199413627L;
-
-	public static final Logger LOGGER = Logger.getLogger(RecruitAction.class.getName());
-
+	private static final long serialVersionUID = -3010582557508632609L;
+	
 	public Tile tile;
 	public Beast beast;
 	public byte cost;
@@ -62,7 +61,6 @@ public class RecruitAction extends EndableAction {
 			// trigger battle actions
 			battles.fillCanonicalForm(cannonicalForm, playerIndex);
 			return;
-
 		}
 
 		for (Tile tile : pickedTiles) {
@@ -79,9 +77,9 @@ public class RecruitAction extends EndableAction {
 			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
 
 		} else if (playerHasBeastAvailable()) {
-
-			// TODO pick beast
-
+			cannonicalForm.set(BoardInventory.STATE_PICK_BEAST, player.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.PICKED_SIZE, recruitSize );
+			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
 		}
 
 	}
@@ -131,7 +129,9 @@ public class RecruitAction extends EndableAction {
 			pickedTiles.set(i, game.getTileByCopy(pickedTiles.get(i)));
 		}
 
-		battles.relink(clone);
+		if (battles != null) {
+			battles.relink(clone);
+		}
 
 		super.relink(clone);
 	}
@@ -318,9 +318,11 @@ public class RecruitAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			// TODO support this.
-			LOGGER.severe("Beast recruitment isn't supported yet.");
-			return 0;
+			if (pickBeast == null) {
+				return ChoiceInventory.KEEP_BEAST;
+			}
+			
+			return pickBeast.index + ChoiceInventory.PICK_BEAST;
 		}
 
 	}
@@ -374,9 +376,10 @@ public class RecruitAction extends EndableAction {
 
 		if (freeRecruitLeft < 0) {
 			freeRecruitLeft = 0;
-			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE)) {
+			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE_1)) {
 				freeRecruitLeft += 2;
 			}
+			
 			if (player.hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
 				freeRecruitLeft += 1;
 			}
@@ -397,7 +400,7 @@ public class RecruitAction extends EndableAction {
 
 				addRecruitArmySizeChoice(pick.choiceList);
 
-				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 				return pick.validate();
 			} else if (playerHasBeastAvailable()) {
 
@@ -405,7 +408,7 @@ public class RecruitAction extends EndableAction {
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 				addRecruitBeastChoice(pick.choiceList);
-				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 				return pick.validate();
 			}
 		} else {
@@ -423,7 +426,7 @@ public class RecruitAction extends EndableAction {
 
 			}
 
-			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this);
+			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 			return pick.validate();
 		}
 		return null;
@@ -572,7 +575,7 @@ public class RecruitAction extends EndableAction {
 
 		@Override
 		public int getIndex() {
-			return pickTile.getPickChoiceIndex(player.index);
+			return pickTile.getPickChoiceIndex(player.getIndex());
 		}
 	}
 

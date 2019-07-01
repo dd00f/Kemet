@@ -2,13 +2,14 @@ package kemet.ai;
 
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Logger;
 
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.action.PlayerChoicePick;
 import kemet.model.action.choice.Choice;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class RandomPlayerAI extends PlayerActor {
 
 	/**
@@ -16,7 +17,6 @@ public class RandomPlayerAI extends PlayerActor {
 	 */
 	private static final long serialVersionUID = 9176413876584129621L;
 
-	public static final Logger LOGGER = Logger.getLogger(RandomPlayerAI.class.getName());
 
 	private Random r = new Random();
 	
@@ -41,7 +41,7 @@ public class RandomPlayerAI extends PlayerActor {
         }
 
         if (choiceList.size() == 0) {
-            LOGGER.warning("no choice supplied in list.");
+            log.warn("no choice supplied in list.");
             try {
                 NullPointerException ex = new NullPointerException();
                 throw ex;

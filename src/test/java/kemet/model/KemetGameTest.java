@@ -17,17 +17,17 @@ class KemetGameTest {
 
 		Player player = Player.create();
 
-		player.index = 0;
+		player.setIndex(0);
 		assertEquals(0, player.getCanonicalPlayerIndex(0));
 		assertEquals(1, player.getCanonicalPlayerIndex(1));
 		assertEquals(1, player.getCanonicalPlayerIndex(2));
 
-		player.index = 1;
+		player.setIndex(1);
 		assertEquals(1, player.getCanonicalPlayerIndex(0));
 		assertEquals(0, player.getCanonicalPlayerIndex(1));
 		assertEquals(2, player.getCanonicalPlayerIndex(2));
 
-		player.index = 2;
+		player.setIndex(2);
 		assertEquals(2, player.getCanonicalPlayerIndex(0));
 		assertEquals(2, player.getCanonicalPlayerIndex(1));
 		assertEquals(0, player.getCanonicalPlayerIndex(2));

@@ -1,6 +1,7 @@
 package kemet.model.action.choice;
 
 import kemet.model.BattleCard;
+import kemet.model.BeastList;
 import kemet.model.BoardInventory;
 import kemet.model.PowerList;
 
@@ -74,26 +75,44 @@ public class ChoiceInventory {
 	static {
 		INDEXER += BoardInventory.MAX_DAWN_TOKEN + 1;
 	}
-	
+
 	public static final int PICK_PLAYER_ORDER = INDEXER;
 	static {
 		INDEXER += BoardInventory.PLAYER_COUNT;
 	}
-	
+
 	// 1 pick for this
 	public static final int PASS_RECRUIT_CHOICE_INDEX = INDEXER++;
 
 	// 1 pick for this
 	public static final int PASS_RECALL_CHOICE_INDEX = INDEXER++;
 
-	
 	public static final int BUY_POWER = INDEXER;
 	static {
 		INDEXER += PowerList.POWER_INDEXER;
 	}
-	
-	public static final int TOTAL_CHOICE = INDEXER;
 
+	public static final int PICK_BEAST = INDEXER;
+	static {
+		INDEXER += BeastList.BEAST_INDEXER;
+	}
+	
+	// 1 pick
+	public static final int ONLY_BEAST_MOVE = INDEXER++;
+
+	// 7 picks for this
+	public static final int ARMY_SIZE_WITH_BEAST_CHOICE = INDEXER;
+	static {
+		INDEXER += BoardInventory.LARGEST_ARMY;
+	}
+	
+	// 1 pick
+	public static final int BUY_NOTHING = INDEXER++;
+	public static final int KEEP_BEAST = INDEXER++;
+	public static final int UPGRADE_NOTHING = INDEXER++;
+	public static final int END_RECRUIT = INDEXER++;
+
+	public static final int TOTAL_CHOICE = INDEXER;
 
 	public static void main(String[] args) {
 
@@ -119,16 +138,20 @@ public class ChoiceInventory {
 		System.out.println("PICK_GOLD_PRAY " + PICK_GOLD_PRAY);
 		System.out.println("PICK_GOLD_MOVE " + PICK_GOLD_MOVE);
 		System.out.println("PICK_GOLD_RECRUIT " + PICK_GOLD_RECRUIT);
-		
+
 		System.out.println("PICK_DAWN_TOKEN " + PICK_DAWN_TOKEN);
 		System.out.println("PICK_PLAYER_ORDER " + PICK_PLAYER_ORDER);
 		System.out.println("PASS_RECRUIT_CHOICE_INDEX " + PASS_RECRUIT_CHOICE_INDEX);
 		System.out.println("PASS_RECALL_CHOICE_INDEX " + PASS_RECALL_CHOICE_INDEX);
 		System.out.println("BUY_POWER " + BUY_POWER);
-		System.out.println("LAST_INDEX " + ( INDEXER -1 ) );
+		System.out.println("PICK_BEAST " + PICK_BEAST);
+		System.out.println("ARMY_SIZE_WITH_BEAST_CHOICE " + ARMY_SIZE_WITH_BEAST_CHOICE);
+		System.out.println("BUY_NOTHING " + BUY_NOTHING);
+		System.out.println("KEEP_BEAST " + KEEP_BEAST);
+		System.out.println("KEEP_BEAST " + END_RECRUIT);
+		System.out.println("UPGRADE_NOTHING " + UPGRADE_NOTHING);
+		System.out.println("LAST_INDEX " + (INDEXER - 1));
 
-		
-		
 //		Choice Index List
 //		PASS_CHOICE_INDEX 0
 //		ARMY_SIZE_CHOICE 1

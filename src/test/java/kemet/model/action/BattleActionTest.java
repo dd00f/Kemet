@@ -3,10 +3,6 @@ package kemet.model.action;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +10,6 @@ import kemet.ai.TrialPlayerAI;
 import kemet.data.TwoPlayerGame;
 import kemet.model.Army;
 import kemet.model.BattleCard;
-import kemet.model.Beast;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.Tile;
@@ -23,7 +18,7 @@ import kemet.model.action.choice.Choice;
 
 public class BattleActionTest {
 
-	private static final int CLONE_COUNT = 1000000;
+//	private static final int CLONE_COUNT = 1000000;
 	TwoPlayerGame tpg = new TwoPlayerGame();
 	private Army redArmy;
 	private Army blueArmy;
@@ -61,7 +56,7 @@ public class BattleActionTest {
 		ArmyMoveAction armyMoveAction = ArmyMoveAction.create(game, bluePlayer, tokenPick);
 		tokenPick.nextAction = armyMoveAction;
 		battle = BattleAction.create(game, armyMoveAction);
-		armyMoveAction.battle = battle;
+		armyMoveAction.overridingAction = battle;
 
 		Tile battleTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		redArmy.moveToTile(battleTile);
@@ -73,7 +68,7 @@ public class BattleActionTest {
 
 	@Test
 	public void testDeepCloning() {
-		
+
 		game.validate();
 
 		for (int i = 0; i < 10000; ++i) {
@@ -176,64 +171,64 @@ public class BattleActionTest {
 
 	}
 
-	List<Beast> cache = new ArrayList<>();
+//	List<Beast> cache = new ArrayList<>();
+//
+//	public Beast fetchFromCache() {
+//		if (cache.size() == 0) {
+//			return new Beast();
+//		}
+//		return cache.remove(cache.size() - 1);
+//	}
+//
+//	public void releaseToCache(Beast beast) {
+//		cache.add(beast);
+//	}
+//
+//	@Test
+//	void speedTestSerializationUtilClone() {
+//
+//		Beast originalBeast = new Beast();
+//		originalBeast.bloodBonus = 3;
+//		originalBeast.fightBonus = 4;
+//		originalBeast.moveBonus = 5;
+//		originalBeast.name = "lasdjfkljasd flkj";
+//		originalBeast.shieldBonus = 6;
+//
+//		int copyCount = 1000000;
+//
+//		for (int i = 0; i < copyCount; i++) {
+//			SerializationUtils.clone(originalBeast);
+//		}
+//
+//	}
 
-	public Beast fetchFromCache() {
-		if (cache.size() == 0) {
-			return new Beast();
-		}
-		return cache.remove(cache.size() - 1);
-	}
+//	@Test
+//	void speedTestCache() {
+//
+//		Beast originalBeast = new Beast();
+//		originalBeast.bloodBonus = 3;
+//		originalBeast.fightBonus = 4;
+//		originalBeast.moveBonus = 5;
+//		originalBeast.name = "lasdjfkljasd flkj";
+//		originalBeast.shieldBonus = 6;
+//
+//		int copyCount = CLONE_COUNT;
+//
+//		for (int i = 0; i < copyCount; i++) {
+//			Beast fetchFromCache = fetchFromCache();
+//			fetchFromCache.copy(originalBeast);
+//			releaseToCache(fetchFromCache);
+//		}
+//	}
 
-	public void releaseToCache(Beast beast) {
-		cache.add(beast);
-	}
-
-	@Test
-	void speedTestSerializationUtilClone() {
-
-		Beast originalBeast = new Beast();
-		originalBeast.bloodBonus = 3;
-		originalBeast.fightBonus = 4;
-		originalBeast.moveBonus = 5;
-		originalBeast.name = "lasdjfkljasd flkj";
-		originalBeast.shieldBonus = 6;
-
-		int copyCount = 1000000;
-
-		for (int i = 0; i < copyCount; i++) {
-			SerializationUtils.clone(originalBeast);
-		}
-
-	}
-
-	@Test
-	void speedTestCache() {
-
-		Beast originalBeast = new Beast();
-		originalBeast.bloodBonus = 3;
-		originalBeast.fightBonus = 4;
-		originalBeast.moveBonus = 5;
-		originalBeast.name = "lasdjfkljasd flkj";
-		originalBeast.shieldBonus = 6;
-
-		int copyCount = CLONE_COUNT;
-
-		for (int i = 0; i < copyCount; i++) {
-			Beast fetchFromCache = fetchFromCache();
-			fetchFromCache.copy(originalBeast);
-			releaseToCache(fetchFromCache);
-		}
-	}
-	
-	@Test
-	void testtest() throws InterruptedException {
-		
-		String format = String.format("Explored %1$,d choices in %2$02dh%3$02dm%4$02ds , recent speed : %5$,d choice per second. Best Outcome : %6$s",
-				 100000000000l , 1, 2 , 3, 123123 , "[1,2,3]");
-		System.out.println(format);
-		
-		Thread.sleep(1000);
-	}
+//	@Test
+//	void testtest() throws InterruptedException {
+//		
+//		String format = String.format("Explored %1$,d choices in %2$02dh%3$02dm%4$02ds , recent speed : %5$,d choice per second. Best Outcome : %6$s",
+//				 100000000000l , 1, 2 , 3, 123123 , "[1,2,3]");
+//		System.out.println(format);
+//		
+//		Thread.sleep(1000);
+//	}
 
 }

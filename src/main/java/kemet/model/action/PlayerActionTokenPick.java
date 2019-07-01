@@ -215,10 +215,11 @@ public class PlayerActionTokenPick implements Action {
 			boolean hasDivineWill = currentPlayer.hasPower(PowerList.BLUE_4_DIVINE_WILL);
 			boolean hasForcedMarch = currentPlayer.hasPower(PowerList.BLACK_3_FORCED_MARCH);
 			if (hasDivineWill || hasForcedMarch) {
-				// TODO add gold move
+				choiceList.add(new MoveChoice(game, player, (byte) 0, true));
 			}
 			if (hasDivineWill) {
-				// TODO add gold recruit
+				// add gold recruit
+				choiceList.add(new RecruitChoice(game, player, (byte) 0, true));
 			}
 			if (currentPlayer.hasPower(PowerList.BLACK_1_DARK_RITUAL)) {
 				// add pray
@@ -239,9 +240,12 @@ public class PlayerActionTokenPick implements Action {
 
 	public class MoveChoice extends PlayerChoice {
 
-		public MoveChoice(KemetGame game, Player player, byte row) {
+		private boolean isGold;
+
+		public MoveChoice(KemetGame game, Player player, byte row, boolean isGold) {
 			super(game, player);
 			this.row = row;
+			this.isGold = isGold;
 		}
 
 		public byte row;
@@ -249,24 +253,32 @@ public class PlayerActionTokenPick implements Action {
 		@Override
 		public String describe() {
 
+			if (isGold) {
+				return "Move action, gold token";
+			}
 			return "Move action, row " + row;
 		}
 
 		@Override
 		public void choiceActivate() {
-			if (row == 1) {
-				player.rowOneMoveUsed = true;
-			} else {
-				player.rowTwoMoveUsed = true;
+			if (!isGold) {
+				if (row == 1) {
+					player.rowOneMoveUsed = true;
+				} else {
+					player.rowTwoMoveUsed = true;
+				}
 			}
 
 			ArmyMoveAction action = ArmyMoveAction.create(game, player, PlayerActionTokenPick.this);
-			addNextAction(action, false);
+			addNextAction(action, isGold);
 
 		}
 
 		@Override
 		public int getIndex() {
+			if (isGold) {
+				return ChoiceInventory.PICK_GOLD_MOVE;
+			}
 			if (row == 1) {
 				return ChoiceInventory.PICK_ROW_ONE_MOVE;
 			}
@@ -314,7 +326,7 @@ public class PlayerActionTokenPick implements Action {
 		@Override
 		public String describe() {
 
-			if( isGold ) {
+			if (isGold) {
 				return "Prayer action, gold token, with " + player.getPrayerPoints() + " prayer points, pray for "
 						+ increasedPower + " prayer points";
 			}
@@ -325,7 +337,7 @@ public class PlayerActionTokenPick implements Action {
 
 		@Override
 		public int getIndex() {
-			if( isGold ) {
+			if (isGold) {
 				return ChoiceInventory.PICK_GOLD_PRAY;
 			}
 			if (row == 2) {
@@ -367,9 +379,12 @@ public class PlayerActionTokenPick implements Action {
 
 	public class RecruitChoice extends PlayerChoice {
 
-		public RecruitChoice(KemetGame game, Player player, byte row) {
+		private boolean isGold;
+
+		public RecruitChoice(KemetGame game, Player player, byte row, boolean isGold) {
 			super(game, player);
 			this.row = row;
+			this.isGold = isGold;
 		}
 
 		public byte row;
@@ -377,21 +392,29 @@ public class PlayerActionTokenPick implements Action {
 		@Override
 		public String describe() {
 
+			if (isGold) {
+				return "Recruit action gold token";
+			}
 			return "Recruit action row " + row;
 
 		}
 
 		@Override
 		public void choiceActivate() {
-			player.rowOneRecruitUsed = true;
+			if (!isGold) {
+				player.rowOneRecruitUsed = true;
+			}
 
 			RecruitAction action = RecruitAction.create(game, player, PlayerActionTokenPick.this);
-			addNextAction(action, false);
+			addNextAction(action, isGold);
 
 		}
 
 		@Override
 		public int getIndex() {
+			if (isGold) {
+				return ChoiceInventory.PICK_GOLD_RECRUIT;
+			}
 			return ChoiceInventory.PICK_ROW_ONE_RECRUIT;
 		}
 
@@ -578,7 +601,7 @@ public class PlayerActionTokenPick implements Action {
 
 	private void addRowTwoActions(Player player, List<Choice> choiceList) {
 		if (!player.rowTwoMoveUsed) {
-			choiceList.add(new MoveChoice(game, player, (byte) 2));
+			choiceList.add(new MoveChoice(game, player, (byte) 2, false));
 		}
 		if (!player.rowTwoPrayUsed) {
 			choiceList.add(new PrayerChoice(game, player, (byte) 2, false));
@@ -590,10 +613,10 @@ public class PlayerActionTokenPick implements Action {
 
 	private void addRowOneActions(Player player, List<Choice> choiceList) {
 		if (!player.rowOneMoveUsed) {
-			choiceList.add(new MoveChoice(game, player, (byte) 1));
+			choiceList.add(new MoveChoice(game, player, (byte) 1, false));
 		}
 		if (!player.rowOneRecruitUsed) {
-			choiceList.add(new RecruitChoice(game, player, (byte) 1));
+			choiceList.add(new RecruitChoice(game, player, (byte) 1, false));
 		}
 	}
 

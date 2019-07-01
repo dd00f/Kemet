@@ -113,6 +113,7 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 		printValue(board, build, BoardInventory.STATE_PICK_DEFENSE_DISCARD,  " STATE_PICK_DEFENSE_DISCARD ", 1);
 		printValue(board, build, BoardInventory.STATE_PICK_ARMY_SIZE,  " STATE_PICK_ARMY_SIZE ", 1);
 		printValue(board, build, BoardInventory.STATE_PICK_TILE,  " STATE_PICK_TILE ", 1);
+		printValue(board, build, BoardInventory.STATE_PICK_BEAST,  " STATE_PICK_BEAST ", 1);
 		printValue(board, build, BoardInventory.STATE_PICK_SOURCE_TILE,  " STATE_PICK_SOURCE_TILE ", 1);
 		printValue(board, build, BoardInventory.STATE_PICK_PYRAMID_COLOR,  " STATE_PICK_PYRAMID_COLOR ", 1);
 		printValue(board, build, BoardInventory.STATE_PICK_PYRAMID_LEVEL,  " STATE_PICK_PYRAMID_LEVEL ", 1);
