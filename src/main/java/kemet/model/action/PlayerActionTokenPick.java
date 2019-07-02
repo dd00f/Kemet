@@ -460,7 +460,7 @@ public class PlayerActionTokenPick implements Action {
 				}
 			}
 
-			BuyPowerAction action = BuyPowerAction.create(game, player, parent, color, costBoost);
+			BuyPowerAction action = BuyPowerAction.create(game, player, PlayerActionTokenPick.this, color, costBoost);
 
 			addNextAction(action, isGold);
 		}

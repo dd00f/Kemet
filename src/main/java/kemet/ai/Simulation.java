@@ -517,7 +517,9 @@ public class Simulation {
 		}
 
 		PlayerActionTokenPick currentAction = getActionTokenPick(nextPick);
-		return currentAction.getPlayer().name.equals(actionTokenPick.getPlayer().name);
+		Player currentPlayer = currentAction.getPlayer();
+		Player tokenPickPlayer = actionTokenPick.getPlayer();
+		return currentPlayer.name.equals(tokenPickPlayer.name);
 	}
 
 	private PlayerActionTokenPick getActionTokenPick(PlayerChoicePick nextPick) {

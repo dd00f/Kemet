@@ -11,12 +11,91 @@ import org.junit.jupiter.api.Test;
 import kemet.data.TwoPlayerGame;
 import kemet.model.BattleCard;
 import kemet.model.BeastList;
+import kemet.model.Color;
 import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.action.choice.ChoiceInventory;
 
 public class BeastTest extends TwoPlayerGameTest {
 
+	
+	@Test
+	public void test_cleanGame() {
+		tpg = new TwoPlayerGame();
+		tpg.createAIPlayer("red");
+		tpg.createAIPlayer("blue");
+		tpg.createTiles();
+
+		game = tpg.game;
+		// game.setPrintActivations(false);
+
+		redPlayer = game.playerByInitiativeList.get(0);
+		bluePlayer = game.playerByInitiativeList.get(1);
+	
+		// initialization
+		pickPyramidLevel(2);
+		pickPyramidColor(Color.RED);
+		pickPyramidColor(Color.BLACK);
+		pickPyramidLevel(2);
+		pickPyramidColor(Color.BLUE);
+		pickPyramidColor(Color.WHITE);
+		recruitArmySize(5);
+		recruitArmySize(5);
+		recruitArmySize(5);
+		recruitArmySize(5);
+
+		// turn one
+		upgradePyramid(4, redPlayer.cityTiles.get(0));
+		upgradePyramid(4, bluePlayer.cityTiles.get(0));
+		prayRowThree();
+		prayRowThree();
+		prayRowTwo();
+		prayRowTwo();
+		
+		startRowOneMove();
+		moveFirstTile(redPlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		endMove();
+		
+		startRowOneMove();
+		moveFirstTile(bluePlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+
+		
+		moveRowTwoZeroArmy();
+		moveRowTwoZeroArmy();
+
+
+		// turn two
+		battlePick(BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD, BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD);
+		pickPlayerOrder(1);
+		prayRowThree();
+		prayRowThree();
+		prayRowTwo();
+		prayRowTwo();
+		upgradePyramid(4, redPlayer.cityTiles.get(1));
+		upgradePyramid(4, bluePlayer.cityTiles.get(1));
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+		moveRowTwoZeroArmy();
+		moveRowTwoZeroArmy();
+
+		// turn three
+		battlePick(BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD, BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD);
+		pickPlayerOrder(1);
+//		prayRowThree();
+//		prayRowThree();
+//		prayRowTwo();
+//		prayRowTwo();
+//		upgradePyramid(4, redPlayer.cityTiles.get(1));
+//		upgradePyramid(4, bluePlayer.cityTiles.get(1));
+//		moveRowOneZeroArmy();
+//		moveRowOneZeroArmy();
+//		moveRowTwoZeroArmy();
+//		moveRowTwoZeroArmy();
+
+
+
+	}
+	
 	@Test
 	public void test_beastRecruitAfterRecall() {
 

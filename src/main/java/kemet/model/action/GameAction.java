@@ -123,14 +123,14 @@ public class GameAction implements Action {
                 return null;
             }
         	
-            chainedActions.add(NightAction.create(game, this));
+            chainedActions.add(NightAction.create(game, chainedActions));
             
             addBlue4ReinforcementsAction();
             
             addWhite3HandOfGodAction();
             
             if (!game.isFirstTurn()) {
-            	chainedActions.add(DawnAction.create(game, this));
+            	chainedActions.add(DawnAction.create(game, chainedActions));
             }
             chainedActions.add(createDayAction(game, chainedActions));
             nextPlayerChoicePick = chainedActions.getNextPlayerChoicePick();

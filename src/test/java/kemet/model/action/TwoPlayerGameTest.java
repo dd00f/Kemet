@@ -1,5 +1,7 @@
 package kemet.model.action;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import org.junit.jupiter.api.BeforeEach;
 
 import kemet.data.TwoPlayerGame;
@@ -11,7 +13,9 @@ import kemet.model.Player;
 import kemet.model.Power;
 import kemet.model.Tile;
 import kemet.model.action.choice.ChoiceInventory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class TwoPlayerGameTest {
 
 	TwoPlayerGame tpg = new TwoPlayerGame();
@@ -69,13 +73,7 @@ public class TwoPlayerGameTest {
 		// Army : blue army 2 of size 5 on tile : blue district 2 with pyramid WHITE of
 		// level 4
 
-//		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 42, 14, 29, 42, 14, 29, 44, 44, 43,
-//				43, 39, 14, 11, 5, 0, 39, 14, 13, 5, 41, 11, 0, 41, 0, 37, 36, 37, 36, 60, 43, 43, 44, 44, 42, 15, 29,
-//				42, 15, 29, 39, 0, 39, 0, 40, 0, 40, 0, 34, 35, 34, 35, 60 });
-
-		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 44, 14, 29, 44, 14, 29, 46, 46, 45,
-				45, 41, 14, 11, 5, 0, 41, 14, 13, 5, 43, 11, 0, 43, 0, 37, 36, 37, 36, 66, 45, 45, 46, 46, 44, 15, 29,
-				44, 15, 29, 41, 0, 41, 0, 42, 155, 42, 155, 34, 35, 34, 35, 66 });
+		replayGameUntilInitialState();
 
 //		Choice Index List
 //		PASS_CHOICE_INDEX 0
@@ -105,6 +103,63 @@ public class TwoPlayerGameTest {
 
 	}
 
+	private void replayGameUntilInitialState() {
+//		game.replayMultipleActions(new int[] { 27, 23, 22, 27, 25, 24, 5, 5, 5, 5, 44, 14, 29, 44, 14, 29, 46, 46, 45,
+//				45, 41, 14, 11, 5, 0, 41, 14, 13, 5, 43, 11, 0, 43, 0, 37, 36, 37, 36, 66, 45, 45, 46, 46, 44, 15, 29,
+//				44, 15, 29, 41, 0, 41, 0, 42, 155, 42, 155, 34, 35, 34, 35, 66 });
+//		
+		// initialization
+		pickPyramidLevel(2);
+		pickPyramidColor(Color.RED);
+		pickPyramidColor(Color.BLACK);
+		pickPyramidLevel(2);
+		pickPyramidColor(Color.BLUE);
+		pickPyramidColor(Color.WHITE);
+		recruitArmySize(5);
+		recruitArmySize(5);
+		recruitArmySize(5);
+		recruitArmySize(5);
+
+		// turn one
+		upgradePyramid(4, redPlayer.cityTiles.get(0));
+		upgradePyramid(4, bluePlayer.cityTiles.get(0));
+		prayRowThree();
+		prayRowThree();
+		prayRowTwo();
+		prayRowTwo();
+		
+		startRowOneMove();
+		moveFirstTile(redPlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		endMove();
+		
+		startRowOneMove();
+		moveFirstTile(bluePlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+
+		
+		moveRowTwoZeroArmy();
+		moveRowTwoZeroArmy();
+
+
+		// turn two
+		battlePick(BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD, BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD);
+		pickPlayerOrder(1);
+		prayRowThree();
+		prayRowThree();
+		prayRowTwo();
+		prayRowTwo();
+		upgradePyramid(4, redPlayer.cityTiles.get(1));
+		upgradePyramid(4, bluePlayer.cityTiles.get(1));
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+		moveRowTwoZeroArmy();
+		moveRowTwoZeroArmy();
+
+		// turn three
+		battlePick(BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD, BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD);
+		pickPlayerOrder(1);
+		
+	}
+
 	public void prayRowThree() {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_THREE_PRAY);
 		game.getNextPlayerChoicePick();
@@ -129,8 +184,26 @@ public class TwoPlayerGameTest {
 	public void upgradePyramid(int level, Color color, Tile tile) {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
 		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_PYRAMID_LEVEL_CHOICE + level - 1);
+		pickPyramidLevel(level);
+		pickPyramidColor(color);
+	}
+	
+	public void pickPlayerOrder(int order) {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_PLAYER_ORDER + order -1);
+	}
+	
+	public void upgradePyramid(int level, Tile tile) {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
+		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
+		pickPyramidLevel(level);
+	}
+
+	public void pickPyramidColor(Color color) {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + color.ordinal());
+	}
+
+	public void pickPyramidLevel(int level) {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_PYRAMID_LEVEL_CHOICE + level - 1);
 	}
 
 	public void startRecruit() {
@@ -169,17 +242,47 @@ public class TwoPlayerGameTest {
 
 	public static boolean CANNONICAL_ON_ALL_MOVES = true;
 
-	private void activateActionOnGame(int nextPlayer, int pickIndex) {
+	public void activateActionOnGame(int nextPlayer, int pickIndex) {
 		KemetGame deepCacheClone = null;
+		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
+		game.validate();
+		int choiceCount = nextPlayerChoicePick.choiceList.size();
 		if (CLONE_GAME_ON_ALL_MOVES) {
 
 			deepCacheClone = game.deepCacheClone();
+			deepCacheClone.validate();
+			PlayerChoicePick cloneNextPick = deepCacheClone.getNextPlayerChoicePick();
+			int newCount = cloneNextPick.choiceList.size();
+
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
+			deepCacheClone.validate();
 			if (CANNONICAL_ON_ALL_MOVES) {
 				deepCacheClone.getCanonicalForm(nextPlayer);
 			}
+			if( newCount != choiceCount ) {
+				
+				log.info("Original Game");
+				PlayerChoicePick.print(nextPlayerChoicePick.choiceList);
+				
+				log.info("Cloned Game");
+				PlayerChoicePick.print(cloneNextPick.choiceList);
+				
+				fail( "previous count " + choiceCount + " doesnt match new count " + newCount);
+			}
 
 			deepCacheClone = game.deepCacheClone();
+			newCount = cloneNextPick.choiceList.size();
+			if( newCount != choiceCount ) {
+				log.info("Original Game");
+				PlayerChoicePick.print(nextPlayerChoicePick.choiceList);
+				
+				log.info("Cloned Game");
+				PlayerChoicePick.print(cloneNextPick.choiceList);
+
+				
+				fail( "previous count " + choiceCount + " doesnt match new count " + newCount);
+			}
+
 
 			if (CANNONICAL_ON_ALL_MOVES) {
 				deepCacheClone.getCanonicalForm(nextPlayer);
@@ -190,13 +293,16 @@ public class TwoPlayerGameTest {
 			game.getCanonicalForm(nextPlayer);
 		}
 		game.activateAction(nextPlayer, pickIndex);
-
+		game.validate();
+		
 		if (CANNONICAL_ON_ALL_MOVES) {
 			game.getCanonicalForm(nextPlayer);
 		}
 
 		if (CLONE_GAME_ON_ALL_MOVES) {
+			deepCacheClone.validate();
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
+			deepCacheClone.validate();
 		}
 	}
 
@@ -278,6 +384,10 @@ public class TwoPlayerGameTest {
 
 	public void recruitArmy(Tile tile, int size) {
 		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
+		recruitArmySize(size);
+	}
+
+	public void recruitArmySize(int size) {
 		activateActionOnGame(game.getNextPlayer(), getMoveArmySizeWithBeastChoiceIndex(size, false));
 	}
 

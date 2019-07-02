@@ -6,14 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import kemet.ai.TrialPlayerAI;
 import kemet.data.TwoPlayerGame;
 import kemet.model.Army;
 import kemet.model.BattleCard;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.Tile;
-import kemet.model.action.BattleAction.PickBattleCardChoice;
 import kemet.model.action.choice.Choice;
 
 public class BattleActionTest {
@@ -118,58 +116,58 @@ public class BattleActionTest {
 
 	}
 
-	@Test
-	void testTempleIslandBattleAiResponse() {
+//	@Test
+//	void testTempleIslandBattleAiResponse() {
+//
+//		BattleCard attackCard = bluePlayer.getBattleCard(BattleCard.SACRIFICIAL_CHARGE);
+//		battle.attackingUsedBattleCard = attackCard;
+//		BattleCard discardCard = bluePlayer.getBattleCard(BattleCard.CHARIOT_RAID);
+//		battle.attackingDiscardBattleCard = discardCard;
+//		bluePlayer.useBattleCard(attackCard);
+//		bluePlayer.useBattleCard(discardCard);
+//
+//		TrialPlayerAI redDefendingAi = new TrialPlayerAI(redPlayer, game);
+//		TrialPlayerAI blueAttackingAi = new TrialPlayerAI(bluePlayer, game);
+//
+//		Choice pickAction = redDefendingAi.pickAction(battle.getNextPlayerChoicePick());
+//		BattleAction.PickBattleCardChoice cardChoice = (PickBattleCardChoice) pickAction;
+//		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice.card.name);
+//
+//		// prove the choice of attacking cards doesn't impact the AI choices.
+//		battle.attackingUsedBattleCard = discardCard;
+//		battle.attackingDiscardBattleCard = attackCard;
+//
+//		Choice pickAction2 = redDefendingAi.pickAction(battle.getNextPlayerChoicePick());
+//		BattleAction.PickBattleCardChoice cardChoice2 = (PickBattleCardChoice) pickAction2;
+//		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice2.card.name);
+//
+//		battle.attackingUsedBattleCard = null;
+//		battle.attackingDiscardBattleCard = null;
+//
+//		Choice pickAction3 = blueAttackingAi.pickAction(battle.getNextPlayerChoicePick());
+//		BattleAction.PickBattleCardChoice cardChoice3 = (PickBattleCardChoice) pickAction3;
+//		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice3.card.name);
+//
+//	}
 
-		BattleCard attackCard = bluePlayer.getBattleCard(BattleCard.SACRIFICIAL_CHARGE);
-		battle.attackingUsedBattleCard = attackCard;
-		BattleCard discardCard = bluePlayer.getBattleCard(BattleCard.CHARIOT_RAID);
-		battle.attackingDiscardBattleCard = discardCard;
-		bluePlayer.useBattleCard(attackCard);
-		bluePlayer.useBattleCard(discardCard);
-
-		TrialPlayerAI redDefendingAi = new TrialPlayerAI(redPlayer, game);
-		TrialPlayerAI blueAttackingAi = new TrialPlayerAI(bluePlayer, game);
-
-		Choice pickAction = redDefendingAi.pickAction(battle.getNextPlayerChoicePick());
-		BattleAction.PickBattleCardChoice cardChoice = (PickBattleCardChoice) pickAction;
-		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice.card.name);
-
-		// prove the choice of attacking cards doesn't impact the AI choices.
-		battle.attackingUsedBattleCard = discardCard;
-		battle.attackingDiscardBattleCard = attackCard;
-
-		Choice pickAction2 = redDefendingAi.pickAction(battle.getNextPlayerChoicePick());
-		BattleAction.PickBattleCardChoice cardChoice2 = (PickBattleCardChoice) pickAction2;
-		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice2.card.name);
-
-		battle.attackingUsedBattleCard = null;
-		battle.attackingDiscardBattleCard = null;
-
-		Choice pickAction3 = blueAttackingAi.pickAction(battle.getNextPlayerChoicePick());
-		BattleAction.PickBattleCardChoice cardChoice3 = (PickBattleCardChoice) pickAction3;
-		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice3.card.name);
-
-	}
-
-	@Test
-	void testTempleIslandBattleAiResponseFactorInHiddenCards() {
-
-		BattleCard attackCard = bluePlayer.getBattleCard(BattleCard.SACRIFICIAL_CHARGE);
-		battle.attackingUsedBattleCard = attackCard;
-		BattleCard discardCard = bluePlayer.getBattleCard(BattleCard.CHARIOT_RAID);
-		battle.attackingDiscardBattleCard = discardCard;
-		bluePlayer.useBattleCard(attackCard);
-		bluePlayer.discardBattleCard(discardCard);
-
-		TrialPlayerAI redDefendingAi = new TrialPlayerAI(redPlayer, game);
-		// TrialPlayerAI blueAttackingAi = new TrialPlayerAI(bluePlayer, game);
-
-		Choice pickAction = redDefendingAi.pickAction(battle.getNextPlayerChoicePick());
-		BattleAction.PickBattleCardChoice cardChoice = (PickBattleCardChoice) pickAction;
-		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice.card.name);
-
-	}
+//	@Test
+//	void testTempleIslandBattleAiResponseFactorInHiddenCards() {
+//
+//		BattleCard attackCard = bluePlayer.getBattleCard(BattleCard.SACRIFICIAL_CHARGE);
+//		battle.attackingUsedBattleCard = attackCard;
+//		BattleCard discardCard = bluePlayer.getBattleCard(BattleCard.CHARIOT_RAID);
+//		battle.attackingDiscardBattleCard = discardCard;
+//		bluePlayer.useBattleCard(attackCard);
+//		bluePlayer.discardBattleCard(discardCard);
+//
+//		TrialPlayerAI redDefendingAi = new TrialPlayerAI(redPlayer, game);
+//		// TrialPlayerAI blueAttackingAi = new TrialPlayerAI(bluePlayer, game);
+//
+//		Choice pickAction = redDefendingAi.pickAction(battle.getNextPlayerChoicePick());
+//		BattleAction.PickBattleCardChoice cardChoice = (PickBattleCardChoice) pickAction;
+//		assertEquals(BattleCard.CAVALRY_BLITZ, cardChoice.card.name);
+//
+//	}
 
 //	List<Beast> cache = new ArrayList<>();
 //
