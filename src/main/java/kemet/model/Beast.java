@@ -69,14 +69,14 @@ public class Beast implements Model {
 		return description;
 	}
 
-	public void copy(Beast copy) {
+	//public void copy(Beast copy) {
 //		name = copy.name;
 //		fightBonus = copy.fightBonus;
 //		shieldBonus = copy.shieldBonus;
 //		moveBonus = copy.moveBonus;
 //		bloodBonus = copy.bloodBonus;
 //				
-	}
+	//}
 
 	@Override
 	public Model deepCacheClone() {

@@ -89,7 +89,7 @@ public class Simulation {
 			}
 		}
 	}
-	
+
 	private long nextPrintCount = Options.SIMULATION_CHOICE_COUNT_PRINT_INTERVAL;
 
 	public class SimulationStep {
@@ -243,10 +243,10 @@ public class Simulation {
 
 	private void setBestChoice(float calculateGameScore, int[] newActionStack) {
 		if (calculateGameScore > bestScore) {
-			setBestChoiceSync(  calculateGameScore, newActionStack);
+			setBestChoiceSync(calculateGameScore, newActionStack);
 		}
 	}
-	
+
 	private synchronized void setBestChoiceSync(float calculateGameScore, int[] newActionStack) {
 		if (calculateGameScore > bestScore) {
 			for (int i = 0; i < newActionStack.length; i++) {
@@ -328,7 +328,7 @@ public class Simulation {
 				m.simulateChoice();
 				m.closeCounter();
 			});
-			
+
 			for (SimulationStep simulationStep : simulationList) {
 				if (simulationStep.calculateGameScore > currentScore) {
 					bestChoiceIndex = simulationStep.choiceToPick;
@@ -343,17 +343,17 @@ public class Simulation {
 
 		return bestChoiceIndex;
 	}
-	
+
 	private long lastPrintCount = 0;
-	
+
 	private long lastPrintTime = 0;
 
 	private void printExploredCount() {
-		
-		if( ! print ) {
+
+		if (!print) {
 			return;
 		}
-		
+
 		long nanoTime = System.nanoTime();
 		long durationMs = (nanoTime - startTimeNano) / 1000000;
 		long recentDurationMs = (nanoTime - lastPrintTime) / 1000000;
@@ -375,12 +375,15 @@ public class Simulation {
 
 		String bestOutcome = printBestOutcomeToString();
 
-		String format = String.format("Explored %1$,d choices in %2$02dh%3$02dm%4$02ds , recent speed : %5$,d choice per second. Best Outcome : %6$s",
-				totalChoiceCount , hours, minutes , seconds, choicePerSecond , bestOutcome);
-		
-		log.info( format );
-		//print("Explored " + exploredChoiceCount + " choices in " + hours + "h" + minutes + "m" + seconds
-		///			+ "s , recent speed : " + choicePerSecond + " choice per second. Best Outcome : " + bestOutcome);
+		String format = String.format(
+				"Explored %1$,d choices in %2$02dh%3$02dm%4$02ds , recent speed : %5$,d choice per second. Best Outcome : %6$s",
+				totalChoiceCount, hours, minutes, seconds, choicePerSecond, bestOutcome);
+
+		log.info(format);
+		// print("Explored " + exploredChoiceCount + " choices in " + hours + "h" +
+		// minutes + "m" + seconds
+		/// + "s , recent speed : " + choicePerSecond + " choice per second. Best
+		// Outcome : " + bestOutcome);
 	}
 
 	private String printBestOutcomeToString() {
@@ -459,7 +462,6 @@ public class Simulation {
 		log.info(build.toString());
 	}
 
-
 	@SuppressWarnings("unused")
 	private String printChoiceEntry(int depthLeft, String prefix, PlayerChoicePick nextPick, int i) {
 		String newPrefix = null;
@@ -485,22 +487,20 @@ public class Simulation {
 			// round number changed, stop the simulation.
 			return false;
 		}
-		
-		if( Options.SIMULATION_END_AFTER_BATTLE) {
+
+		if (Options.SIMULATION_END_AFTER_BATTLE) {
 			if (nextPick.game.battleCount != originalGame.battleCount) {
 				return false;
 			}
 		}
-			
-		if (nextPick != null) {
-			if (actionTokenPick == null) {
-				if (nextPick.player.isSamePlayer(player)) {
-					return true;
-				}
-			} else {
-				if (isPartOfActionTokenPick(nextPick)) {
-					return true;
-				}
+
+		if (actionTokenPick == null) {
+			if (nextPick.player.isSamePlayer(player)) {
+				return true;
+			}
+		} else {
+			if (isPartOfActionTokenPick(nextPick)) {
+				return true;
 			}
 		}
 

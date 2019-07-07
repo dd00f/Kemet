@@ -19,7 +19,9 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class KemetRecurrentNeuralNetBuilder {
 
 	public static LossFunction POLICY_LOSS_FUNCTION = LossFunctions.LossFunction.XENT;
@@ -35,8 +37,7 @@ public class KemetRecurrentNeuralNetBuilder {
 	public static boolean VALUE_OUTPUT = true;
 	// TODO reset back to 10 or 20
 	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;
-	
-	
+
 	private ComputationGraph apply(int blocks) {
 
 		NeuralNetConfiguration.Builder builder = new NeuralNetConfiguration.Builder();
@@ -68,28 +69,27 @@ public class KemetRecurrentNeuralNetBuilder {
 
 		int cumulativeLayerSize = INPUT_SIZE;
 		layerList.add(inputLayerName);
-		
+
 		String dense0LayerName = "dense";
 		WeightInit weightInit = WEIGHT_INIT;
 //		conf2.layer(dense0LayerName, new DenseLayer.Builder().nIn(cumulativeLayerSize).nOut(LAYER_SIZE)
 //				.activation(Activation.RELU).weightInit(weightInit).build(), inputLayerName);
 
 		String policyInput = inputLayerName;
-		
+
 //		layerList.add(dense0LayerName);
-		
 
 //		cumulativeLayerSize += LAYER_SIZE;
-		
-		for (int i = 0; i < NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT; ++i) {
+
+		for (int i = 0; i < blocks; ++i) {
 			String denseLayerName = dense0LayerName + "_" + i;
-			String mergeLayerName = "merge_" + i; 
+			String mergeLayerName = "merge_" + i;
 
 			conf2.layer(denseLayerName, new DenseLayer.Builder().nIn(cumulativeLayerSize).nOut(LAYER_SIZE)
 					.activation(Activation.RELU).weightInit(weightInit).build(), policyInput);
-			
+
 			cumulativeLayerSize += LAYER_SIZE;
-			
+
 			layerList.add(denseLayerName);
 
 			conf2.addVertex(mergeLayerName, new MergeVertex(), layerList.toArray(new String[layerList.size()]));
@@ -149,6 +149,9 @@ public class KemetRecurrentNeuralNetBuilder {
 		ComputationGraphConfiguration buildAndReturn = conf2.build();
 		ComputationGraph model = new ComputationGraph(buildAndReturn);
 		model.init();
+
+		log.info("Created Recurrent ComputationGraph with {} inputs, {} layers of size {} and {} outputs", INPUT_SIZE,
+				NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT, LAYER_SIZE, OUTPUT_SIZE);
 
 		return model;
 	}

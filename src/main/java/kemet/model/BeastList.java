@@ -38,7 +38,7 @@ public class BeastList {
 	public static final Beast BLACK_3_GRIFFIN_SPHINX = new Beast(BLACK_3_GRIFFIN_SPHINX_NAME, 2, 0, 0, 0,
 			BLACK_3_GRIFFIN_SPHINX_POWER, BEAST_INDEXER++);
 	
-	public static final String BLACK_4_DEVOURER_POWER = "+1 VP on battle victory & damage 2 enemy units";
+	public static final String BLACK_4_DEVOURER_POWER = "+1 VP on battle victory & damage 2 enemy units. Immune to damage outside of battle.";
 	public static final String BLACK_4_DEVOURER_NAME = "Devourer";
 	public static final Beast BLACK_4_DEVOURER = new Beast(BLACK_4_DEVOURER_NAME, 2, 0, 1, 0,
 			BLACK_4_DEVOURER_POWER, BEAST_INDEXER++);

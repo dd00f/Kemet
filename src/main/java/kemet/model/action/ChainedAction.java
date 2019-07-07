@@ -150,8 +150,13 @@ public class ChainedAction implements Action {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		if (actionChain.size() > 0) {
-			actionChain.get(0).fillCanonicalForm(cannonicalForm, playerIndex);
+			Action action = actionChain.get(0);
+			action.fillCanonicalForm(cannonicalForm, playerIndex);
 		}
+	}
+
+	public int size() {
+		return actionChain.size();
 	}
 
 }

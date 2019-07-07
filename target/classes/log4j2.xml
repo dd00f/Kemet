@@ -58,7 +58,7 @@
 			asyncRoot
 			
 		-->
-		<Root level="info" includeLocation="false">
+		<Root level="info" includeLocation="false" additivity="false" >
 
 			<AppenderRef ref="Console" />
 

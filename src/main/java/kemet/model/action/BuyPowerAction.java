@@ -3,6 +3,7 @@ package kemet.model.action;
 
 import java.util.List;
 
+import kemet.model.BoardInventory;
 import kemet.model.Color;
 import kemet.model.KemetGame;
 import kemet.model.Player;
@@ -25,18 +26,17 @@ public class BuyPowerAction implements Action {
 	 * 
 	 */
 	private static final long serialVersionUID = -6525066429860592023L;
-	
+
 	private KemetGame game;
 	private Player player;
 
 	public Action nextAction;
 	private Action parent;
-	
+
 	public Color color;
 	public byte costBoost;
 
-	public static Cache<BuyPowerAction> CACHE = new Cache<BuyPowerAction>(
-			() -> new BuyPowerAction());
+	public static Cache<BuyPowerAction> CACHE = new Cache<BuyPowerAction>(() -> new BuyPowerAction());
 
 	private BuyPowerAction() {
 
@@ -44,6 +44,9 @@ public class BuyPowerAction implements Action {
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
+
+		cannonicalForm.set(BoardInventory.STATE_BUY_POWER_COLOR + color.ordinal(), player.getState(playerIndex));
+
 		if (nextAction != null) {
 			nextAction.fillCanonicalForm(cannonicalForm, playerIndex);
 		}
@@ -148,43 +151,45 @@ public class BuyPowerAction implements Action {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
-		
-		if( nextAction != null ) {
+
+		if (nextAction != null) {
 
 			return nextAction.getNextPlayerChoicePick();
 		}
-		
-		
+
 		PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 		List<Choice> choiceList = pick.choiceList;
-		
+
 		addAllPowerBuyOptions(player, choiceList, color);
-		
+
+		// nothing to do, action is done
+		if (choiceList.size() == 0) {
+			return null;
+		}
+
 		BuyNothingChoice nothing = new BuyNothingChoice(game, player);
 		choiceList.add(nothing);
-		
+
 		return pick;
 	}
-
 
 	@Override
 	public Action getParent() {
 		return parent;
 	}
-	
 
 	private void addAllPowerBuyOptions(Player currentPlayer, List<Choice> choiceList, Color filterColor) {
 		List<Power> availablePowerList = game.availablePowerList;
 		for (Power power : availablePowerList) {
-			if( power == null ) {
+			if (power == null) {
 				continue;
 			}
-			
-			if(! power.color.equals(filterColor)) {
+
+			if (!power.color.equals(filterColor)) {
 				continue;
 			}
-			
+
 			if (playerCanBuyPower(currentPlayer, power)) {
 				BuyPowerChoice choice = new BuyPowerChoice(game, currentPlayer, power);
 				choiceList.add(choice);
@@ -212,8 +217,6 @@ public class BuyPowerAction implements Action {
 
 		return true;
 	}
-	
-
 
 	private boolean playerHasPowerAlready(Player currentPlayer, Power power) {
 		return currentPlayer.hasPower(power);
@@ -232,15 +235,12 @@ public class BuyPowerAction implements Action {
 
 		return true;
 	}
-	
 
 	public class BuyNothingChoice extends PlayerChoice {
-
 
 		public BuyNothingChoice(KemetGame game, Player player) {
 			super(game, player);
 		}
-
 
 		@Override
 		public String describe() {
@@ -251,7 +251,7 @@ public class BuyPowerAction implements Action {
 		public void choiceActivate() {
 
 			nextAction = DoneAction.create(parent);
-			
+
 		}
 
 		@Override
@@ -260,7 +260,7 @@ public class BuyPowerAction implements Action {
 		}
 
 	}
-	
+
 	public class BuyPowerChoice extends PlayerChoice {
 
 		public Power power;
@@ -281,16 +281,16 @@ public class BuyPowerAction implements Action {
 		public void choiceActivate() {
 
 			// trigger the power purchase
-			
+
 			// pay the cost
 			byte cost = getPowerCost();
-			player.modifyPrayerPoints(cost, "Buy power " + power);
+			player.modifyPrayerPoints(cost, power);
 
 			// move the power
 			game.movePowerToPlayer(player, power);
-			
+
 			nextAction = power.createNextAction(player, BuyPowerAction.this, game);
-			
+
 		}
 
 		private byte getPowerCost() {

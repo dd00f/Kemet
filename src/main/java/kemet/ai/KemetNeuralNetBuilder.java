@@ -83,7 +83,7 @@ public class KemetNeuralNetBuilder {
 
 		String policyInput = dense0LayerName;
 
-		for (int i = 0; i < NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT; ++i) {
+		for (int i = 0; i < blocks; ++i) {
 			String denseLayerName = dense0LayerName + "_" + i;
 
 			conf2.layer(denseLayerName, new DenseLayer.Builder().nIn(LAYER_SIZE).nOut(LAYER_SIZE)

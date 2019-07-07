@@ -74,9 +74,9 @@ public class Army implements Model {
 		return returnValue;
 	}
 
-	public byte getScore(boolean isAttacking) {
+	public byte getScore(boolean isAttacking, boolean isBeastIgnored) {
 		byte score = armySize;
-		if (beast != null) {
+		if (beast != null && !isBeastIgnored) {
 			score += beast.combatBonus;
 		}
 		score += owningPlayer.strengthBonus;
@@ -160,7 +160,8 @@ public class Army implements Model {
 
 	private void validateArmySize() {
 		if (armySize > owningPlayer.maximumArmySize) {
-			log.warn("validateArmySize lead to armySize > owningPlayer.maximumArmySize ." + name);
+			log.warn("validateArmySize lead to armySize > owningPlayer.maximumArmySize ." + name + " is at size "
+					+ armySize + " while max is at " + owningPlayer.maximumArmySize);
 		}
 		if (armySize < 0) {
 			log.warn("validateArmySize lead to armySize = 0." + name);
@@ -181,17 +182,16 @@ public class Army implements Model {
 	}
 
 	public void addBeast(Beast beastAdd) {
-		if( beast != null ) {
+		if (beast != null) {
 			log.warn("Army.addBeast with beast {} on army {} that already has a beast ", beastAdd.name, describeArmy());
 			return;
 		}
-		
+
 		if (beastAdd != null) {
 			boolean success = owningPlayer.availableBeasts.remove(beastAdd);
-			if( success ) {
+			if (success) {
 				beast = beastAdd;
-			}
-			else {
+			} else {
 				log.warn("Army.addBeast on beast that wasnt in player inventory " + beastAdd.name);
 			}
 		}
@@ -267,7 +267,7 @@ public class Army implements Model {
 		return false;
 
 	}
-	
+
 	public String describeArmy() {
 		StringBuilder build = new StringBuilder();
 		describeArmy(build);
@@ -296,28 +296,41 @@ public class Army implements Model {
 		currentGame.validate(tile);
 	}
 
-	public byte getAttackStrength() {
-		return getScore(true);
+	public byte getAttackStrength(boolean isBeastIgnored) {
+		return getScore(true, isBeastIgnored);
 	}
 
-	public byte getAttackShield() {
-		return owningPlayer.shieldBonus;
+	public byte getAttackShield(boolean isBeastIgnored) {
+		
+		byte shieldBonus = owningPlayer.shieldBonus;
+		
+		if( beast != null && ! isBeastIgnored ) {
+			shieldBonus += beast.shieldBonus;
+		}
+		
+		return shieldBonus;
 	}
 
-	public byte getAttackDamage() {
-		return owningPlayer.damageBonus;
+	public byte getAttackDamage(boolean isBeastIgnored) {
+		byte damageBonus = owningPlayer.damageBonus;
+		
+		if( beast != null && ! isBeastIgnored ) {
+			damageBonus += beast.damageBonus;
+		}
+		
+		return damageBonus;
 	}
 
-	public byte getDefendingStrength() {
-		return getScore(false);
+	public byte getDefendingStrength(boolean isBeastIgnored) {
+		return getScore(false, isBeastIgnored);
 	}
 
-	public byte getDefendingShield() {
-		return owningPlayer.shieldBonus;
+	public byte getDefendingShield(boolean isBeastIgnored) {
+		return getAttackShield(isBeastIgnored);
 	}
 
-	public byte getDefendingDamage() {
-		return owningPlayer.damageBonus;
+	public byte getDefendingDamage(boolean isBeastIgnored) {
+		return getAttackDamage(isBeastIgnored);
 	}
 
 }

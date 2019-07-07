@@ -188,6 +188,10 @@ public class BeastRecruitAction extends EndableAction {
 
 	private void checkToAddRecruitChoice(List<Choice> choiceList, Tile tile) {
 
+		if (tile == null) {
+			return;
+		}
+
 		Army army = tile.getArmy();
 		if (army == null) {
 			return;
@@ -221,7 +225,7 @@ public class BeastRecruitAction extends EndableAction {
 		@Override
 		public String describe() {
 
-			return "Recruit "+beast.name+" on tile \"" + pickTile.name;
+			return "Recruit " + beast.name + " on tile \"" + pickTile.name;
 
 		}
 

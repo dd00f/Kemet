@@ -13,6 +13,7 @@ import kemet.model.Player;
 import kemet.model.Power;
 import kemet.model.Tile;
 import kemet.model.action.choice.ChoiceInventory;
+import kemet.util.ByteCanonicalForm;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -26,6 +27,9 @@ public class TwoPlayerGameTest {
 
 	@BeforeEach
 	void setupGame() {
+		
+		
+		
 		tpg = new TwoPlayerGame();
 		tpg.createAIPlayer("red");
 		tpg.createAIPlayer("blue");
@@ -127,21 +131,20 @@ public class TwoPlayerGameTest {
 		prayRowThree();
 		prayRowTwo();
 		prayRowTwo();
-		
+
 		startRowOneMove();
 		moveFirstTile(redPlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 		endMove();
-		
+
 		startRowOneMove();
 		moveFirstTile(bluePlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 
-		
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
-
 
 		// turn two
-		battlePick(BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD, BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD);
+		battlePick(BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD, BattleCard.FERVENT_PURGE_CARD,
+				BattleCard.MIXED_TACTICS_CARD);
 		pickPlayerOrder(1);
 		prayRowThree();
 		prayRowThree();
@@ -155,9 +158,10 @@ public class TwoPlayerGameTest {
 		moveRowTwoZeroArmy();
 
 		// turn three
-		battlePick(BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD, BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD);
+		battlePick(BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD, BattleCard.CHARIOT_RAID_CARD,
+				BattleCard.SHIELD_PUSH_CARD);
 		pickPlayerOrder(1);
-		
+
 	}
 
 	public void prayRowThree() {
@@ -187,11 +191,11 @@ public class TwoPlayerGameTest {
 		pickPyramidLevel(level);
 		pickPyramidColor(color);
 	}
-	
+
 	public void pickPlayerOrder(int order) {
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_PLAYER_ORDER + order -1);
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_PLAYER_ORDER + order - 1);
 	}
-	
+
 	public void upgradePyramid(int level, Tile tile) {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
 		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
@@ -242,11 +246,18 @@ public class TwoPlayerGameTest {
 
 	public static boolean CANNONICAL_ON_ALL_MOVES = true;
 
+	@SuppressWarnings("null")
 	public void activateActionOnGame(int nextPlayer, int pickIndex) {
 		KemetGame deepCacheClone = null;
 		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
+
+		int size = nextPlayerChoicePick.choiceList.size();
+		if (size <= 1) {
+			fail("getNextPlayerChoicePick has size of " + size + "\n" + nextPlayerChoicePick);
+		}
+
 		game.validate();
-		int choiceCount = nextPlayerChoicePick.choiceList.size();
+		int choiceCount = size;
 		if (CLONE_GAME_ON_ALL_MOVES) {
 
 			deepCacheClone = game.deepCacheClone();
@@ -257,52 +268,70 @@ public class TwoPlayerGameTest {
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
 			deepCacheClone.validate();
 			if (CANNONICAL_ON_ALL_MOVES) {
-				deepCacheClone.getCanonicalForm(nextPlayer);
+				validateCanonicalForm(deepCacheClone.getCanonicalForm(nextPlayer));
 			}
-			if( newCount != choiceCount ) {
-				
+			if (newCount != choiceCount) {
+
 				log.info("Original Game");
-				PlayerChoicePick.print(nextPlayerChoicePick.choiceList);
-				
+				PlayerChoicePick.logChoiceList(nextPlayerChoicePick.choiceList);
+
 				log.info("Cloned Game");
-				PlayerChoicePick.print(cloneNextPick.choiceList);
-				
-				fail( "previous count " + choiceCount + " doesnt match new count " + newCount);
+				PlayerChoicePick.logChoiceList(cloneNextPick.choiceList);
+
+				fail("previous count " + choiceCount + " doesnt match new count " + newCount);
 			}
 
 			deepCacheClone = game.deepCacheClone();
 			newCount = cloneNextPick.choiceList.size();
-			if( newCount != choiceCount ) {
+			if (newCount != choiceCount) {
 				log.info("Original Game");
-				PlayerChoicePick.print(nextPlayerChoicePick.choiceList);
-				
-				log.info("Cloned Game");
-				PlayerChoicePick.print(cloneNextPick.choiceList);
+				PlayerChoicePick.logChoiceList(nextPlayerChoicePick.choiceList);
 
-				
-				fail( "previous count " + choiceCount + " doesnt match new count " + newCount);
+				log.info("Cloned Game");
+				PlayerChoicePick.logChoiceList(cloneNextPick.choiceList);
+
+				fail("previous count " + choiceCount + " doesnt match new count " + newCount);
 			}
 
-
 			if (CANNONICAL_ON_ALL_MOVES) {
-				deepCacheClone.getCanonicalForm(nextPlayer);
+				validateCanonicalForm(deepCacheClone.getCanonicalForm(nextPlayer));
 			}
 		}
 
 		if (CANNONICAL_ON_ALL_MOVES) {
-			game.getCanonicalForm(nextPlayer);
+			validateCanonicalForm(game.getCanonicalForm(nextPlayer));
 		}
 		game.activateAction(nextPlayer, pickIndex);
 		game.validate();
-		
+
 		if (CANNONICAL_ON_ALL_MOVES) {
-			game.getCanonicalForm(nextPlayer);
+			validateCanonicalForm(game.getCanonicalForm(nextPlayer));
 		}
 
 		if (CLONE_GAME_ON_ALL_MOVES) {
 			deepCacheClone.validate();
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
 			deepCacheClone.validate();
+		}
+	}
+
+	private void validateCanonicalForm(ByteCanonicalForm canonicalForm) {
+		float[] floatCanonicalForm = canonicalForm.getFloatCanonicalForm();
+		for (int i = 0; i < floatCanonicalForm.length; i++) {
+			float f = floatCanonicalForm[i];
+
+			if (f > 1) {
+				fail("Float canonical value bigger than 1 : " + f + " at index " + i);
+			}
+
+			// TODO enable once all negative states are eliminated.
+//			if( f < 0 ) {
+//				fail("Float canonical value smaller than zero : " + f + " at index " + i);
+//			}
+
+			if (f < -1) {
+				fail("Float canonical value smaller than -1 : " + f + " at index " + i);
+			}
 		}
 	}
 

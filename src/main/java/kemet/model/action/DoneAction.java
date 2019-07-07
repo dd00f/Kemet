@@ -92,7 +92,7 @@ public class DoneAction implements Action
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		LOGGER.warn("Shouldn't be able to reach this code");
+		LOGGER.warn("DoneAction fillCanonicalForm Shouldn't be able to reach this code");
 		
 	}
 

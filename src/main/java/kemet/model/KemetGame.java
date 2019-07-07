@@ -34,8 +34,8 @@ public class KemetGame implements Model, Game {
 
 	public List<Tile> tileList = new ArrayList<>();
 	public List<Player> playerByInitiativeList = new ArrayList<>();
-	public List<DiCard> availableDiCardList = new ArrayList<>();
-	public List<DiCard> discardedDiCardList = new ArrayList<>();
+	public byte[] availableDiCardList = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
+	public byte[] discardedDiCardList = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
 	public List<Power> availablePowerList = new ArrayList<>();
 	public byte roundNumber = 0;
 	public boolean victoryConditionTriggered = false;
@@ -89,10 +89,10 @@ public class KemetGame implements Model, Game {
 
 		tileList.clear();
 		playerByInitiativeList.clear();
-		availableDiCardList.clear();
-		discardedDiCardList.clear();
+		DiCardList.initializeGame(availableDiCardList);
+		DiCardList.fillArray(discardedDiCardList, (byte) 0);
 		availablePowerList.clear();
-		
+
 		PowerList.initializeGame(this);
 
 		recordActionIndex = 0;
@@ -116,11 +116,8 @@ public class KemetGame implements Model, Game {
 			clone.playerByInitiativeList.add((Player) player.deepCacheClone());
 		}
 
-		clone.availableDiCardList.clear();
-		clone.availableDiCardList.addAll(availableDiCardList);
-
-		clone.discardedDiCardList.clear();
-		clone.discardedDiCardList.addAll(discardedDiCardList);
+		DiCardList.copyArray(availableDiCardList, clone.availableDiCardList);
+		DiCardList.copyArray(discardedDiCardList, clone.discardedDiCardList);
 
 		clone.availablePowerList.clear();
 		clone.availablePowerList.addAll(availablePowerList);
@@ -129,10 +126,10 @@ public class KemetGame implements Model, Game {
 		clone.victoryConditionTriggered = victoryConditionTriggered;
 		clone.victoryPointObjective = victoryPointObjective;
 		clone.printActivations = printActivations;
-		
+
 		clone.battleCount = battleCount;
 		clone.simulatedPlayerIndex = simulatedPlayerIndex;
-		
+
 		clone.winner = clone.getPlayerByCopy(winner);
 
 		clone.action = action.deepCacheClone();
@@ -178,13 +175,11 @@ public class KemetGame implements Model, Game {
 		// clean links
 		tileList.clear();
 		playerByInitiativeList.clear();
-		availableDiCardList.clear();
-		discardedDiCardList.clear();
 		availablePowerList.clear();
 		winner = null;
 
 		action = null;
-		
+
 		simulationMcts = null;
 
 		GAME_CACHE.release(this);
@@ -203,7 +198,24 @@ public class KemetGame implements Model, Game {
 		action.validate(null, this);
 
 		validate(winner);
+		
+		validateDiCardCount();
+	}
 
+	private void validateDiCardCount() {
+		int count = 0;
+		
+		count += DiCardList.sumArray(availableDiCardList);
+		count += DiCardList.sumArray(discardedDiCardList);
+		
+		for (Player player : playerByInitiativeList) {
+			count += DiCardList.sumArray(player.diCards);
+		}
+		
+		if( count != DiCardList.TOTAL_DI_COUNT) {
+			Validation.validationFailed("Total DI card in play is wrong. Expected " + DiCardList.TOTAL_DI_COUNT + " but got " + count);
+		}
+		
 	}
 
 	public void validate(Player player) {
@@ -319,11 +331,11 @@ public class KemetGame implements Model, Game {
 		}
 		return null;
 	}
-	
 
 	/**
 	 * 
-	 * @param index The player by initiative index, starting at zero to number_of_player -1.
+	 * @param index The player by initiative index, starting at zero to
+	 *              number_of_player -1.
 	 * @return The player.
 	 */
 	public Player getPlayerByInitiativeIndex(int index) {
@@ -416,13 +428,28 @@ public class KemetGame implements Model, Game {
 
 	public void provideNightDiCards() {
 
+		for (Player player : playerByInitiativeList) {
+			DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, "Available DI Cards", player.name,
+					"Night DI Card", this);
+
+			if (player.hasPower(PowerList.WHITE_2_DIVINE_BOON)) {
+				DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, "Available DI Cards", player.name,
+						PowerList.WHITE_2_DIVINE_BOON.name, this);
+			}
+
+			if (player.hasPower(PowerList.WHITE_4_MUMMY)) {
+				DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, "Available DI Cards", player.name,
+						PowerList.WHITE_4_MUMMY.name, this);
+			}
+		}
+
 	}
 
 	public void provideNightPrayerPoints() {
 		for (Player player : playerByInitiativeList) {
-			
+
 			byte points = player.getNightPrayerPoints();
-			
+
 			player.modifyPrayerPoints(points, "night state");
 		}
 
@@ -500,12 +527,12 @@ public class KemetGame implements Model, Game {
 		deepCacheClone.activateAction(player, actionIndex);
 		return deepCacheClone;
 	}
-	
+
 	private static final int[] EMPTY = new int[] {};
 
 	@Override
 	public int[] getActivatedActions() {
-		if( actions == null ) {
+		if (actions == null) {
 			return EMPTY;
 		}
 		return Arrays.copyOf(actions, recordActionIndex);
@@ -523,22 +550,21 @@ public class KemetGame implements Model, Game {
 		int index = choice.getIndex();
 
 		if (recordActionIndex < Options.GAME_TRACK_MAX_ACTION_COUNT && index >= 0) {
-			if( isSimulation() ) {
+			if (isSimulation()) {
 				actions[recordActionIndex++] = index + 1000;
-			}
-			else {
+			} else {
 				actions[recordActionIndex++] = index;
 			}
 		}
 
 		resetCachedChoices();
-		
+
 		choice.activate();
 
 		resetCachedChoices();
 
 	}
-	
+
 	public boolean isSimulation() {
 		return simulatedPlayerIndex != -1;
 	}
@@ -571,7 +597,9 @@ public class KemetGame implements Model, Game {
 			}
 		}
 
-		String message = "Unable to find action that matches index : " + actionIndex + "\n" + "Choice List :" + printChoiceList(currentPlayerChoicePick);
+		String message = "Unable to find action that matches index : " + actionIndex + "\n" + "Choice List :"
+				+ printChoiceList(currentPlayerChoicePick) + "\nPlayer :\n"
+				+ currentPlayerChoicePick.player.describePlayer();
 		LOGGER.error(message);
 		throw new IllegalArgumentException(message);
 	}
@@ -694,6 +722,9 @@ public class KemetGame implements Model, Game {
 				player.fillCanonicalForm(canonicalForm, playerIndex);
 			}
 
+			// DI CARDS
+			DiCardList.fillCanonicalForm(discardedDiCardList, canonicalForm, BoardInventory.DI_DISCARD);
+
 			canonicalForm.finalize();
 		}
 
@@ -738,12 +769,12 @@ public class KemetGame implements Model, Game {
 	@Override
 	public void enterSimulationMode(int playerIndex, StackingMCTS mcts) {
 		resetCachedChoices();
-		
+
 		simulatedPlayerIndex = playerIndex;
 		simulationMcts = mcts;
-		
+
 		for (Player player : playerByInitiativeList) {
-			player.enterSimulationMode( playerIndex );
+			player.enterSimulationMode(playerIndex);
 		}
 	}
 
@@ -753,31 +784,31 @@ public class KemetGame implements Model, Game {
 	 * @return the order of the player in the game, zero based.
 	 */
 	public int getPlayerOrder(int index) {
-		for( int i=0;i<playerByInitiativeList.size();++i) {
-			if( playerByInitiativeList.get(i).getIndex() == index ) {
+		for (int i = 0; i < playerByInitiativeList.size(); ++i) {
+			if (playerByInitiativeList.get(i).getIndex() == index) {
 				return i;
 			}
 		}
-		
+
 		log.error("Couldn't determine player order of player index {}", index);
 		return -1;
 	}
 
 	public void movePowerToPlayer(Player player, Power power) {
-		if( power == null ) {
+		if (power == null) {
 			return;
 		}
-		
+
 		Power removedPower = availablePowerList.set(power.index, null);
-		if( removedPower == null ) {
+		if (removedPower == null) {
 			log.error("Attempted to mover power {} to player {} but it's already gone.", power, player);
 			throw new IllegalStateException("Invalid power to move");
 		}
-		
+
 		player.powerList.add(power);
-		
+
 		power.applyToPlayer(player);
-		
+
 	}
 
 }

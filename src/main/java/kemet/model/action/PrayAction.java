@@ -108,7 +108,7 @@ public class PrayAction implements Action
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		LOGGER.warn("Shouldn't be able to reach this code");
+		LOGGER.warn("PrayAction fillCanonicalForm Shouldn't be able to reach this code");
 		
 	}
 

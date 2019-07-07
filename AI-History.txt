@@ -610,6 +610,24 @@
 		the last move in a turn, allowing it to capture free temples more easily.
 		 
 
+2019-07-06
+
+	Infinite loop of actions
+		Ever since the majority of game powers were implemented, the coach would sometimes run out of memory.
+		Turns out that from time to time, the API would buy a specific combination of powers that allowed it
+		to perform moves using infinite repetitions. The combo was :
+			Stargate : -1 cost on teleport
+			Priest of Ra : -1 cost on everything
+			Teleport : Enable teleportation from obelisk
+		Using this combo, the AI could teleport between two tiles forever if
+		- the best known move on tile A was to move to tile B via Teleport
+		- the best known move on tile B was to move to tile A via Teleport
+		
+		To fix this, simulations now detect when they are about to try a move that's already been simulated and
+		switch to the next best action.
+
+
+
 TODO High priority: 
 		- Game feature : Battle for initiative with dawn tokens.
 

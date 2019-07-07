@@ -20,13 +20,11 @@ import kemet.util.Cache;
 
 public class RecruitAction extends EndableAction {
 
-
-
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3010582557508632609L;
-	
+
 	public Tile tile;
 	public Beast beast;
 	public byte cost;
@@ -78,7 +76,7 @@ public class RecruitAction extends EndableAction {
 
 		} else if (playerHasBeastAvailable()) {
 			cannonicalForm.set(BoardInventory.STATE_PICK_BEAST, player.getState(playerIndex));
-			cannonicalForm.set(BoardInventory.PICKED_SIZE, recruitSize );
+			cannonicalForm.set(BoardInventory.PICKED_SIZE, recruitSize);
 			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
 		}
 
@@ -321,7 +319,7 @@ public class RecruitAction extends EndableAction {
 			if (pickBeast == null) {
 				return ChoiceInventory.KEEP_BEAST;
 			}
-			
+
 			return pickBeast.index + ChoiceInventory.PICK_BEAST;
 		}
 
@@ -379,7 +377,7 @@ public class RecruitAction extends EndableAction {
 			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE_1)) {
 				freeRecruitLeft += 2;
 			}
-			
+
 			if (player.hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
 				freeRecruitLeft += 1;
 			}
@@ -452,10 +450,9 @@ public class RecruitAction extends EndableAction {
 			recruitSize = pickArmySize;
 			cost = pickCost;
 
-			if (!playerHasBeastAvailable()) {
+			if (!playerCanRecruitBeastOnTile(recruitSize)) {
 				activateAction();
 			}
-
 		}
 
 		@Override
@@ -473,6 +470,27 @@ public class RecruitAction extends EndableAction {
 			return ChoiceInventory.ARMY_SIZE_CHOICE + pickArmySize - 1;
 		}
 
+	}
+
+	public boolean playerCanRecruitBeastOnTile(byte addedSize) {
+		if (!playerHasBeastAvailable()) {
+			return false;
+		}
+		byte totalSize = addedSize;
+		Army army = tile.getArmy();
+		if (army != null) {
+			if (army.beast != null) {
+				return false;
+			}
+			totalSize += army.armySize;
+		}
+
+		// need units to recruit a beast
+		if (totalSize == 0) {
+			return false;
+		}
+
+		return true;
 	}
 
 	public void addRecruitArmySizeChoice(List<Choice> choiceList) {
@@ -531,7 +549,7 @@ public class RecruitAction extends EndableAction {
 		if (player.hasPower(PowerList.BLACK_1_ENFORCED_RECRUITMENT) || canRecruitOnAnyArmy) {
 
 			for (Army army : player.armyList) {
-				if (!player.cityTiles.contains(army.tile)) {
+				if (!player.cityTiles.contains(army.tile) && army.tile != null) {
 					checkToAddRecruitChoice(choiceList, army.tile);
 				}
 			}

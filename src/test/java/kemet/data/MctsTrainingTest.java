@@ -19,7 +19,7 @@ class MctsTrainingTest {
 	public boolean useRecurrentNetwork = true;
 
 	@Test
-	void test() throws InterruptedException {
+	void test() {
 		
 		Options.PRINT_MCTS_FULL_PROBABILITY_VECTOR = false;
 		Options.PRINT_MCTS_SEARCH_ACTIONS = true;

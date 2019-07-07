@@ -31,39 +31,39 @@ public class StackingMCTS {
 	public List<TrainExample> trainExamples = new ArrayList<>();
 
 	private float cPuct; // C? P? upper confidence T?
-	
+
 	public static class MctsBoardInformation {
-		
+
 		// predicted value of the board at action Q
 		public Map<Integer, Float> valueAtBoardActionQsa = new HashMap<>();
-		
+
 		// number of times action X was hit
 		public Map<Integer, Integer> boardActionHitCountNsa = new HashMap<>();
-		
+
 		// number of times the board was hit
 		public int boardHitCountNs;
-		
+
 		// policy vector of the board
 		public PolicyVector choiceValuePredictionForBoardPs;
-		
+
 		// predicted board value by neural network
 		public float boardValue;
-		
+
 		// the last cycle at which this board information was used.
 		public int lastCycle;
-		
+
 		// the actual board.
 		public ByteCanonicalForm board;
 
 		// valid moves for the board
 		public boolean[] validMoves;
 	}
-	
+
 	// stores board information based on the canonical form
 	public Map<ByteCanonicalForm, MctsBoardInformation> boardInformationMemory = new HashMap<>();
 
 	public SearchPooler pooler;
-	
+
 	public int currentCycle;
 
 	public StackingMCTS(Game game, SearchPooler inPooler, float cPuct) {
@@ -71,11 +71,11 @@ public class StackingMCTS {
 		this.pooler = inPooler;
 		this.cPuct = cPuct;
 	}
-	
-	public MctsBoardInformation getBoardInformation( ByteCanonicalForm board ) {
-		
+
+	public MctsBoardInformation getBoardInformation(ByteCanonicalForm board) {
+
 		MctsBoardInformation currentBoard = boardInformationMemory.get(board);
-		if( currentBoard == null ) {
+		if (currentBoard == null) {
 			currentBoard = new MctsBoardInformation();
 			currentBoard.board = board;
 			boardInformationMemory.put(board, currentBoard);
@@ -83,21 +83,21 @@ public class StackingMCTS {
 		currentBoard.lastCycle = currentCycle;
 		return currentBoard;
 	}
-	
+
 	public void incrementCycle() {
 		currentCycle++;
 	}
-	
+
 	/**
 	 * free up memory from any board that haven't been used recently
 	 */
 	public void cleanupOldCycles() {
 		int minimumCycleAge = currentCycle - 2;
-		
+
 		Collection<MctsBoardInformation> values = boardInformationMemory.values();
 		for (Iterator<MctsBoardInformation> iterator = values.iterator(); iterator.hasNext();) {
 			MctsBoardInformation mctsBoardInformation = iterator.next();
-			if( mctsBoardInformation.lastCycle < minimumCycleAge ) {
+			if (mctsBoardInformation.lastCycle < minimumCycleAge) {
 				iterator.remove();
 			}
 		}
@@ -127,7 +127,7 @@ public class StackingMCTS {
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
 		Map<Integer, Integer> map = getBoardInformation(gameString).boardActionHitCountNsa;
-		
+
 		Set<Entry<Integer, Integer>> actionIndexCount = map.entrySet();
 		for (Entry<Integer, Integer> entry : actionIndexCount) {
 			actionHitCounts[entry.getKey()] = entry.getValue();
@@ -158,16 +158,15 @@ public class StackingMCTS {
 			float power = 1.0f / temperature;
 			for (int i = 0; i < actionHitCounts.length; i++) {
 				double pow = Math.pow(actionHitCounts[i], power);
-				if( pow > Float.MAX_VALUE) {
+				if (pow > Float.MAX_VALUE) {
 					countsFloat[i] = Float.MAX_VALUE;
-				}
-				else {
+				} else {
 					countsFloat[i] = (float) pow;
 				}
 			}
 		} else {
 			for (int i = 0; i < actionHitCounts.length; i++) {
-				countsFloat[i] = (float) actionHitCounts[i];
+				countsFloat[i] = actionHitCounts[i];
 			}
 		}
 
@@ -216,7 +215,7 @@ public class StackingMCTS {
 			MctsBoardInformation boardInformation = getBoardInformation(canonicalForm);
 			boardInformation.boardValue = valueV;
 			boardInformation.validMoves = validMoves;
-			
+
 			if (allActionProbability != null) {
 				boardInformation.choiceValuePredictionForBoardPs = allActionProbability;
 			}
@@ -304,7 +303,7 @@ public class StackingMCTS {
 	public void runSearchUntilNeuralNetPredict() {
 
 		int currentPlayerIndex = searchData.getGame().getNextPlayer();
-		//long start = System.nanoTime();
+		// long start = System.nanoTime();
 
 		while (!searchData.searchFinished) {
 
@@ -339,7 +338,7 @@ public class StackingMCTS {
 					newLayer.actionIndex = actionIndexOfNextSimulationA;
 					newLayer.byteCanonicalForm = canonicalForm;
 					newLayer.currentPlayer = currentPlayerIndex;
-					searchData.searchLayers.add(newLayer);
+					addSearchLayer(newLayer);
 
 					activateActionOnGame(currentGame, currentPlayerIndex, canonicalForm, actionIndexOfNextSimulationA);
 
@@ -347,8 +346,17 @@ public class StackingMCTS {
 			}
 		}
 
-		//long duration = System.nanoTime() - start;
+		// long duration = System.nanoTime() - start;
 
+	}
+
+	private void addSearchLayer(SearchDataLayer newLayer) {
+		searchData.searchLayers.add(newLayer);
+
+		if (searchData.searchLayers.size() > 100) {
+			game.printDescribeGame();
+			throw new IllegalStateException("MCTS search reached over 100 level deep. Doesn't sound possible.");
+		}
 	}
 
 	private void activateActionOnGame(Game currentGame, final int currentPlayerIndex, ByteCanonicalForm canonicalForm,
@@ -369,7 +377,8 @@ public class StackingMCTS {
 
 			// patch the valid moves and redo another action
 			gameInformation.validMoves = currentGame.getValidMoves();
-			actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(canonicalForm, currentGame, gameInformation.validMoves);
+			actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(canonicalForm, currentGame,
+					gameInformation.validMoves);
 			currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
 		}
 	}
@@ -412,8 +421,15 @@ public class StackingMCTS {
 				float currentActionValueU = adjustMoveValue(boardS, actionIndexA);
 
 				if (currentActionValueU > bestActionValue) {
-					bestActionValue = currentActionValueU;
-					bestActionIndex = actionIndexA;
+
+					// ensure the action hasn't been searched already, leading to an infinite loop
+					int currentPlayerIndex = game.getNextPlayer();
+
+					if (!actionAlreadySearched(boardS, actionIndexA, currentPlayerIndex)) {
+						// action isn't in a loop
+						bestActionValue = currentActionValueU;
+						bestActionIndex = actionIndexA;
+					}
 				}
 			}
 		}
@@ -424,6 +440,23 @@ public class StackingMCTS {
 		}
 
 		return bestActionIndex;
+	}
+
+	private boolean actionAlreadySearched(ByteCanonicalForm boardS, int actionIndexA, int currentPlayerIndex) {
+
+		List<SearchDataLayer> searchLayers = searchData.searchLayers;
+		for (SearchDataLayer searchDataLayer : searchLayers) {
+			if (searchDataLayer.actionIndex == actionIndexA && searchDataLayer.currentPlayer == currentPlayerIndex
+					&& searchDataLayer.byteCanonicalForm.equals(boardS)) {
+
+				log.debug("Action {} on board {} was already searched, leading to a potential infinite loop.",
+						actionIndexA, boardS);
+
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public void printStats() {
@@ -499,7 +532,7 @@ public class StackingMCTS {
 		float newValue = newBoardActionValueV;
 		if (preExists) {
 			// update the value of the current board+action
-			Integer currentBoardActionHitCountNsa = boardInformation.boardActionHitCountNsa.get(actionIndexA); 
+			Integer currentBoardActionHitCountNsa = boardInformation.boardActionHitCountNsa.get(actionIndexA);
 
 			// merge the new board value with the old one proportionally
 			newValue = (currentBoardActionHitCountNsa * previousBoardActionValueQ + newBoardActionValueV)
@@ -516,7 +549,7 @@ public class StackingMCTS {
 	public void incrementBoardActionHitCount(ByteCanonicalForm s, int a) {
 		MctsBoardInformation boardInformation = getBoardInformation(s);
 		Map<Integer, Integer> map = boardInformation.boardActionHitCountNsa;
-		
+
 		int hitCount = 1;
 		if (map.containsKey(a)) {
 			hitCount = map.get(a) + 1;
@@ -533,7 +566,7 @@ public class StackingMCTS {
 
 		float cpuct = getCPuct();
 		float currentActionValueU;
-		
+
 		MctsBoardInformation boardInformation = getBoardInformation(boardS);
 
 		PolicyVector policyVectorValuePrediction = boardInformation.choiceValuePredictionForBoardPs;
@@ -581,10 +614,10 @@ public class StackingMCTS {
 	public void printCurrentBoardProbability() {
 
 		ByteCanonicalForm gameString = game.getCanonicalForm(game.getNextPlayer());
-		
+
 		MctsBoardInformation boardInformation = getBoardInformation(gameString);
 
-		float value =  boardInformation.boardValue;
+		float value = boardInformation.boardValue;
 
 		value += 1;
 		value /= 2;

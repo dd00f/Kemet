@@ -425,7 +425,7 @@ class MiniLearnTest {
 		float valueError = Math.abs(value[0] - this.lastValue);
 		error = Math.max(valueError, error);
 		errorSum += valueError;
-		errorAverage = errorSum / ((float) measuredCount);
+		errorAverage = errorSum / (measuredCount);
 
 		// error /= KemetNeuralNetBuilder.OUTPUT_SIZE + 1;
 		// return error;

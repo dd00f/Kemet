@@ -3,6 +3,7 @@ package kemet.model.action.choice;
 import kemet.model.BattleCard;
 import kemet.model.BeastList;
 import kemet.model.BoardInventory;
+import kemet.model.DiCardList;
 import kemet.model.PowerList;
 
 public class ChoiceInventory {
@@ -112,6 +113,11 @@ public class ChoiceInventory {
 	public static final int UPGRADE_NOTHING = INDEXER++;
 	public static final int END_RECRUIT = INDEXER++;
 
+	public static final int ACTIVATE_DI_CARD = INDEXER;
+	static {
+		INDEXER += DiCardList.TOTAL_DI_CARD_TYPE_COUNT;
+	}
+	
 	public static final int TOTAL_CHOICE = INDEXER;
 
 	public static void main(String[] args) {

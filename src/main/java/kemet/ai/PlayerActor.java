@@ -29,7 +29,7 @@ public abstract class PlayerActor implements Serializable {
 	public void printChoiceList(List<kemet.model.action.choice.Choice> choiceList) {
 		printPlayerStatus();
 
-		PlayerChoicePick.print(choiceList);
+		PlayerChoicePick.logChoiceList(choiceList);
 	}
 
 	public void printPlayerStatus() {

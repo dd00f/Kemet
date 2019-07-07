@@ -4,6 +4,7 @@ package kemet.model.action;
 import java.util.List;
 
 import kemet.Options;
+import kemet.model.ActionList;
 import kemet.model.BoardInventory;
 import kemet.model.Color;
 import kemet.model.KemetGame;
@@ -38,6 +39,10 @@ public class PlayerActionTokenPick implements Action {
 	private boolean firstPick = true;
 	private boolean mainTokenPicked = false;
 
+	private int actionIndex1;
+	private int actionIndex2;
+	private int actionIndex3;
+
 	public static Cache<PlayerActionTokenPick> CACHE = new Cache<PlayerActionTokenPick>(
 			() -> new PlayerActionTokenPick());
 
@@ -49,9 +54,79 @@ public class PlayerActionTokenPick implements Action {
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		cannonicalForm.set(BoardInventory.STATE_PICK_ACTION_TOKEN, player.getState(playerIndex));
 
-		if (nextAction != null) {
-			nextAction.fillCanonicalForm(cannonicalForm, playerIndex);
+		if (mainTokenPicked) {
+			cannonicalForm.set(BoardInventory.MAIN_TOKEN_PICKED, player.getState(playerIndex));
 		}
+
+		// Picked & pending actions aren't reflected in the game canonical state.
+		// need indicator to know what is the 1st & 2nd, 3rd pending action.
+		// need indicator to know which action is executing : 1st,2nd,3rd
+
+		int selectedCount = getSelectedActionCount();
+		int pendingCount = getPendingActionCount();
+		int offset = selectedCount - pendingCount;
+		int canonicalPendingActionIndex1 = -1;
+		int canonicalPendingActionIndex2 = -1;
+		int canonicalPendingActionIndex3 = -1;
+
+		if (offset == 0) {
+			canonicalPendingActionIndex1 = actionIndex1;
+			canonicalPendingActionIndex2 = actionIndex2;
+			canonicalPendingActionIndex3 = actionIndex3;
+		} else if (offset == 1) {
+			canonicalPendingActionIndex1 = actionIndex2;
+			canonicalPendingActionIndex2 = actionIndex3;
+		} else if (offset == 2) {
+			canonicalPendingActionIndex1 = actionIndex3;
+		} else {
+			throw new IllegalStateException(
+					"How can the offset be bigger than 2 when there can only be 3 actions ? Offset " + offset);
+		}
+
+		if (canonicalPendingActionIndex1 >= 0) {
+			int offset1 = BoardInventory.PICKED_ACTION_IN_ORDER + canonicalPendingActionIndex1;
+			cannonicalForm.set(offset1, player.getState(playerIndex));
+		}
+		if (canonicalPendingActionIndex2 >= 0) {
+			int offset2 = BoardInventory.PICKED_ACTION_IN_ORDER + ActionList.TOTAL_ACTION_COUNT
+					+ canonicalPendingActionIndex2;
+			cannonicalForm.set(offset2, player.getState(playerIndex));
+		}
+		if (canonicalPendingActionIndex3 >= 0) {
+			int offset3 = BoardInventory.PICKED_ACTION_IN_ORDER + (ActionList.TOTAL_ACTION_COUNT * 2)
+					+ canonicalPendingActionIndex3;
+			cannonicalForm.set(offset3, player.getState(playerIndex));
+		}
+
+		if (donePicking) {
+			if (nextAction != null) {
+				nextAction.fillCanonicalForm(cannonicalForm, playerIndex);
+			}
+		}
+	}
+
+	private int getPendingActionCount() {
+		if (nextAction instanceof ChainedAction) {
+			ChainedAction nextChain = (ChainedAction) nextAction;
+			return nextChain.size();
+		}
+		if (nextAction != null) {
+			return 1;
+		}
+		return 0;
+	}
+
+	private int getSelectedActionCount() {
+		if (actionIndex3 >= 0) {
+			return 3;
+		}
+		if (actionIndex2 >= 0) {
+			return 2;
+		}
+		if (actionIndex1 >= 0) {
+			return 1;
+		}
+		return 0;
 	}
 
 	@Override
@@ -63,6 +138,10 @@ public class PlayerActionTokenPick implements Action {
 		donePicking = false;
 		firstPick = true;
 		mainTokenPicked = false;
+
+		actionIndex1 = -1;
+		actionIndex2 = -1;
+		actionIndex3 = -1;
 	}
 
 	@Override
@@ -90,6 +169,10 @@ public class PlayerActionTokenPick implements Action {
 		clone.donePicking = donePicking;
 		clone.firstPick = firstPick;
 		clone.mainTokenPicked = mainTokenPicked;
+
+		clone.actionIndex1 = actionIndex1;
+		clone.actionIndex2 = actionIndex2;
+		clone.actionIndex3 = actionIndex3;
 
 		// deep clone all owned objects
 		clone.nextAction = null;
@@ -174,30 +257,32 @@ public class PlayerActionTokenPick implements Action {
 
 		List<Choice> choiceList = pick.choiceList;
 
-		if (getPlayerActionTokenLeft() == 1) {
-			if (!player.isRowOneUsed()) {
-				addRowOneActions(player, choiceList);
-			} else if (!player.isRowTwoUsed()) {
-				addRowTwoActions(player, choiceList);
-			} else if (!player.isRowThreeUsed()) {
-				addRowThreeActions(player, choiceList);
+		if (!mainTokenPicked || player.canUseSilverToken()) {
+			if (getPlayerActionTokenLeft() == 1) {
+				if (!player.isRowOneUsed()) {
+					addRowOneActions(player, choiceList);
+				} else if (!player.isRowTwoUsed()) {
+					addRowTwoActions(player, choiceList);
+				} else if (!player.isRowThreeUsed()) {
+					addRowThreeActions(player, choiceList);
+				} else {
+					addAllActions(player, choiceList);
+				}
+
+			} else if (getPlayerActionTokenLeft() == 2 && player.getUsedRowCount() == 1) {
+				if (!player.isRowOneUsed()) {
+					addRowOneActions(player, choiceList);
+				}
+				if (!player.isRowTwoUsed()) {
+					addRowTwoActions(player, choiceList);
+				}
+				if (!player.isRowThreeUsed()) {
+					addRowThreeActions(player, choiceList);
+				}
+
 			} else {
 				addAllActions(player, choiceList);
 			}
-
-		} else if (getPlayerActionTokenLeft() == 2 && player.getUsedRowCount() == 1) {
-			if (!player.isRowOneUsed()) {
-				addRowOneActions(player, choiceList);
-			}
-			if (!player.isRowTwoUsed()) {
-				addRowTwoActions(player, choiceList);
-			}
-			if (!player.isRowThreeUsed()) {
-				addRowThreeActions(player, choiceList);
-			}
-
-		} else {
-			addAllActions(player, choiceList);
 		}
 
 		addAllGoldTokenActions(player, choiceList);
@@ -225,6 +310,8 @@ public class PlayerActionTokenPick implements Action {
 				// add pray
 				choiceList.add(new PrayerChoice(game, player, (byte) 0, true));
 			}
+
+			addAllTwinCeremonyPowerBuyOptions(currentPlayer, choiceList);
 		}
 
 	}
@@ -270,7 +357,7 @@ public class PlayerActionTokenPick implements Action {
 			}
 
 			ArmyMoveAction action = ArmyMoveAction.create(game, player, PlayerActionTokenPick.this);
-			addNextAction(action, isGold);
+			addNextAction(action, isGold, ActionList.ACTION_MOVE);
 
 		}
 
@@ -320,7 +407,7 @@ public class PlayerActionTokenPick implements Action {
 			}
 
 			PrayAction action = PrayAction.create(PlayerActionTokenPick.this, player, increasedPower);
-			addNextAction(action, isGold);
+			addNextAction(action, isGold, ActionList.ACTION_PRAY);
 		}
 
 		@Override
@@ -360,7 +447,7 @@ public class PlayerActionTokenPick implements Action {
 			player.rowTwoUpgradePyramidUsed = true;
 
 			UpgradePyramidAction action = UpgradePyramidAction.create(game, player, PlayerActionTokenPick.this);
-			addNextAction(action, false);
+			addNextAction(action, false, ActionList.ACTION_UPGRADE_PYRAMID);
 
 		}
 
@@ -406,7 +493,7 @@ public class PlayerActionTokenPick implements Action {
 			}
 
 			RecruitAction action = RecruitAction.create(game, player, PlayerActionTokenPick.this);
-			addNextAction(action, isGold);
+			addNextAction(action, isGold, ActionList.ACTION_RECRUIT);
 
 		}
 
@@ -462,7 +549,15 @@ public class PlayerActionTokenPick implements Action {
 
 			BuyPowerAction action = BuyPowerAction.create(game, player, PlayerActionTokenPick.this, color, costBoost);
 
-			addNextAction(action, isGold);
+			int actionIndexOffset = getActionIndexOffset();
+			addNextAction(action, isGold, actionIndexOffset);
+		}
+
+		public int getActionIndexOffset() {
+			if (isGold) {
+				return ActionList.ACTION_REPEAT_BUY_POWER + color.ordinal();
+			}
+			return ActionList.ACTION_BUY_POWER + color.ordinal();
 		}
 
 		@Override
@@ -518,7 +613,19 @@ public class PlayerActionTokenPick implements Action {
 		addRowThreeActions(player, choiceList);
 	}
 
-	public void addNextAction(Action action, boolean goldToken) {
+	public void addNextAction(Action action, boolean goldToken, int actionIndexOffset) {
+
+		if (actionIndex1 < 0) {
+			actionIndex1 = actionIndexOffset;
+		} else if (actionIndex2 < 0) {
+			actionIndex2 = actionIndexOffset;
+		} else if (actionIndex3 < 0) {
+			actionIndex3 = actionIndexOffset;
+		} else {
+			game.printDescribeGame();
+			throw new IllegalStateException("A player managed to get 4 actions in one turn. ");
+		}
+
 		firstPick = false;
 
 		if (goldToken) {
@@ -541,6 +648,7 @@ public class PlayerActionTokenPick implements Action {
 			} else {
 				next = (ChainedAction) nextAction;
 			}
+			action.setParent(next);
 			next.add(action);
 		} else {
 			donePicking = true;
@@ -549,6 +657,7 @@ public class PlayerActionTokenPick implements Action {
 				nextAction = action;
 			} else {
 				ChainedAction next = (ChainedAction) nextAction;
+				action.setParent(next);
 				next.add(action);
 			}
 		}
@@ -564,30 +673,46 @@ public class PlayerActionTokenPick implements Action {
 
 	private void addAllPowerBuyOptions(Player currentPlayer, List<Choice> choiceList) {
 
-		boolean canBuyWithGoldToken = currentPlayer.canUseGoldToken()
-				&& currentPlayer.hasPower(PowerList.BLACK_2_TWIN_CEREMONY);
-
 		if (!player.rowThreeBuildWhiteUsed && playerHasPyramidColor(currentPlayer, Color.WHITE)) {
 			choiceList.add(new BuyPowerChoice(game, player, Color.WHITE, false));
-		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.WHITE)) {
-			choiceList.add(new BuyPowerChoice(game, player, Color.WHITE, true));
 		}
 
 		if (!player.rowThreeBuildRedUsed && playerHasPyramidColor(currentPlayer, Color.RED)) {
 			choiceList.add(new BuyPowerChoice(game, player, Color.RED, false));
-		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.RED)) {
-			choiceList.add(new BuyPowerChoice(game, player, Color.RED, true));
 		}
 
 		if (!player.rowThreeBuildBlackUsed && playerHasPyramidColor(currentPlayer, Color.BLACK)) {
 			choiceList.add(new BuyPowerChoice(game, player, Color.BLACK, false));
-		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.BLACK)) {
-			choiceList.add(new BuyPowerChoice(game, player, Color.BLACK, true));
 		}
 
 		if (!player.rowThreeBuildBlueUsed && playerHasPyramidColor(currentPlayer, Color.BLUE)) {
 			choiceList.add(new BuyPowerChoice(game, player, Color.BLUE, false));
-		} else if (canBuyWithGoldToken && playerHasPyramidColor(currentPlayer, Color.BLUE)) {
+		}
+
+	}
+
+	private void addAllTwinCeremonyPowerBuyOptions(Player currentPlayer, List<Choice> choiceList) {
+
+		boolean canBuyWithGoldToken = currentPlayer.canUseGoldToken()
+				&& currentPlayer.hasPower(PowerList.BLACK_2_TWIN_CEREMONY);
+
+		if (!canBuyWithGoldToken) {
+			return;
+		}
+
+		if (player.rowThreeBuildWhiteUsed && playerHasPyramidColor(currentPlayer, Color.WHITE)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.WHITE, true));
+		}
+
+		if (player.rowThreeBuildRedUsed && playerHasPyramidColor(currentPlayer, Color.RED)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.RED, true));
+		}
+
+		if (player.rowThreeBuildBlackUsed && playerHasPyramidColor(currentPlayer, Color.BLACK)) {
+			choiceList.add(new BuyPowerChoice(game, player, Color.BLACK, true));
+		}
+
+		if (player.rowThreeBuildBlueUsed && playerHasPyramidColor(currentPlayer, Color.BLUE)) {
 			choiceList.add(new BuyPowerChoice(game, player, Color.BLUE, true));
 		}
 

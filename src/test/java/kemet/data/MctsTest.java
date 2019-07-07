@@ -9,7 +9,7 @@ class StackingMCTSTest {
 	public boolean useRecurrentNetwork = true;
 
 	@Test
-	void test() throws InterruptedException {
+	void test()  {
 		
 		System.out.println("Board Hit count s tweak");
 		System.out.println(StackingMCTS.getAdjustedActionValueForSearch(1.0f, 6, 0.5f, 0.7f, 1));

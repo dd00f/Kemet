@@ -44,17 +44,21 @@ public class Options {
 	public static int GAME_TURN_LIMIT = 15;
 
 	// Number of matches used to compare 2 generations of the neural network
-	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 50;
+	// TODO reset to 50
+	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 10;
 
 	// number of games to play when training the neural network
-	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 100;
+	// TODO reset to 100
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 500;
 
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network
-	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 1000;
+	// TODO reset to 1000
+	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 10;
 	
 	// number of times to run the test data to fit the neural network
-	public static int NEURAL_NET_TRAIN_EPOCH = 30;
+	// TODO reset to 30
+	public static int NEURAL_NET_TRAIN_EPOCH = 10;
 
 	// number of actions to remember in the game
 	public static int GAME_TRACK_MAX_ACTION_COUNT = 1024;

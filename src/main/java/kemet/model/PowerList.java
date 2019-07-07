@@ -78,12 +78,12 @@ public class PowerList {
 	public static final Power WHITE_3_VISION = new Power(POWER_INDEXER++, WHITE_3_VISION_NAME, (byte) 3, Color.WHITE,
 			WHITE_3_VISION_DESCRIPTION);
 
-	public static final String WHITE_4_PRIEST_OF_RA_NAME = "PRIEST_OF_RA";
+	public static final String WHITE_4_PRIEST_OF_RA_NAME = "Priest of Ra";
 	public static final String WHITE_4_PRIEST_OF_RA_DESCRIPTION = "-1 cost on everything.";
 	public static final Power WHITE_4_PRIEST_OF_RA = new Power(POWER_INDEXER++, WHITE_4_PRIEST_OF_RA_NAME, (byte) 4,
 			Color.WHITE, WHITE_4_PRIEST_OF_RA_DESCRIPTION);
 
-	public static final String WHITE_4_PRIEST_OF_AMON_NAME = "PRIEST_OF_AMON";
+	public static final String WHITE_4_PRIEST_OF_AMON_NAME = "Priest of Amon";
 	public static final String WHITE_4_PRIEST_OF_AMON_DESCRIPTION = "+5 power at night.";
 	public static final Power WHITE_4_PRIEST_OF_AMON = new Power(POWER_INDEXER++, WHITE_4_PRIEST_OF_AMON_NAME, (byte) 4,
 			Color.WHITE, WHITE_4_PRIEST_OF_AMON_DESCRIPTION);
@@ -155,7 +155,7 @@ public class PowerList {
 	public static final Power RED_4_PHOENIX = new BeastPower(POWER_INDEXER++, (byte) 4, Color.RED,
 			BeastList.RED_4_PHOENIX);
 
-	public static final String RED_4_INITIATIVE_NAME = "INITIATIVE";
+	public static final String RED_4_INITIATIVE_NAME = "Initiative";
 	public static final String RED_4_INITIATIVE_DESCRIPTION = "Destroy 2 enemy units before battle.";
 	public static final Power RED_4_INITIATIVE = new Power(POWER_INDEXER++, RED_4_INITIATIVE_NAME, (byte) 4, Color.RED,
 			RED_4_INITIATIVE_DESCRIPTION);

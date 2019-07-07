@@ -17,6 +17,7 @@ import kemet.util.TrainExample;
 
 class KemetLearnTest {
 
+	@SuppressWarnings("null")
 	@Test
 	void test() {
 

@@ -1,14 +1,15 @@
 package kemet.model.action;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 
 import kemet.model.Army;
 import kemet.model.BattleCard;
+import kemet.model.BeastList;
 import kemet.model.BoardInventory;
 import kemet.model.DiCard;
+import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
@@ -26,6 +27,8 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class BattleAction implements Action {
 
+	private static final String DEVOURER_VICTORY_POINT_REASON = "Devourer won victory point and damaged 2 or more troops.";
+
 	/**
 	 * 
 	 */
@@ -38,13 +41,13 @@ public class BattleAction implements Action {
 	public Army attackingArmy;
 	public BattleCard attackingDiscardBattleCard;
 	public BattleCard attackingUsedBattleCard;
-	public List<DiCard> attackingUsedDiCard = new ArrayList<>();
+	public byte[] attackingUsedDiCard = new byte[DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT];
 	public boolean attackerRecall = false;
 
 	public Army defendingArmy;
 	public BattleCard defendingDiscardBattleCard;
 	public BattleCard defendingUsedBattleCard;
-	public List<DiCard> defendingUsedDiCard = new ArrayList<>();
+	public byte[] defendingUsedDiCard = new byte[DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT];
 	public boolean defenderRecall = false;
 
 	public Tile tile;
@@ -73,13 +76,13 @@ public class BattleAction implements Action {
 		attackingArmy = null;
 		attackingDiscardBattleCard = null;
 		attackingUsedBattleCard = null;
-		attackingUsedDiCard.clear();
+		DiCardList.fillArray(attackingUsedDiCard, (byte) 0);
+		DiCardList.fillArray(defendingUsedDiCard, (byte) 0);
 		attackerRecall = false;
 
 		defendingArmy = null;
 		defendingDiscardBattleCard = null;
 		defendingUsedBattleCard = null;
-		defendingUsedDiCard.clear();
 		defenderRecall = false;
 
 		tile = null;
@@ -153,10 +156,10 @@ public class BattleAction implements Action {
 		clone.attackerRetreatTilePicked = attackerRetreatTilePicked;
 		clone.defenderRetreatPicked = defenderRetreatPicked;
 		clone.defenderRetreatTilePicked = defenderRetreatTilePicked;
-		clone.attackingUsedDiCard.clear();
-		clone.attackingUsedDiCard.addAll(attackingUsedDiCard);
-		clone.defendingUsedDiCard.clear();
-		clone.defendingUsedDiCard.addAll(defendingUsedDiCard);
+
+		DiCardList.copyArray(attackingUsedDiCard, clone.attackingUsedDiCard);
+		DiCardList.copyArray(defendingUsedDiCard, clone.defendingUsedDiCard);
+
 		clone.incrementedCounter = incrementedCounter;
 
 		if (pendingActions != null) {
@@ -174,8 +177,6 @@ public class BattleAction implements Action {
 		attackingArmy = null;
 		defendingArmy = null;
 		tile = null;
-		attackingUsedDiCard.clear();
-		defendingUsedDiCard.clear();
 		attackingDiscardBattleCard = null;
 		attackingUsedBattleCard = null;
 		defendingDiscardBattleCard = null;
@@ -213,14 +214,26 @@ public class BattleAction implements Action {
 	}
 
 	public byte calculateAttackerScore() {
-		byte score = attackingArmy.getScore(true);
+		boolean isAttackerBeastIgnored = isAttackerBeastIgnored();
+
+		byte score = attackingArmy.getScore(true, isAttackerBeastIgnored);
 		score += attackingUsedBattleCard.attackBonus;
+		
+		score += attackingUsedDiCard[DiCardList.WAR_RAGE.index];
+		score += attackingUsedDiCard[DiCardList.WAR_FURY.index] * 2;
+		
 		return score;
 	}
 
 	public byte calculateDefenderScore() {
-		byte score = defendingArmy.getScore(false);
+		boolean isDefenderBeastIgnored = isDefenderBeastIgnored();
+
+		byte score = defendingArmy.getScore(false, isDefenderBeastIgnored);
 		score += defendingUsedBattleCard.attackBonus;
+		
+		score += defendingUsedDiCard[DiCardList.WAR_RAGE.index];
+		score += defendingUsedDiCard[DiCardList.WAR_FURY.index] * 2;
+		
 		return score;
 	}
 
@@ -231,6 +244,9 @@ public class BattleAction implements Action {
 		if (attackingArmy.beast != null) {
 			score += attackingArmy.beast.damageBonus;
 		}
+		
+		score += attackingUsedDiCard[DiCardList.BLOOD_BATTLE.index];
+		score += attackingUsedDiCard[DiCardList.BLOOD_BATH.index] * 2;
 
 		return score;
 	}
@@ -242,6 +258,10 @@ public class BattleAction implements Action {
 		if (defendingArmy.beast != null) {
 			score += defendingArmy.beast.damageBonus;
 		}
+		
+		score += defendingUsedDiCard[DiCardList.BLOOD_BATTLE.index];
+		score += defendingUsedDiCard[DiCardList.BLOOD_BATH.index] * 2;
+		
 		return score;
 	}
 
@@ -253,6 +273,9 @@ public class BattleAction implements Action {
 			score += attackingArmy.beast.shieldBonus;
 		}
 
+		score += attackingUsedDiCard[DiCardList.BRONZE_WALL.index];
+		score += attackingUsedDiCard[DiCardList.IRON_WALL.index] * 2;
+		
 		return score;
 	}
 
@@ -264,6 +287,9 @@ public class BattleAction implements Action {
 			score += defendingArmy.beast.shieldBonus;
 		}
 
+		score += defendingUsedDiCard[DiCardList.BRONZE_WALL.index];
+		score += defendingUsedDiCard[DiCardList.IRON_WALL.index] * 2;
+		
 		return score;
 	}
 
@@ -292,7 +318,6 @@ public class BattleAction implements Action {
 
 			addRecruitBeastFromRemovedArmy(attackingArmy);
 
-			
 			attackingArmy.destroyArmy();
 			attackerRetreatPicked = true;
 			attackerRetreatTilePicked = true;
@@ -300,9 +325,9 @@ public class BattleAction implements Action {
 
 		defenderDestroyed = defendingArmy.armySize <= 0;
 		if (defenderDestroyed) {
-			
+
 			addRecruitBeastFromRemovedArmy(defendingArmy);
-			
+
 			defendingArmy.destroyArmy();
 			defenderRetreatPicked = true;
 			defenderRetreatTilePicked = true;
@@ -312,13 +337,13 @@ public class BattleAction implements Action {
 	public void addRecruitBeastFromRemovedArmy(Army removedArmy) {
 		if (removedArmy.beast != null) {
 			createPendingActions();
-			pendingActions.add(BeastRecruitAction.create(game, removedArmy.owningPlayer, pendingActions,
-					removedArmy.beast));
+			pendingActions
+					.add(BeastRecruitAction.create(game, removedArmy.owningPlayer, pendingActions, removedArmy.beast));
 		}
 	}
 
 	private void createPendingActions() {
-		if( pendingActions == null ) {
+		if (pendingActions == null) {
 			pendingActions = ChainedAction.create(game, this);
 		}
 	}
@@ -355,16 +380,28 @@ public class BattleAction implements Action {
 		}
 	}
 
-	public void giveBattleVictoryPoints() {
+	public void giveBattleVictoryPoints(byte defenderBleed, byte attackerBleed, boolean attackerHasDeepDesertSnake,
+			boolean defenderHasDeepDesertSnake) {
 		// give winner victory point if attacker & still alive
 		if (attackerWins) {
 			if (!attackerDestroyed) {
-				attackingArmy.owningPlayer.addBattleVictoryPoint();
+				String reason = "Offensive Battle Victory";
+				attackingArmy.owningPlayer.addBattleVictoryPoint(reason);
+
+				if (attackingArmy.beast == BeastList.BLACK_4_DEVOURER && defenderBleed >= 2
+						&& !defenderHasDeepDesertSnake) {
+					attackingArmy.owningPlayer.addBattleVictoryPoint(DEVOURER_VICTORY_POINT_REASON);
+				}
 			}
 		} else {
 			if (!defenderDestroyed) {
 				if (defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_DEFENSIVE_VICTORY)) {
-					defendingArmy.owningPlayer.addBattleVictoryPoint();
+					defendingArmy.owningPlayer.addBattleVictoryPoint("Defensive Battle Victory Power");
+
+					if (defendingArmy.beast == BeastList.BLACK_4_DEVOURER && attackerBleed >= 2
+							&& !attackerHasDeepDesertSnake) {
+						defendingArmy.owningPlayer.addBattleVictoryPoint(DEVOURER_VICTORY_POINT_REASON);
+					}
 				}
 			}
 		}
@@ -380,9 +417,8 @@ public class BattleAction implements Action {
 		}
 	}
 
-	public void applyBattleBleed() {
+	public byte applyAttackerBattleBleed() {
 		byte attackerBleed = calculateDamageOnAttacker();
-		byte defenderBleed = calculateDamageOnDefender();
 
 		// apply bleeds
 		attackingArmy.bleedArmy(attackerBleed, "defender damage score");
@@ -390,10 +426,18 @@ public class BattleAction implements Action {
 		applyCrusadePowerBonusToDamage(attackerBleed, defendingArmy.owningPlayer);
 		applyHonorInBattlePowerBonusToDamage(attackerBleed, attackingArmy.owningPlayer);
 
+		return attackerBleed;
+	}
+
+	public byte applyDefenderBattleBleed() {
+		byte defenderBleed = calculateDamageOnDefender();
+
 		defendingArmy.bleedArmy(defenderBleed, "attacker damage score");
 
 		applyCrusadePowerBonusToDamage(defenderBleed, attackingArmy.owningPlayer);
 		applyHonorInBattlePowerBonusToDamage(defenderBleed, defendingArmy.owningPlayer);
+
+		return defenderBleed;
 	}
 
 	private void applyCrusadePowerBonusToDamage(byte attackerBleed, Player owningPlayer) {
@@ -414,6 +458,56 @@ public class BattleAction implements Action {
 		// apply battlecard mandatory bleed
 		attackingArmy.bleedArmy(attackingUsedBattleCard.armyCost, "activated battle card");
 		defendingArmy.bleedArmy(defendingUsedBattleCard.armyCost, "activated battle card");
+	}
+
+	public Player getBattlePlayer(boolean isAttacker) {
+		if (isAttacker) {
+			return attackingArmy.owningPlayer;
+		}
+		return defendingArmy.owningPlayer;
+	}
+
+	public class PickBattleDiCardChoice extends PlayerChoice {
+
+		public int cardIndex;
+		public boolean isAttacker;
+
+		public PickBattleDiCardChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
+		@Override
+		public String describe() {
+			DiCard diCard = DiCardList.CARDS[cardIndex];
+
+			return "Use divine intervention card : " + diCard;
+		}
+
+		@Override
+		public void choiceActivate() {
+
+			DiCard diCard = DiCardList.CARDS[cardIndex];
+
+			if (diCard.powerCost > 0) {
+				byte cost = diCard.powerCost;
+				Player player = getBattlePlayer(isAttacker);
+				cost = player.applyPriestOfRaBonus(cost);
+				player.modifyPrayerPoints((byte) -cost, "Activated DI Card");
+			}
+
+			if (isAttacker) {
+				attackingUsedDiCard[cardIndex] += 1;
+			} else {
+				defendingUsedDiCard[cardIndex] += 1;
+			}
+
+		}
+
+		@Override
+		public int getIndex() {
+			return ChoiceInventory.ACTIVATE_DI_CARD + cardIndex;
+		}
+
 	}
 
 	public class PickBattleCardChoice extends PlayerChoice {
@@ -475,8 +569,10 @@ public class BattleAction implements Action {
 
 					if (game.isSimulation() && game.simulatedPlayerIndex != player.getIndex()) {
 						// skip discard card selection for other players during simulations
-						String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.";
-						log.error(message);
+						if (!attackingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
+							String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.";
+							log.error(message);
+						}
 						defendingDiscardBattleCard = card;
 					}
 
@@ -712,8 +808,42 @@ public class BattleAction implements Action {
 
 		}
 
+		if (!isDiscard) {
+			addAllBattleDiCardChoice(player, isAttacker, pick);
+		}
+
 		return pick;
 
+	}
+
+	public void addAllBattleDiCardChoice(Player player, boolean isAttacker, PlayerChoicePick pick) {
+		byte[] selectedDiCards = defendingUsedDiCard;
+		if (isAttacker) {
+			selectedDiCards = attackingUsedDiCard;
+		}
+
+		for (int i = 0; i < DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT; ++i) {
+			if (selectedDiCards[i] < player.diCards[i]) {
+
+				if (playerCanAffordDiCard(i, player)) {
+					PickBattleDiCardChoice pickBattleCardChoice = new PickBattleDiCardChoice(game, player);
+					pickBattleCardChoice.cardIndex = i;
+					pickBattleCardChoice.isAttacker = isAttacker;
+					pick.choiceList.add(pickBattleCardChoice);
+				}
+			}
+		}
+	}
+
+	private boolean playerCanAffordDiCard(int cardIndex, Player player) {
+		byte cost = DiCardList.CARDS[cardIndex].powerCost;
+		cost = player.applyPriestOfRaBonus(cost);
+		
+		if( cost > 0  && player.getPrayerPoints() < cost) {
+			return false;
+		}
+		
+		return true;
 	}
 
 	public class ArmyRetreatTileMoveChoice extends PlayerChoice {
@@ -979,12 +1109,29 @@ public class BattleAction implements Action {
 		cannonicalForm.set(BoardInventory.STATE_BATTLE, attackingArmy.owningPlayer.getState(playerIndex));
 		tile.setSelected(cannonicalForm, playerIndex, attackingArmy.owningPlayer.getState(playerIndex));
 
-		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_STRENGTH, attackingArmy.getAttackStrength());
-		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_SHIELD, attackingArmy.getAttackShield());
-		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_DAMAGE, attackingArmy.getAttackDamage());
-		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_STRENGTH, defendingArmy.getDefendingStrength());
-		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_SHIELD, defendingArmy.getDefendingShield());
-		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_DAMAGE, defendingArmy.getDefendingDamage());
+		boolean isAttackerBeastIgnored = isAttackerBeastIgnored();
+		boolean isDefenderBeastIgnored = isDefenderBeastIgnored();
+
+		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_STRENGTH,
+				attackingArmy.getAttackStrength(isAttackerBeastIgnored));
+		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_SHIELD,
+				attackingArmy.getAttackShield(isAttackerBeastIgnored));
+		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_DAMAGE,
+				attackingArmy.getAttackDamage(isAttackerBeastIgnored));
+		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_STRENGTH,
+				defendingArmy.getDefendingStrength(isDefenderBeastIgnored));
+		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_SHIELD,
+				defendingArmy.getDefendingShield(isDefenderBeastIgnored));
+		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_DAMAGE,
+				defendingArmy.getDefendingDamage(isDefenderBeastIgnored));
+
+		if (playerIndex == attackingArmy.owningPlayer.getIndex()) {
+			DiCardList.fillBattleCanonicalForm(attackingUsedDiCard, cannonicalForm,
+					BoardInventory.CURRENT_PLAYER_ACTIVATED_DI);
+		} else if (playerIndex == defendingArmy.owningPlayer.getIndex()) {
+			DiCardList.fillBattleCanonicalForm(defendingUsedDiCard, cannonicalForm,
+					BoardInventory.CURRENT_PLAYER_ACTIVATED_DI);
+		}
 
 		if (battleResolved) {
 			cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) (attackerWins ? 1 : -1));
@@ -1044,13 +1191,26 @@ public class BattleAction implements Action {
 		}
 	}
 
+	private boolean isDefenderBeastIgnored() {
+		return attackingArmy.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE;
+	}
+
+	private boolean isAttackerBeastIgnored() {
+		return defendingArmy.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE;
+	}
+
 	public void resolveBattle() {
 		if (!battleResolved) {
 			// resolve battle
 
 			resolveBattleWinner();
 
-			applyBattleBleed();
+			byte attackerBleed = applyAttackerBattleBleed();
+
+			byte defenderBleed = applyDefenderBattleBleed();
+
+			boolean attackerHasDeepDesertSnake = attackingArmy.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE;
+			boolean defenderHasDeepDesertSnake = defendingArmy.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE;
 
 			applyAttackCardBleed();
 
@@ -1058,13 +1218,35 @@ public class BattleAction implements Action {
 
 			giveDawnTokenToLoser();
 
-			giveBattleVictoryPoints();
+			giveBattleVictoryPoints(defenderBleed, attackerBleed, attackerHasDeepDesertSnake,
+					defenderHasDeepDesertSnake);
 
 			checkForForcedRecall();
 
 			moveWinnerToTile();
+			
+			discardUsedDiCards();
 
 			battleResolved = true;
+		}
+	}
+
+	private void discardUsedDiCards() {
+		
+		Player attacker = attackingArmy.owningPlayer;
+		byte[] attackingDiCards = attacker.diCards;
+		Player defender = defendingArmy.owningPlayer;
+		byte[] defendingDiCards = defender.diCards;
+		byte[] discardedDiCardList = game.discardedDiCardList;
+		
+		for( int i=0;i<DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT;++i) {
+			for( int j=0; j< attackingUsedDiCard[i];++i) {
+				DiCardList.moveDiCard(attackingDiCards, discardedDiCardList, i, attacker.name, "discard pile", "used in battle", game);
+			}
+
+			for( int j=0; j< defendingUsedDiCard[i];++i) {
+				DiCardList.moveDiCard(defendingDiCards, discardedDiCardList, i, defender.name, "discard pile", "used in battle", game);
+			}
 		}
 	}
 
@@ -1106,16 +1288,6 @@ public class BattleAction implements Action {
 				defenderRetreatPicked = true;
 				defenderRetreatTilePicked = true;
 			}
-		}
-	}
-
-	public byte getHighestAttackerScore() {
-		if (attackingUsedBattleCard == null) {
-			byte score = attackingArmy.getScore(true);
-			score += attackingUsedBattleCard.attackBonus;
-			return score;
-		} else {
-			return calculateAttackerScore();
 		}
 	}
 

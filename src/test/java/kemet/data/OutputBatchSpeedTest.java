@@ -32,7 +32,7 @@ class OutputBatchSpeedTest {
 	public boolean useRecurrentNetwork = true;
 
 	@Test
-	void test() throws InterruptedException {
+	void test() {
 
 		nn = new KemetNeuralNetwork();
 

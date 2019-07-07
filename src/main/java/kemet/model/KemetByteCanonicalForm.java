@@ -85,6 +85,17 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_STRENGTH, BoardInventory.PLAYER_COUNT,
 				BoardInventory.MAX_DAWN_BATTLE_STRENGTH_TOKEN);
 				
+		
+		adjustRange(floatCanonicalForm, BoardInventory.DI_DISCARD, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
+				DiCardList.MAX_DI_CARD_COUNT);
+		adjustRange(floatCanonicalForm, BoardInventory.CURRENT_PLAYER_DI, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
+				DiCardList.MAX_DI_CARD_COUNT);
+		adjustRange(floatCanonicalForm, BoardInventory.CURRENT_PLAYER_ACTIVATED_DI, DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT,
+				DiCardList.MAX_DI_CARD_COUNT);
+		
+		adjustRange(floatCanonicalForm, BoardInventory.DI_CARD_PER_PLAYER, BoardInventory.PLAYER_COUNT,
+				DiCardList.TOTAL_DI_COUNT);
+		
 		return floatCanonicalForm;
 	}
 

@@ -79,7 +79,7 @@ public class DawnAction implements Action {
 				int currentSelectingPlayerIndex = initiativeSelectionOrderPlayerIndex[i];
 				Player player = game.getPlayerByIndex(currentSelectingPlayerIndex);
 				if (selectedPlayerOrderByCurrentPlayerIndex[currentSelectingPlayerIndex] == -1) {
-					cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_DAWN_TOKEN, player.getState(playerIndex));
+					cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_ORDER, player.getState(playerIndex));
 					stepSet = true;
 					break;
 				}
@@ -334,6 +334,12 @@ public class DawnAction implements Action {
 	private void resolveInitiativeSelectionOrder() {
 		if (initiativeSelectionOrderPlayerIndex == null) {
 			int playerCount = game.playerByInitiativeList.size();
+			
+			for (int i = 0; i < playerCount; ++i) {
+				Player player = game.playerByInitiativeList.get(i);
+				player.checkToRecuperateAllBattleCards();
+			}
+			
 			initiativeSelectionOrderPlayerIndex = new byte[playerCount];
 
 			byte[] scoreByPlayerInitiativeIndex = new byte[playerCount];

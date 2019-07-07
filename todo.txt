@@ -1,69 +1,31 @@
 
+
 - BUG : 
 	- Recruit on top of an existing army doesn't trigger attack start powers, night/day
 
 
-	51 of 64 tiles done !
-	
-	- insta-recruit action
-
-	- move : add option to move beast & move bonus
-		- move with partial army left behind
-	
-	- battle : add beast bonus
-		- army death/recall : insta-recall beast
-	- recruit
-		- insta-recruit beast
-		- recruit beast on top of already full army during recruit action
-
-	- special : 
-		- Red : 4 : Beast : ignore walls
-		- Blue : 2 : Beast : Deep Desert Snake : ignore other creatures
-		- Black : 2 : Beast : Khnum's Sphinx : opponent cost 2 prayer point to move on tile
-		- Black : 3 : Beast : Griffin Sphinx : teleport from obelisk
-		- Black : 4 : Beast : Devourer : +1 VP on battle win & destroy 2 enemy troups
-		- White : 4 : Beast : Mummy : +1 DI card at night 
+	62 of 64 tiles done !
 
 - Check that power tiles have a unique flag per player ( no negative )
 
 - State goes negative based on player - change to individual state fields
 
-- Game feature : Power Tiles - Beasts - 10 tiles
-	- Red : 3 : Beast : Royal Scarab : +2 move, +2 attack
-	- Red : 4 : Beast : Giant Scorpion : +1 move, +2 strength, +2 damage
-	- Red : 4 : Beast : Phoenix : +1 move, +2 Strength, ignore walls
-	- Blue : 2 : Beast : Ancestral Elephant : +1 move, +1 strength, +1 protection
-	- Blue : 2 : Beast : Deep Desert Snake : +1 move, ignore other creatures
-	- Blue : 4 : Beast : Sphinx : +1 VP, +2 Strength
-	- Black : 2 : Beast : Khnum's Sphinx : +1 move, +1 strength, opponent cost 2 prayer point to move on tile
-	- Black : 3 : Beast : Griffin Sphinx : +2 strength, teleport from obelisk
-	- Black : 4 : Beast : Devourer : +1 move, +2 strength, +1 VP on battle win & destroy 2 enemy troups
+- Player fillCannonical uses negative values for used battle cards
+		for (BattleCard card : usedBattleCards) {
+			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
+		}
 
-
-- Game feature : Power Tiles - DI - 3 tiles
-	- White : 2 : Divine Boon : +1 DI card at night
+- Game feature : Power Tiles - DI - 4 tiles
 	- White : 3 : Vision : draw 5 DI card at night, pick one
 	- Red : 3 : Divine Wound : +1 strength per DI card spent
-	- White : 4 : Beast : Mummy : +1 move, +2 attack, +1 DI card at night 
 
 
-- Game feature : Power Tiles - Extra
-	- blue power tile level 1: - Protective aura: ignore any damage outside of combat
-	- white power tile level 2: - Reminiscence: At the end of battle, if the opponent has played at least one DI card, you may take one of them in your hand
-	- Black : 2 : Piety : +1 VP when holding 2 temples at night time.
-	
 
 - Game feature : DI Cards - Battle
 	- 2x : glory : cost 0 : gain 4 prayer if you win the battle.
 	- 2x : divine protection : cost 0 : if you win battle, don't take any damage.
 	- 2x : reinforcements : cost 0 : if you win battle, recruit 3 units anywhere before retreat.
 	- 2x : tactical choice : cost 0 : play after battle cards : you can switch your revealed battle card with the discard.
-	- 3x : War rage : cost 0 : +1 strength 
-	- 3x : War fury : cost 1 : +2 strength 
-	- 3x : Blood battle : cost 0 : +1 damage 
-	- 3x : Bloodbath : cost 1 : +2 damage 
-	- 3x : Bronze Wall : cost 0 : +1 shield 
-	- 3x : Iron Wall : cost 1 : +2 shield
 	 
 
 - Game feature : DI Cards - Non-Battle
@@ -78,13 +40,44 @@
 	- 2x : Veto : cost 0 : Cancel a DI card, not during battle.
 	- 1x : Escape : cost 0 : No battle takes place, move to a free territory.
 	
-
-- Game expansion : Seth !
+- Funny questions for game designers
+	- Khnum's Sphinx : Is there a 2 power cost to recruit on top of an enemy army with Khnum's sphinx in your city.
+	- Is it legal to move an army and leave the beast behind, alone, with no units, therefore forcing an automatic recall of the beast ?
+	- When an army moves and leaves a beast behind, do the beast bonus movement still apply to the army that keeps moving ?
+	- When an army moves and leaves a Phoenix behind just before crossing city walls, does that army still get to bypass city walls ?
+	- When an army moves and leaves a Phoenix behind one tile before reaching the opponent city front, does that army still get to bypass city walls ?
+	- When army with Phoenix is about to do a second move to a enemy walled city tile which has an army with Deep Desert Snake, 
+		does the phoenix power sill allow it to bypass city walls ?
+	- When army with Griffin Sphinx is about to teleport from an obelisk to another obelisk which has an army with Deep Desert Snake, 
+		does the Griffin Sphinx power sill allow it to teleport from an obelisk ?
+	- When using Blue 4 power Reinforcements, can it trigger a battle during night phase in your city ?
+	- If army with devourer moves on tile with enemy army with Deep Desert Snake & Deadly Trap, does the attacker take deadly trap damage ?
+		- Devourer negates damage outside of combat.
+		- Deep Desert snake negates enemy beast.
+	- If army with Deep Desert Snake & Initiative moves on tile with enemy army with Devourer, does the defender take Initiative damage ?
+		- Devourer negates damage outside of combat.
+		- Deep Desert snake negates enemy beast.
+	- If army with devourer moves on tile with enemy army with Deep Desert Snake, the devourer then wins the battle & does 2 damage to the enemy 
+		army, forcing them to retreat or recall. does the attacker get an extra VP for the battle victory
+		- Devourer gets an extra VP on battle win with 2 damage
+		- Deep Desert snake negates enemy beast.
+		- However, Deep Desert Snake is gone after the battle
+	- What happens if there are not enough DI cards to distribute at night ?
+		Example : 5 player game, 2 DI cards left in the stack, all other cards are owned by players. Who gets the remaining cards ? ( player order ? )
+	
+	
+- Game feature : Power Tiles - Extra
+	- blue power tile level 1: - Protective aura: ignore any damage outside of combat
+	- white power tile level 2: - Reminiscence: At the end of battle, if the opponent has played at least one DI card, you may take one of them in your hand
+	- Black : 2 : Piety : +1 VP when holding 2 temples at night time.
+	
 
 - Game feature : Power Tiles - Dice tower promo
 	- Divine Prescience (1red/1blue): Your opponent must reveal the Divine Intervention cards he will play during a battle, before you choose your Battle and Divine Intervention cards. If your opponent has the Prescience blue tile, the revelation of your Battle card and his Divine Intervention cards are done simultaneously.
 	- Renewal (2white/1red): During the night phase, before the new Divine Intervention cards are dealt, discard as many Divine Intervention cards as you want and draw the same number plus one.
 	- Disciple of Ptah (2blue/2white): Each pyramid you control gives you a temporary VP at level 3 instead of level 4.
+
+- Game expansion : Seth !
 
 - Game feature : Ta-Seti path
 

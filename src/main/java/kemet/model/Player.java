@@ -51,7 +51,7 @@ public class Player implements Model {
 	public List<BattleCard> availableBattleCards = new ArrayList<>();
 	public List<BattleCard> usedBattleCards = new ArrayList<>();
 	public List<BattleCard> discardedBattleCards = new ArrayList<>();
-	public List<DiCard> diCards = new ArrayList<>();
+	public byte[] diCards = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
 	public List<Beast> availableBeasts = new ArrayList<>();
 
 	public boolean rowOneMoveUsed = false;
@@ -91,10 +91,10 @@ public class Player implements Model {
 	}
 
 	public boolean hasPower(Power powerToCheck) {
-		if( powerToCheck == null ) {
+		if (powerToCheck == null) {
 			return false;
 		}
-		
+
 		for (Power power : powerList) {
 			if (power.name.equals(powerToCheck.name)) {
 				return true;
@@ -131,7 +131,7 @@ public class Player implements Model {
 		availableBattleCards.clear();
 		usedBattleCards.clear();
 		discardedBattleCards.clear();
-		diCards.clear();
+		DiCardList.fillArray(diCards, (byte) 0);
 		availableBeasts.clear();
 		cityTiles.clear();
 		armyList.clear();
@@ -226,8 +226,8 @@ public class Player implements Model {
 		clone.usedBattleCards.addAll(usedBattleCards);
 		clone.discardedBattleCards.clear();
 		clone.discardedBattleCards.addAll(discardedBattleCards);
-		clone.diCards.clear();
-		clone.diCards.addAll(diCards);
+
+		DiCardList.copyArray(diCards, clone.diCards);
 		clone.availableBeasts.clear();
 		clone.availableBeasts.addAll(availableBeasts);
 
@@ -255,7 +255,6 @@ public class Player implements Model {
 		usedBattleCards.clear();
 		usedBattleCards.clear();
 		discardedBattleCards.clear();
-		diCards.clear();
 		availableBeasts.clear();
 
 		CACHE.release(this);
@@ -321,7 +320,7 @@ public class Player implements Model {
 		return prayerPoints;
 	}
 
-	public void modifyPrayerPoints(byte modification, String reason) {
+	public void modifyPrayerPoints(byte modification, Object reason) {
 		if (modification == 0) {
 			return;
 		}
@@ -403,13 +402,17 @@ public class Player implements Model {
 			if (game.printActivations) {
 				game.printEvent("Player " + name + " recuperates all his battle cards.");
 			}
-			availableBattleCards.addAll(usedBattleCards);
-			availableBattleCards.addAll(discardedBattleCards);
-			discardedBattleCards.clear();
-			usedBattleCards.clear();
-
-			validateCardCount();
+			recuperateAllBattleCards();
 		}
+	}
+
+	public void recuperateAllBattleCards() {
+		availableBattleCards.addAll(usedBattleCards);
+		availableBattleCards.addAll(discardedBattleCards);
+		discardedBattleCards.clear();
+		usedBattleCards.clear();
+
+		validateCardCount();
 	}
 
 	public void discardBattleCard(BattleCard card) {
@@ -423,9 +426,9 @@ public class Player implements Model {
 		initiativeTokens++;
 	}
 
-	public void addBattleVictoryPoint() {
+	public void addBattleVictoryPoint(String reason) {
 		if (game.printActivations) {
-			game.printEvent("Army " + name + " won a permanent battle victory point.");
+			game.printEvent("Army " + name + " won a permanent battle victory point : " + reason);
 		}
 		victoryPoints++;
 		battlePoints++;
@@ -525,8 +528,18 @@ public class Player implements Model {
 			}
 		}
 
-		if ((countUsedActions() + actionTokenLeft) != 5) {
-			Validation.validationFailed("action left doesn't equal 5");
+		int usedActions = countUsedActions() + actionTokenLeft;
+		int availableActions = 5;
+		if (silverTokenAvailable) {
+			availableActions += 1;
+			if (!silverTokenUsed) {
+				usedActions += 1;
+			}
+		}
+
+		if (usedActions != availableActions) {
+			Validation.validationFailed("Used actions " + usedActions
+					+ " is not equal to the number of available actions " + availableActions);
 		}
 
 		if (prayerPoints < 0) {
@@ -624,6 +637,49 @@ public class Player implements Model {
 		builder.append("\t" + initiativeTokens + " initiative tokens.");
 		builder.append("\n");
 
+		builder.append("\tPyramids : ");
+		boolean first = true;
+		for (Tile tile : cityTiles) {
+			if (tile.getPyramidLevel() > 0) {
+				if (first) {
+					first = false;
+				} else {
+					builder.append(", ");
+				}
+
+				builder.append(tile.pyramidColor);
+				builder.append(" ");
+				builder.append(tile.getPyramidLevel());
+			}
+		}
+		builder.append("\n");
+
+		builder.append("\tPowers : ");
+		first = true;
+		for (Power power : powerList) {
+			if (first) {
+				first = false;
+			} else {
+				builder.append(", ");
+			}
+
+			builder.append(power.name);
+		}
+		builder.append("\n");
+
+		builder.append("\tAvailable Beasts : ");
+		first = true;
+		for (Beast beast : availableBeasts) {
+			if (first) {
+				first = false;
+			} else {
+				builder.append(", ");
+			}
+
+			builder.append(beast.name);
+		}
+		builder.append("\n");
+
 		builder.append("\tUsed Battle Cards  : ");
 		for (BattleCard used : usedBattleCards) {
 			builder.append(" ");
@@ -670,7 +726,7 @@ public class Player implements Model {
 
 		validateCardCount();
 	}
-	
+
 	public void recoverAllUsedBattleCards() {
 		availableBattleCards.addAll(usedBattleCards);
 		usedBattleCards.clear();
@@ -789,6 +845,15 @@ public class Player implements Model {
 		canonicalForm.set(BoardInventory.PLAYER_ORDER + canonicalPlayerIndex * BoardInventory.PLAYER_COUNT
 				+ game.getPlayerOrder(getIndex()), (byte) 1);
 
+		if (silverTokenAvailable) {
+			canonicalForm.set(BoardInventory.PLAYER_SILVER_TOKEN_USED + canonicalPlayerIndex,
+					(byte) (silverTokenUsed ? 0 : 1));
+		}
+		if (goldTokenAvailable) {
+			canonicalForm.set(BoardInventory.PLAYER_GOLD_TOKEN_USED + canonicalPlayerIndex,
+					(byte) (goldTokenUsed ? 0 : 1));
+		}
+
 		for (BattleCard card : availableBattleCards) {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) 1);
 		}
@@ -797,11 +862,20 @@ public class Player implements Model {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
 		}
 
+		for (Beast beast : availableBeasts) {
+			int beastAvailableIndex = BoardInventory.BEAST_AVAILABLE + BeastList.BEAST_INDEXER * canonicalPlayerIndex
+					+ beast.index;
+			canonicalForm.set(beastAvailableIndex, (byte) 1);
+		}
+
 		byte discardCardStatus = -1;
 
 		if (playerIndex != getIndex()) {
 			// make discarded cards appear available only for other players.
 			discardCardStatus = 1;
+		} else {
+			// Fill DI cards only if we are the current player, hide for other players
+			DiCardList.fillCanonicalForm(diCards, canonicalForm, BoardInventory.CURRENT_PLAYER_DI);
 		}
 
 		for (BattleCard card : discardedBattleCards) {
@@ -809,9 +883,14 @@ public class Player implements Model {
 		}
 
 		for (Power power : powerList) {
-			int powerIndex = (BoardInventory.PLAYER_POWERS + power.index * BoardInventory.PLAYER_COUNT + canonicalPlayerIndex);
+			int powerIndex = (BoardInventory.PLAYER_POWERS + power.index * BoardInventory.PLAYER_COUNT
+					+ canonicalPlayerIndex);
 			canonicalForm.set(powerIndex, (byte) 1);
 		}
+
+		// fill DI card count
+		canonicalForm.set(BoardInventory.DI_CARD_PER_PLAYER + canonicalPlayerIndex, DiCardList.sumArray(diCards));
+
 	}
 
 	public static int getCardStatusIndex(int canonicalPlayerIndex, BattleCard card) {
@@ -865,15 +944,15 @@ public class Player implements Model {
 		if (hasPower(PowerList.WHITE_1_PRIESTESS_1)) {
 			returnValue += 1;
 		}
-		
+
 		if (hasPower(PowerList.WHITE_4_PRIEST_OF_RA)) {
 			returnValue += 1;
 		}
-		
-		if( returnValue > 0 ) {
+
+		if (returnValue > 0) {
 			returnValue = 0;
 		}
-		
+
 		return returnValue;
 	}
 
@@ -882,11 +961,11 @@ public class Player implements Model {
 		if (hasPower(PowerList.WHITE_2_GREAT_PRIEST)) {
 			points += 2;
 		}
-		
+
 		if (hasPower(PowerList.WHITE_4_PRIEST_OF_AMON)) {
 			points += 5;
 		}
-		
+
 		return points;
 	}
 
@@ -912,11 +991,11 @@ public class Player implements Model {
 	}
 
 	public boolean canUseGoldToken() {
-		return goldTokenAvailable && ! goldTokenUsed;
+		return goldTokenAvailable && !goldTokenUsed;
 	}
-	
+
 	public boolean canUseSilverToken() {
-		return silverTokenAvailable && ! silverTokenUsed;
+		return silverTokenAvailable && !silverTokenUsed;
 	}
 
 	public int getIndex() {
@@ -925,6 +1004,12 @@ public class Player implements Model {
 
 	public void setIndex(int index) {
 		this.index = index;
+	}
+
+	public String describePlayer() {
+		StringBuilder build = new StringBuilder();
+		describePlayer(build);
+		return build.toString();
 	}
 
 }

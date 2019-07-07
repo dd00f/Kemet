@@ -529,16 +529,19 @@ public class Coach {
 			if (mcts != null) {
 				try {
 					activateActionOnGame(temperature, mcts);
+					
+					mcts.cleanupOldCycles();
+					mcts.incrementCycle();
+
+					// purge ended games
+					remainingGameCount = checkIfGameEnded(gameList, remainingGameCount, j, mcts, trainExamples);
+					
 				} catch (Exception ex) {
 					// scrap games that generated errors
+					log.error("Unexpected error in Coach.runPooledGameAction", ex);
+					remainingGameCount--;
 					gameList[j] = null;
 				}
-
-				mcts.cleanupOldCycles();
-				mcts.incrementCycle();
-
-				// purge ended games
-				remainingGameCount = checkIfGameEnded(gameList, remainingGameCount, j, mcts, trainExamples);
 			}
 		}
 

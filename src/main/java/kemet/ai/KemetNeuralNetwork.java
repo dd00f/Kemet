@@ -70,7 +70,7 @@ public class KemetNeuralNetwork implements NeuralNet {
 			long end = System.currentTimeMillis();
 			long start = end;
 			for (int i = 1; i <= epochs; ++i) {
-				trainEpoch(i, setList);
+				trainEpoch(setList);
 
 				// bookkeeping + plot progress
 				long now = System.currentTimeMillis();
@@ -90,8 +90,8 @@ public class KemetNeuralNetwork implements NeuralNet {
 						+ timeLeft + "ms, train list size : " + setListSize + " time per input ms = "
 						+ durationPerData);
 				String message = "{} / {}  | train eps time {}ms | total {}ms | ETA {}ms, train list size : {} time per input ms = {}";
-				log.info(message, i , epochs , duration , totalTime , timeLeft , setListSize , durationPerData);
-				
+				log.info(message, i, epochs, duration, totalTime, timeLeft, setListSize, durationPerData);
+
 				start = now;
 			}
 
@@ -120,7 +120,7 @@ public class KemetNeuralNetwork implements NeuralNet {
 		}
 	}
 
-	private void trainEpoch(int i, List<MultiDataSet> setList) {
+	private void trainEpoch( List<MultiDataSet> setList) {
 
 		Collections.shuffle(setList);
 
@@ -206,8 +206,10 @@ public class KemetNeuralNetwork implements NeuralNet {
 	public void saveCheckpoint(String folder, String filename) {
 
 		try {
-			model.save(new File(folder + "/" + filename), true);
-			log.info("Saved neural network checkpoint file {} {}", folder, filename);
+			File file = new File(folder + "/" + filename);
+			model.save(file, true);
+			long size = file.length();
+			log.info("Saved neural network checkpoint file {} {}, {} bytes", folder, filename, size);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -217,8 +219,13 @@ public class KemetNeuralNetwork implements NeuralNet {
 	public void loadCheckpoint(String folder, String filename) {
 
 		try {
-			model = ComputationGraph.load(new File(folder + "/" + filename), true);
-			log.info("Loaded neural network checkpoint file {} {}", folder, filename);
+			File previousCheckpointFile = new File(folder + "/" + filename);
+			if (previousCheckpointFile.exists()) {
+				model = ComputationGraph.load(previousCheckpointFile, true);
+				log.info("Loaded neural network checkpoint file {} {}", folder, filename);
+			} else {
+				log.info("No neural network checkpoint file found in {} {}, starting from scratch.", folder, filename);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

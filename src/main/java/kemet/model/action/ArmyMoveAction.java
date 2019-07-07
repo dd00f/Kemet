@@ -3,6 +3,7 @@ package kemet.model.action;
 import java.util.List;
 
 import kemet.model.Army;
+import kemet.model.BeastList;
 import kemet.model.BoardInventory;
 import kemet.model.KemetGame;
 import kemet.model.Player;
@@ -272,14 +273,18 @@ public class ArmyMoveAction extends EndableAction {
 			subChoice.pickDestinationTile = tile;
 			subChoice.pickIsTeleport = false;
 
-			if (tile.isWalledByEnemy(player) && !firstMove && !player.hasPower(PowerList.RED_2_OPEN_GATE)) {
+			applyKhnumSphinxCostToMove(tile, subChoice);
+
+			if (tile.isWalledByEnemy(player) && !firstMove && !armyHasPowerToBypassWalls()) {
 				// moving into a city tile with walls
 				log.debug("Army {} can't move to tile {} because it has walls and it isn't the first move.", army,
 						tile.name);
 				continue;
 			}
 
-			choiceList.add(subChoice);
+			if (playerCanAffordCost(subChoice.pickPowerCost)) {
+				choiceList.add(subChoice);
+			}
 
 		}
 
@@ -295,10 +300,37 @@ public class ArmyMoveAction extends EndableAction {
 					subChoice.pickDestinationTile = tile;
 					subChoice.pickIsTeleport = true;
 					subChoice.pickPowerCost = player.getTeleportCost();
-					choiceList.add(subChoice);
+
+					applyKhnumSphinxCostToMove(tile, subChoice);
+					if (playerCanAffordCost(subChoice.pickPowerCost)) {
+						choiceList.add(subChoice);
+					}
 				}
 			}
 		}
+	}
+
+	private boolean playerCanAffordCost(byte pickPowerCost) {
+		return player.getPrayerPoints() >= pickPowerCost;
+	}
+
+	private void applyKhnumSphinxCostToMove(Tile tile, TileMoveChoice subChoice) {
+		Army destinationTileArmy = tile.getArmy();
+		if (destinationTileArmy != null && destinationTileArmy.beast == BeastList.BLACK_2_KHNUM_SPHINX) {
+
+			if (army.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE) {
+				log.debug("Cost to move to tile {} didn't change by Khnum's Sphinx due to Deep DesertSnake", tile);
+			} else {
+
+				byte extraCost = player.applyPriestOfRaBonus((byte) 2);
+				log.debug("Cost to move to tile {} increased by {} due to Khnum's Sphinx", tile, extraCost);
+				subChoice.pickPowerCost += extraCost;
+			}
+		}
+	}
+
+	private boolean armyHasPowerToBypassWalls() {
+		return player.hasPower(PowerList.RED_2_OPEN_GATE) || army.beast == BeastList.RED_4_PHOENIX;
 	}
 
 	private boolean armyCanTeleport() {
@@ -312,8 +344,13 @@ public class ArmyMoveAction extends EndableAction {
 			return true;
 		}
 
-		if (army.tile.hasObelisk && player.hasPower(PowerList.RED_2_TELEPORT)) {
-			return true;
+		if (army.tile.hasObelisk) {
+			if (player.hasPower(PowerList.RED_2_TELEPORT)) {
+				return true;
+			}
+			if (army.beast == BeastList.BLACK_3_GRIFFIN_SPHINX) {
+				return true;
+			}
 		}
 
 		return false;
@@ -379,7 +416,7 @@ public class ArmyMoveAction extends EndableAction {
 				return tempNextChoice;
 			}
 		}
-		
+
 		if (isEnded()) {
 			return null;
 		}
@@ -412,13 +449,13 @@ public class ArmyMoveAction extends EndableAction {
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
 						ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
 				return pick.validate();
-			} else {
-				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
-				addArmySizeMoveChoice(pick.choiceList);
-				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
-						ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
-				return pick.validate();
 			}
+
+			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
+			addArmySizeMoveChoice(pick.choiceList);
+			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
+					ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
+			return pick.validate();
 
 		}
 
@@ -449,7 +486,10 @@ public class ArmyMoveAction extends EndableAction {
 			// pick army source tile
 			cannonicalForm.set(BoardInventory.STATE_PICK_SOURCE_TILE, player.getState(playerIndex));
 		} else if (movementLeft > 0) {
-			army.tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			Tile currentArmyTile = army.tile;
+			if (currentArmyTile != null) {
+				currentArmyTile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			}
 
 			// pick tile until move capacity is done
 			if (destinationTile == null) {
@@ -478,7 +518,7 @@ public class ArmyMoveAction extends EndableAction {
 			addAllArmySizeMoveChoice(choiceList, (byte) 1, maxSize, false);
 			if (army.beast != null && destinationTileArmy.beast == null) {
 				// add options to move beast
-				addAllArmySizeMoveChoice(choiceList, (byte) 0, sourceArmySize, true);
+				addAllArmySizeMoveChoice(choiceList, (byte) 0, maxSize, true);
 			}
 
 		} else {
@@ -560,10 +600,9 @@ public class ArmyMoveAction extends EndableAction {
 							army.owningPlayer.modifyPrayerPoints((byte) 1,
 									PowerList.BLACK_4_DIVINE_STRENGTH.toString());
 						}
-
 					}
 
-					if (destinationArmy.owningPlayer.hasPower(PowerList.BLACK_3_DEADLY_TRAP)) {
+					if (isDamageDoneFromDeadlyTrap(destinationArmy)) {
 
 						byte enemyArmySize = army.armySize;
 						byte damageDone = (byte) Math.min(1, enemyArmySize);
@@ -574,13 +613,12 @@ public class ArmyMoveAction extends EndableAction {
 							battleCancelledAttackerDestroyed = true;
 							addRecruitBeastFromRemovedArmy(army);
 							army.destroyArmy();
-							armyThatKeepsMoving = null;
 							movementLeft = 0;
 							end();
 						}
 					}
 
-					if (army.owningPlayer.hasPower(PowerList.RED_4_INITIATIVE)) {
+					if (isDamageInflictedFromInitiativePower()) {
 
 						byte enemyArmySize = destinationArmy.armySize;
 						byte damageDone = (byte) Math.min(2, enemyArmySize);
@@ -633,6 +671,54 @@ public class ArmyMoveAction extends EndableAction {
 
 		}
 
+		private boolean isDamageDoneFromDeadlyTrap(Army destinationArmy) {
+			if (!destinationArmy.owningPlayer.hasPower(PowerList.BLACK_3_DEADLY_TRAP)) {
+				return false;
+			}
+
+			if (army.beast == BeastList.BLACK_4_DEVOURER) {
+
+				if (destinationArmy.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE) {
+					log.debug(
+							"Deadly trap damage done to army {}, Devourer couldn't avoid it due to Deep Desert Snake.",
+							army);
+					return true;
+				}
+
+				log.debug("Deadly trap damage to army {} avoided due to Devourer.", army);
+				return false;
+			}
+
+			log.debug("Deadly trap damage done to army {} .", army);
+			return true;
+		}
+
+		private boolean isDamageInflictedFromInitiativePower() {
+			boolean hasPower = army.owningPlayer.hasPower(PowerList.RED_4_INITIATIVE);
+			if (!hasPower) {
+				return false;
+			}
+
+			Army destinationArmy = destinationTile.getArmy();
+			if (destinationArmy.beast == BeastList.BLACK_4_DEVOURER) {
+
+				if (destinationArmy.beast == BeastList.BLUE_2_DEEP_DESERT_SNAKE) {
+					log.debug(
+							"Initiative damage done to army {}. It couldn't be avoided by Devourer due to Deep Desert Snake.",
+							army);
+					return true;
+				}
+
+				log.debug("Initiative damage is avoided on army {} because it has the Devourer beast.",
+						destinationArmy);
+				return false;
+			}
+
+			log.debug("Initiative damage done to army {} .", army);
+
+			return true;
+		}
+
 		public void createArmyLeftBehind(Tile previousTile) {
 			// moving to empty territory
 			byte soldierLeft = (byte) (army.armySize - moveSoldierCount);
@@ -662,11 +748,9 @@ public class ArmyMoveAction extends EndableAction {
 
 				if (moveBeast) {
 					return ChoiceInventory.ONLY_BEAST_MOVE;
-				} else {
-					log.error("Move army size of 0 isn't valid");
-
-					return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
 				}
+				log.error("Move army size of 0 isn't valid");
+				return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
 
 			}
 

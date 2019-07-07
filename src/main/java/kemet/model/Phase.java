@@ -2,7 +2,7 @@ package kemet.model;
 
 public enum Phase implements Model {
 
-	DAWN, DAY, NIGHT, COMBAT;
+	DAWN, DAY, NIGHT, COMBAT, INTERRUPT;
 	
 	@Override
 	public Model deepCacheClone() {
