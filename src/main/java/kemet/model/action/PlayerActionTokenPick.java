@@ -7,6 +7,7 @@ import kemet.Options;
 import kemet.model.ActionList;
 import kemet.model.BoardInventory;
 import kemet.model.Color;
+import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
@@ -24,17 +25,14 @@ import lombok.extern.log4j.Log4j2;
  * @author Steve McDuff
  */
 @Log4j2
-public class PlayerActionTokenPick implements Action {
+public class PlayerActionTokenPick extends DiCardAction {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -9034661106772891860L;
 
-	private KemetGame game;
-	private Player player;
 
 	public Action nextAction;
-	private Action parent;
 	private boolean donePicking = false;
 	private boolean firstPick = true;
 	private boolean mainTokenPicked = false;
@@ -52,6 +50,9 @@ public class PlayerActionTokenPick implements Action {
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
+		
+		super.fillCanonicalForm(cannonicalForm, playerIndex);
+		
 		cannonicalForm.set(BoardInventory.STATE_PICK_ACTION_TOKEN, player.getState(playerIndex));
 
 		if (mainTokenPicked) {
@@ -130,11 +131,11 @@ public class PlayerActionTokenPick implements Action {
 	}
 
 	@Override
-	public void initialize() {
-		game = null;
-		player = null;
+	public void internalInitialize() {
+		
+		super.internalInitialize();
+		
 		nextAction = null;
-		parent = null;
 		donePicking = false;
 		firstPick = true;
 		mainTokenPicked = false;
@@ -146,12 +147,9 @@ public class PlayerActionTokenPick implements Action {
 
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
-		currentGame.validate(game);
-		currentGame.validate(player);
+		
+		super.validate(expectedParent, currentGame);
 
-		if (nextAction != null) {
-			nextAction.validate(this, currentGame);
-		}
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
@@ -162,10 +160,16 @@ public class PlayerActionTokenPick implements Action {
 		// create the object
 		PlayerActionTokenPick clone = CACHE.create();
 
+		copy(clone);
+		
+		return clone;
+	}
+
+	private void copy(PlayerActionTokenPick clone) {
+		
+		super.copy(clone);
+		
 		// copy all objects
-		clone.game = game;
-		clone.player = player;
-		clone.parent = parent;
 		clone.donePicking = donePicking;
 		clone.firstPick = firstPick;
 		clone.mainTokenPicked = mainTokenPicked;
@@ -180,11 +184,12 @@ public class PlayerActionTokenPick implements Action {
 			clone.nextAction = nextAction.deepCacheClone();
 			clone.nextAction.setParent(clone);
 		}
-		return clone;
 	}
 
 	@Override
 	public void release() {
+		
+		super.release();
 
 		// release all owned objects
 		if (nextAction != null) {
@@ -192,21 +197,15 @@ public class PlayerActionTokenPick implements Action {
 		}
 
 		// null all references
-		game = null;
-		player = null;
 		nextAction = null;
-		parent = null;
 
 		CACHE.release(this);
 	}
 
 	@Override
 	public void relink(KemetGame clone) {
-		// relink game
-		this.game = clone;
-
-		// relink pointers
-		player = clone.getPlayerByCopy(player);
+		
+		super.relink(clone);
 
 		// release all owned objects
 		if (nextAction != null) {
@@ -226,16 +225,13 @@ public class PlayerActionTokenPick implements Action {
 	}
 
 	@Override
-	public void setParent(Action parent) {
-		this.parent = parent;
-	}
-
-	public Player getPlayer() {
-		return player;
-	}
-
-	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
+		
+		PlayerChoicePick diPick = super.getNextPlayerChoicePick();
+		if (diPick != null) {
+			return diPick;
+		}
+		
 		if (donePicking && nextAction != null) {
 			PlayerChoicePick nextPlayerChoicePick = nextAction.getNextPlayerChoicePick();
 			if (nextPlayerChoicePick == null) {
@@ -286,6 +282,10 @@ public class PlayerActionTokenPick implements Action {
 		}
 
 		addAllGoldTokenActions(player, choiceList);
+		
+		addGenericDiCardChoice(choiceList);
+		
+		addDiCardChoice(choiceList, DiCardList.ENLISTMENT.index);
 
 		if (mainTokenPicked) {
 			choiceList.add(new DonePickingChoice(game, player));
@@ -382,14 +382,8 @@ public class PlayerActionTokenPick implements Action {
 			super(game, player);
 			this.row = row;
 			this.isGold = isGold;
-
-			if (player.hasPower(PowerList.WHITE_1_PRIEST_1)) {
-				increasedPower += 1;
-			}
-
-			if (player.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
-				increasedPower += 1;
-			}
+			
+			increasedPower = player.getPrayActionPowerIncrease();
 		}
 
 		public byte increasedPower = 2;
@@ -745,8 +739,4 @@ public class PlayerActionTokenPick implements Action {
 		}
 	}
 
-	@Override
-	public Action getParent() {
-		return parent;
-	}
 }

@@ -6,6 +6,7 @@ import java.util.List;
 import kemet.model.Army;
 import kemet.model.Beast;
 import kemet.model.BoardInventory;
+import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
@@ -18,7 +19,7 @@ import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 
-public class RecruitAction extends EndableAction {
+public class RecruitAction extends DiCardAction {
 
 	/**
 	 * 
@@ -31,11 +32,8 @@ public class RecruitAction extends EndableAction {
 	public byte recruitSize = -1;
 	public boolean allowPaidRecruit = true;
 	public boolean canRecruitOnAnyArmy = false;
-	public Player player;
 	public List<Tile> pickedTiles = new ArrayList<>();
 	public ChainedAction battles;
-	private KemetGame game;
-	private Action parent;
 	public byte freeRecruitLeft = -1;
 
 	public static Cache<RecruitAction> CACHE = new Cache<RecruitAction>(() -> new RecruitAction());
@@ -46,6 +44,8 @@ public class RecruitAction extends EndableAction {
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
+
+		super.fillCanonicalForm(cannonicalForm, playerIndex);
 
 		if (allowPaidRecruit) {
 			cannonicalForm.set(BoardInventory.STATE_RECRUIT, player.getState(playerIndex));
@@ -84,9 +84,8 @@ public class RecruitAction extends EndableAction {
 
 	@Override
 	public void internalInitialize() {
-		game = null;
-		player = null;
-		parent = null;
+
+		super.internalInitialize();
 		tile = null;
 		beast = null;
 		cost = 0;
@@ -119,8 +118,8 @@ public class RecruitAction extends EndableAction {
 
 	@Override
 	public void relink(KemetGame clone) {
-		this.game = clone;
-		player = clone.getPlayerByCopy(player);
+
+		super.relink(clone);
 		tile = clone.getTileByCopy(tile);
 
 		for (int i = 0; i < pickedTiles.size(); i++) {
@@ -145,8 +144,8 @@ public class RecruitAction extends EndableAction {
 	}
 
 	private void copy(RecruitAction clone) {
-		clone.game = game;
-		clone.player = player;
+		super.copy(clone);
+
 		clone.tile = tile;
 		clone.beast = beast;
 		clone.cost = cost;
@@ -161,30 +160,26 @@ public class RecruitAction extends EndableAction {
 		clone.battles = battles.deepCacheClone();
 		clone.battles.setParent(clone);
 
-		clone.parent = parent;
-
 		super.copy(clone);
 	}
 
 	@Override
 	public void release() {
 
-		clear();
+		super.release();
 		CACHE.release(this);
 	}
 
 	@Override
 	public void clear() {
+		super.clear();
 		if (battles != null) {
 			battles.release();
 		}
 		battles = null;
-		game = null;
-		player = null;
 		tile = null;
 		beast = null;
 		pickedTiles.clear();
-		parent = null;
 
 		super.clear();
 	}
@@ -198,11 +193,6 @@ public class RecruitAction extends EndableAction {
 		create.battles = ChainedAction.create(game, create);
 
 		return create;
-	}
-
-	@Override
-	public void setParent(Action parent) {
-		this.parent = parent;
 	}
 
 	public boolean canRecruitBeast() {
@@ -372,6 +362,11 @@ public class RecruitAction extends EndableAction {
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
 
+		PlayerChoicePick nextPlayerChoicePick = super.getNextPlayerChoicePick();
+		if (nextPlayerChoicePick != null) {
+			return nextPlayerChoicePick;
+		}
+
 		if (freeRecruitLeft < 0) {
 			freeRecruitLeft = 0;
 			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE_1)) {
@@ -386,7 +381,6 @@ public class RecruitAction extends EndableAction {
 		if (isEnded()) {
 			// trigger battle actions
 			return battles.getNextPlayerChoicePick();
-
 		}
 
 		if (tile != null) {
@@ -398,6 +392,10 @@ public class RecruitAction extends EndableAction {
 
 				addRecruitArmySizeChoice(pick.choiceList);
 
+				addGenericDiCardChoice(pick.choiceList);
+				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
+
+
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 				return pick.validate();
 			} else if (playerHasBeastAvailable()) {
@@ -406,6 +404,10 @@ public class RecruitAction extends EndableAction {
 				PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 				addRecruitBeastChoice(pick.choiceList);
+
+				addGenericDiCardChoice(pick.choiceList);
+				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
+
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 				return pick.validate();
 			}
@@ -423,6 +425,9 @@ public class RecruitAction extends EndableAction {
 				return battles.getNextPlayerChoicePick();
 
 			}
+
+			addGenericDiCardChoice(pick.choiceList);
+			addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
 
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 			return pick.validate();
@@ -598,8 +603,12 @@ public class RecruitAction extends EndableAction {
 	}
 
 	@Override
-	public Action getParent() {
-		return parent;
+	public void applyDiCard(int index) {
+		if (index == DiCardList.REINFORCEMENTS.index) {
+			freeRecruitLeft += 2;
+		} else {
+			super.applyDiCard(index);
+		}
 	}
 
 }

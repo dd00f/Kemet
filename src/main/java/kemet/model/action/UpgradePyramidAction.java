@@ -9,7 +9,6 @@ import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
 import kemet.model.Tile;
-import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.model.action.choice.EndTurnChoice;
@@ -17,15 +16,13 @@ import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
 
-public class UpgradePyramidAction extends EndableAction {
+public class UpgradePyramidAction extends DiCardAction {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -2961911483446230497L;
-	private KemetGame game;
-	private Player player;
-	private Action parent;
+
 	public Color color;
 	public byte startLevel;
 	public byte endLevel = -1;
@@ -35,6 +32,8 @@ public class UpgradePyramidAction extends EndableAction {
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
+		super.fillCanonicalForm(cannonicalForm, playerIndex);
+		
 		cannonicalForm.set(BoardInventory.STATE_UPGRADE_PYRAMID, player.getState(playerIndex));
 		if (tile == null) {
 			cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
@@ -52,9 +51,8 @@ public class UpgradePyramidAction extends EndableAction {
 
 	@Override
 	public void internalInitialize() {
-		game = null;
-		player = null;
-		parent = null;
+
+		super.internalInitialize();
 		tile = null;
 		color = null;
 		freeLevel = false;
@@ -65,13 +63,9 @@ public class UpgradePyramidAction extends EndableAction {
 
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
-		currentGame.validate(game);
-		currentGame.validate(player);
-		currentGame.validate(tile);
+		super.validate(expectedParent, currentGame);
 
-		if (expectedParent != parent) {
-			Validation.validationFailed("Action parent isn't as expected.");
-		}
+		currentGame.validate(tile);
 	}
 
 	private UpgradePyramidAction() {
@@ -80,8 +74,6 @@ public class UpgradePyramidAction extends EndableAction {
 
 	@Override
 	public void relink(KemetGame clone) {
-		this.game = clone;
-		player = clone.getPlayerByCopy(player);
 		tile = clone.getTileByCopy(tile);
 
 		super.relink(clone);
@@ -98,15 +90,13 @@ public class UpgradePyramidAction extends EndableAction {
 	}
 
 	private void copy(UpgradePyramidAction clone) {
-		clone.game = game;
-		clone.player = player;
+
 		clone.tile = tile;
 		clone.color = color;
 		clone.startLevel = startLevel;
 		clone.endLevel = endLevel;
 		clone.powerCost = powerCost;
 		clone.tile = tile;
-		clone.parent = parent;
 		clone.freeLevel = freeLevel;
 
 		super.copy(clone);
@@ -122,10 +112,7 @@ public class UpgradePyramidAction extends EndableAction {
 	@Override
 	public void clear() {
 
-		game = null;
-		player = null;
 		tile = null;
-		parent = null;
 
 		super.clear();
 	}
@@ -144,12 +131,6 @@ public class UpgradePyramidAction extends EndableAction {
 		player.modifyPrayerPoints((byte) -powerCost, "pyramid upgrade");
 		tile.pyramidColor = color;
 		tile.setPyramidLevel(endLevel);
-
-	}
-
-	@Override
-	public void setParent(Action parent) {
-		this.parent = parent;
 	}
 
 	public class UpgradePyramidPickTileChoice extends PlayerChoice {
@@ -289,6 +270,12 @@ public class UpgradePyramidAction extends EndableAction {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
+		
+		PlayerChoicePick nextPlayerChoicePick = super.getNextPlayerChoicePick();
+		if (nextPlayerChoicePick != null) {
+			return nextPlayerChoicePick;
+		}
+		
 		if (isEnded()) {
 			return null;
 		}
@@ -310,6 +297,8 @@ public class UpgradePyramidAction extends EndableAction {
 					pick.choiceList.add(new UpgradePyramidPickTileChoice(game, player, armyTile));
 				}
 			}
+			
+			addGenericDiCardChoice(pick.choiceList);
 
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 			return pick.validate();
@@ -319,6 +308,8 @@ public class UpgradePyramidAction extends EndableAction {
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 			createAllPyramidLevelChoices(tile.getPyramidLevel(), pick.choiceList);
+			
+			addGenericDiCardChoice(pick.choiceList);
 
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
@@ -340,6 +331,9 @@ public class UpgradePyramidAction extends EndableAction {
 			if (!player.hasPyramid(Color.RED)) {
 				pick.choiceList.add(new UpgradePyramidPickColorChoice(game, player, Color.RED));
 			}
+			
+			addGenericDiCardChoice(pick.choiceList);
+			
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();
@@ -348,9 +342,5 @@ public class UpgradePyramidAction extends EndableAction {
 		return null;
 	}
 
-	@Override
-	public Action getParent() {
-		return parent;
-	}
 
 }

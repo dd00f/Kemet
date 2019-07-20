@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import kemet.Options;
+import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
@@ -21,21 +22,19 @@ public class GameAction implements Action {
 	 * 
 	 */
 	private static final long serialVersionUID = 5798076013017724149L;
-	
+
 	public boolean initialized = false;
-	
+
 	public ChainedAction chainedActions;
 
-
 	public static Cache<GameAction> CACHE = new Cache<GameAction>(() -> new GameAction());
-	
+
 	@Override
 	public void initialize() {
 		initialized = false;
 		chainedActions = null;
 	}
-	
-	
+
 	@Override
 	public GameAction deepCacheClone() {
 		// create the object
@@ -50,13 +49,12 @@ public class GameAction implements Action {
 
 		return clone;
 	}
-	
+
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
 		chainedActions.validate(this, currentGame);
 
-		
-		if( expectedParent != null ) {
+		if (expectedParent != null) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
 	}
@@ -75,79 +73,76 @@ public class GameAction implements Action {
 		chainedActions.relink(clone);
 	}
 
-	
 	public static GameAction create(KemetGame game) {
 		GameAction create = CACHE.create();
 		create.initialize();
 		create.chainedActions = ChainedAction.create(game, create);
 		return create;
 	}
-	
-    @Override
-    public PlayerChoicePick getNextPlayerChoicePick()
-    {
-    	KemetGame game = chainedActions.getGame();
-    	
-        if( ! initialized ) {
-        	
-    		for (Player player : game.playerByInitiativeList)
-            {
-    			chainedActions.add(InitializationPlayerPyramidAction.create(game, player, chainedActions) );
-            }
-            for (Player player : game.playerByInitiativeList)
-            {
-            	chainedActions.add(InitializationPlayerRecruitAction.create(game, player, chainedActions) );
-            }
 
-            initialized = true;
-        }
+	@Override
+	public PlayerChoicePick getNextPlayerChoicePick() {
+		KemetGame game = chainedActions.getGame();
 
-        if (game.hasWinner()) {
-            return null;
-        }
-        
-        PlayerChoicePick nextPlayerChoicePick = chainedActions.getNextPlayerChoicePick();
-        if( nextPlayerChoicePick == null ) {
-            // start a new turn when we're out of options
-            if (game.victoryConditionTriggered) {
-            	game.findWinner();
-                return null;
-            }
+		if (!initialized) {
 
+			for (Player player : game.playerByInitiativeList) {
+				chainedActions.add(InitializationPlayerPyramidAction.create(game, player, chainedActions));
+			}
+			for (Player player : game.playerByInitiativeList) {
+				chainedActions.add(InitializationPlayerRecruitAction.create(game, player, chainedActions));
+			}
 
-            game.incrementTurnCount();
-            
-            if( game.roundNumber > Options.GAME_TURN_LIMIT ) {
-            	game.victoryConditionTriggered = true;
-            	game.findWinner();
-                return null;
-            }
-        	
-            chainedActions.add(NightAction.create(game, chainedActions));
-            
-            addBlue4ReinforcementsAction();
-            
-            addWhite3HandOfGodAction();
-            
-            if (!game.isFirstTurn()) {
-            	chainedActions.add(DawnAction.create(game, chainedActions));
-            }
-            chainedActions.add(createDayAction(game, chainedActions));
-            nextPlayerChoicePick = chainedActions.getNextPlayerChoicePick();
-        }
-        
-        if( Options.VALIDATE_PLAYER_CHOICE_PICK_INDEX ) {
-        	validatePlayerChoicePickIndex(nextPlayerChoicePick);
-        }
+			initialized = true;
+		}
 
-        return nextPlayerChoicePick;
-    }
+		if (game.hasWinner()) {
+			return null;
+		}
+
+		PlayerChoicePick nextPlayerChoicePick = chainedActions.getNextPlayerChoicePick();
+		if (nextPlayerChoicePick == null) {
+			// start a new turn when we're out of options
+			if (game.victoryConditionTriggered) {
+				game.findWinner();
+				return null;
+			}
+
+			game.incrementTurnCount();
+
+			if (game.roundNumber > Options.GAME_TURN_LIMIT) {
+				game.victoryConditionTriggered = true;
+				game.findWinner();
+				return null;
+			}
+
+			chainedActions.add(NightAction.create(game, chainedActions));
+
+			addBlue4ReinforcementsAction();
+
+			addWhite3HandOfGodAction();
+
+			addWhite3VisionAction();
+
+			if (!game.isFirstTurn()) {
+				chainedActions.add(DawnAction.create(game, chainedActions));
+			}
+			chainedActions.add(createDayAction(game, chainedActions));
+			nextPlayerChoicePick = chainedActions.getNextPlayerChoicePick();
+		}
+
+		if (Options.VALIDATE_PLAYER_CHOICE_PICK_INDEX) {
+			validatePlayerChoicePickIndex(nextPlayerChoicePick);
+		}
+
+		return nextPlayerChoicePick;
+	}
 
 	private void addBlue4ReinforcementsAction() {
-		
+
 		for (Player player : chainedActions.getGame().playerByInitiativeList) {
-			
-			if( player.hasPower(PowerList.BLUE_4_REINFORCEMENTS)) {
+
+			if (player.hasPower(PowerList.BLUE_4_REINFORCEMENTS)) {
 				RecruitAction action = RecruitAction.create(chainedActions.getGame(), player, chainedActions);
 				action.allowPaidRecruit = false;
 				action.freeRecruitLeft = 4;
@@ -158,47 +153,65 @@ public class GameAction implements Action {
 	}
 
 	private void addWhite3HandOfGodAction() {
-		
+
 		for (Player player : chainedActions.getGame().playerByInitiativeList) {
-			
-			if( player.hasPower(PowerList.WHITE_3_HAND_OF_GOD)) {
-				UpgradePyramidAction action = UpgradePyramidAction.create(chainedActions.getGame(), player, chainedActions);
+
+			if (player.hasPower(PowerList.WHITE_3_HAND_OF_GOD)) {
+				UpgradePyramidAction action = UpgradePyramidAction.create(chainedActions.getGame(), player,
+						chainedActions);
 				action.freeLevel = true;
 				chainedActions.add(action);
 			}
 		}
 	}
 
+	private void addWhite3VisionAction() {
+
+		KemetGame game = chainedActions.getGame();
+		for (Player player : game.playerByInitiativeList) {
+
+			if (player.hasPower(PowerList.WHITE_3_VISION)) {
+				PickDiCardAction action = PickDiCardAction.create(game, player, chainedActions);
+
+				action.moveToDiscard = true;
+				for (int i = 0; i < 5; ++i) {
+					DiCardList.moveRandomDiCard(game.availableDiCardList, action.availableDiCards,
+							KemetGame.AVAILABLE_DI_CARDS, "Vision available DI cards", "Night Vision Power", game,
+							true);
+				}
+
+				chainedActions.add(action);
+			}
+		}
+	}
+
 	private void validatePlayerChoicePickIndex(PlayerChoicePick nextPlayerChoicePick) {
-		
+
 		List<Choice> choiceList = nextPlayerChoicePick.choiceList;
 		Set<Integer> indexes = new HashSet<>();
-		
+
 		for (Choice choice : choiceList) {
 			int index = choice.getIndex();
-			if( indexes.contains(index)) {
+			if (indexes.contains(index)) {
 				String message = "two choices have the same index " + index + " " + choiceList;
 				log.error(message);
 				throw new IllegalStateException(message);
 			}
-			
-		}
-		
-	}
 
+		}
+
+	}
 
 	private Action createDayAction(KemetGame game, Action parent) {
 		ChainedAction action = ChainedAction.create(game, parent);
-		
-        for (int i = 0; i < 5; ++i)
-        {
-            // five player turn
-            for (Player player : game.playerByInitiativeList)
-            {
-            	action.add(PlayerActionTokenPick.create(game, player, action));
-            }
-        }
-		
+
+		for (int i = 0; i < 5; ++i) {
+			// five player turn
+			for (Player player : game.playerByInitiativeList) {
+				action.add(PlayerActionTokenPick.create(game, player, action));
+			}
+		}
+
 		return action;
 	}
 
@@ -209,15 +222,12 @@ public class GameAction implements Action {
 
 	@Override
 	public void setParent(Action parent) {
-		
-		
-	}
 
+	}
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		chainedActions.fillCanonicalForm(cannonicalForm, playerIndex);
 	}
-
 
 }

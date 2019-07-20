@@ -228,16 +228,7 @@ public class Army implements Model {
 
 	@Override
 	public String toString() {
-		String string = name + " of " + armySize + " soldiers";
-		if (beast != null) {
-			string += " with beast " + beast.toString();
-		}
-
-		if (tile != null) {
-			string += " on tile " + tile.name;
-		}
-
-		return string;
+		return describeArmy();
 	}
 
 	public void checkToDisbandArmy() {
@@ -275,16 +266,21 @@ public class Army implements Model {
 	}
 
 	public void describeArmy(StringBuilder builder) {
-		String beastStr = "";
+
+		builder.append("\t Army : ");
+		builder.append(name);
+		builder.append(" of size ");
+		builder.append(armySize);
+
 		if (beast != null) {
-			beastStr = " with beast " + beast.name;
-		}
-		String tileName = null;
-		if (tile != null) {
-			tileName = tile.describe();
+			builder.append(" with beast ");
+			builder.append(beast.name);
 		}
 
-		builder.append("\t Army : " + name + " of size " + armySize + beastStr + " on tile : " + tileName);
+		if (tile != null) {
+			builder.append(" on tile : ");
+			tile.describe(builder);
+		}
 		builder.append("\n");
 	}
 
@@ -301,23 +297,23 @@ public class Army implements Model {
 	}
 
 	public byte getAttackShield(boolean isBeastIgnored) {
-		
+
 		byte shieldBonus = owningPlayer.shieldBonus;
-		
-		if( beast != null && ! isBeastIgnored ) {
+
+		if (beast != null && !isBeastIgnored) {
 			shieldBonus += beast.shieldBonus;
 		}
-		
+
 		return shieldBonus;
 	}
 
 	public byte getAttackDamage(boolean isBeastIgnored) {
 		byte damageBonus = owningPlayer.damageBonus;
-		
-		if( beast != null && ! isBeastIgnored ) {
+
+		if (beast != null && !isBeastIgnored) {
 			damageBonus += beast.damageBonus;
 		}
-		
+
 		return damageBonus;
 	}
 

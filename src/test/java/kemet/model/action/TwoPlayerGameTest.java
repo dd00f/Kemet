@@ -8,6 +8,7 @@ import kemet.data.TwoPlayerGame;
 import kemet.model.BattleCard;
 import kemet.model.Beast;
 import kemet.model.Color;
+import kemet.model.DiCard;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.Power;
@@ -36,6 +37,7 @@ public class TwoPlayerGameTest {
 		tpg.createTiles();
 
 		game = tpg.game;
+		game.random.setSeed(12341234);
 		// game.setPrintActivations(false);
 
 		redPlayer = game.playerByInitiativeList.get(0);
@@ -180,14 +182,22 @@ public class TwoPlayerGameTest {
 	}
 
 	public void buyPowerTile(Power powerToBuy) {
-		int buyPowerActionIndex = PlayerActionTokenPick.getBuyPowerActionIndex(powerToBuy.color);
-		activateActionOnGame(game.getNextPlayer(), buyPowerActionIndex);
+		startBuyPowerTile(powerToBuy);
+		endBuyPowerTile(powerToBuy);
+	}
+
+	public void endBuyPowerTile(Power powerToBuy) {
 		activateActionOnGame(game.getNextPlayer(), powerToBuy.getActionIndex());
 	}
 
+	public void startBuyPowerTile(Power powerToBuy) {
+		int buyPowerActionIndex = PlayerActionTokenPick.getBuyPowerActionIndex(powerToBuy.color);
+		activateActionOnGame(game.getNextPlayer(), buyPowerActionIndex);
+	}
+
 	public void upgradePyramid(int level, Color color, Tile tile) {
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
-		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
+		startUpgradePyramid();
+		moveSelectTile(tile);
 		pickPyramidLevel(level);
 		pickPyramidColor(color);
 	}
@@ -197,9 +207,17 @@ public class TwoPlayerGameTest {
 	}
 
 	public void upgradePyramid(int level, Tile tile) {
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
-		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
+		startUpgradePyramid();
+		moveSelectTile(tile);
 		pickPyramidLevel(level);
+	}
+
+	public void startUpgradePyramid() {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
+	}
+	
+	public void endUpgradePyramid() {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.UPGRADE_NOTHING);
 	}
 
 	public void pickPyramidColor(Color color) {
@@ -274,9 +292,13 @@ public class TwoPlayerGameTest {
 
 				log.info("Original Game");
 				PlayerChoicePick.logChoiceList(nextPlayerChoicePick.choiceList);
-
 				log.info("Cloned Game");
 				PlayerChoicePick.logChoiceList(cloneNextPick.choiceList);
+				System.out.println("Game choice");
+			
+				System.out.println(nextPlayerChoicePick);
+				System.out.println("Clone choice");
+				System.out.println(cloneNextPick);
 
 				fail("previous count " + choiceCount + " doesnt match new count " + newCount);
 			}
@@ -349,22 +371,30 @@ public class TwoPlayerGameTest {
 
 	public void moveRowTwoArmy(Tile from, Tile to, int size, boolean moveBeast) {
 		startRowTwoMove();
-		activateActionOnGame(game.getNextPlayer(), from.getPickChoiceIndex(game.getNextPlayer()));
+		moveSelectTile(from);
+		moveSelectTile(to);
+		moveArmySize(size, moveBeast);
+	}
+
+	public void moveSelectTile(Tile to) {
 		activateActionOnGame(game.getNextPlayer(), to.getPickChoiceIndex(game.getNextPlayer()));
+	}
+
+	public void moveArmySize(int size, boolean moveBeast) {
 		activateActionOnGame(game.getNextPlayer(), getMoveArmySizeWithBeastChoiceIndex(size, moveBeast));
 	}
 
 	public void moveFirstTile(Tile from, Tile to, int size, boolean moveBeast) {
-		activateActionOnGame(game.getNextPlayer(), from.getPickChoiceIndex(game.getNextPlayer()));
-		activateActionOnGame(game.getNextPlayer(), to.getPickChoiceIndex(game.getNextPlayer()));
-		activateActionOnGame(game.getNextPlayer(), getMoveArmySizeWithBeastChoiceIndex(size, moveBeast));
+		moveSelectTile(from);
+		moveSelectTile(to);
+		moveArmySize(size, moveBeast);
 	}
 
 	public void moveRowOneArmy(Tile from, Tile to, int size, boolean moveBeast) {
 		startRowOneMove();
-		activateActionOnGame(game.getNextPlayer(), from.getPickChoiceIndex(game.getNextPlayer()));
-		activateActionOnGame(game.getNextPlayer(), to.getPickChoiceIndex(game.getNextPlayer()));
-		activateActionOnGame(game.getNextPlayer(), getMoveArmySizeWithBeastChoiceIndex(size, moveBeast));
+		moveSelectTile(from);
+		moveSelectTile(to);
+		moveArmySize(size, moveBeast);
 	}
 
 	public void skipRecruitBeast() {
@@ -372,9 +402,13 @@ public class TwoPlayerGameTest {
 	}
 
 	public void recruitBeastToTile(Tile to) {
-		activateActionOnGame(game.getNextPlayer(), to.getPickChoiceIndex(game.getNextPlayer()));
+		moveSelectTile(to);
 	}
 
+	public void rainingFireToTile(Tile to) {
+		moveSelectTile(to);
+	}
+	
 	public void recruitBeast(Beast beast) {
 		activateActionOnGame(game.getNextPlayer(), beast.getRecruitChoiceIndex());
 	}
@@ -382,10 +416,14 @@ public class TwoPlayerGameTest {
 	public void moveNextTile(Tile to, int size) {
 		moveNextTile(to, size, false);
 	}
+	
+	public void moveEscapeTile(Tile to) {
+		activateActionOnGame(game.getNextPlayer(), to.getEscapeChoiceIndex(game.getNextPlayer()));
+	}
 
 	public void moveNextTile(Tile to, int size, boolean moveBeast) {
-		activateActionOnGame(game.getNextPlayer(), to.getPickChoiceIndex(game.getNextPlayer()));
-		activateActionOnGame(game.getNextPlayer(), getMoveArmySizeWithBeastChoiceIndex(size, moveBeast));
+		moveSelectTile(to);
+		moveArmySize(size, moveBeast);
 	}
 
 	private int getMoveArmySizeWithBeastChoiceIndex(int size, boolean moveBeast) {
@@ -404,15 +442,39 @@ public class TwoPlayerGameTest {
 
 	public void battlePick(BattleCard attackCard, BattleCard attackDiscard, BattleCard defenseCard,
 			BattleCard defenseDiscard) {
-		activateActionOnGame(game.getNextPlayer(), attackCard.getPickChoiceIndex());
-		activateActionOnGame(game.getNextPlayer(), attackDiscard.getPickChoiceIndex());
-		activateActionOnGame(game.getNextPlayer(), defenseCard.getPickChoiceIndex());
-		activateActionOnGame(game.getNextPlayer(), defenseDiscard.getPickChoiceIndex());
+		pickBattleCard(attackCard);
+		pickBattleCard(attackDiscard);
+		pickBattleCard(defenseCard);
+		pickBattleCard(defenseDiscard);
 
 	}
 
+	public void useDiCardOnDivineWound(DiCard diCard) {
+		activateActionOnGame(game.getNextPlayer(), diCard.getDivineWoundChoiceIndex());
+	}
+	
+	public void activateDiCard(DiCard diCard) {
+		activateActionOnGame(game.getNextPlayer(), diCard.getActivateChoiceIndex());
+	}
+	
+	public void pickDiCard(DiCard diCard) {
+		activateActionOnGame(game.getNextPlayer(), diCard.getPickChoiceIndex());
+	}
+	
+	public void endDivineWound() {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.END_DIVINE_WOUND);
+	}
+	
+	public void skipVeto() {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.SKIP_DI_VETO);
+	}
+	
+	public void pickBattleCard(BattleCard battleCard) {
+		activateActionOnGame(game.getNextPlayer(), battleCard.getPickChoiceIndex());
+	}
+
 	public void recruitArmy(Tile tile, int size) {
-		activateActionOnGame(game.getNextPlayer(), tile.getPickChoiceIndex(game.getNextPlayer()));
+		moveSelectTile(tile);
 		recruitArmySize(size);
 	}
 

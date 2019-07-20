@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import kemet.data.TwoPlayerGame;
@@ -12,8 +14,10 @@ import kemet.model.Army;
 import kemet.model.BattleCard;
 import kemet.model.BeastList;
 import kemet.model.Color;
+import kemet.model.DiCardList;
 import kemet.model.PowerList;
 import kemet.model.Tile;
+import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
 
 public class PowerTileTest extends TwoPlayerGameTest {
@@ -89,6 +93,79 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		upgradePyramid(3, Color.BLACK, bluePlayer.cityTiles.get(2));
 
 		assertEquals(4, bluePlayer.getPrayerPoints());
+	}
+	
+	@Test
+	public void test_WHITE_2_DIVINE_BOON() {
+		
+		// action 1
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_2_DIVINE_BOON);
+		assertEquals(7, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		prayRowThree();
+		
+		prayRowTwo();
+		prayRowTwo();
+		
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+		assertEquals( 3, bluePlayer.getDiCardCount());
+		
+		moveRowTwoZeroArmy();
+		moveRowTwoZeroArmy();
+
+		// trigger night
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+		
+		assertEquals( 5, bluePlayer.getDiCardCount());
+	}
+	
+
+	@Test
+	public void test_WHITE_3_VISION() {
+		
+		// action 1
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_3_VISION);
+		assertEquals(6, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		prayRowThree();
+		
+		prayRowTwo();
+		prayRowTwo();
+		
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+		assertEquals( 3, redPlayer.getDiCardCount());
+		assertEquals( 3, bluePlayer.getDiCardCount());
+		assertEquals( DiCardList.TOTAL_DI_COUNT - 6, DiCardList.sumArray(game.availableDiCardList));
+		assertEquals(0, DiCardList.sumArray(game.discardedDiCardList));
+		
+		moveRowTwoZeroArmy();
+		moveRowTwoZeroArmy();
+		
+		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
+		List<Choice> choiceList = nextPlayerChoicePick.choiceList;
+		assertEquals( 5, choiceList.size());
+		game.activateAction(choiceList.get(0));
+
+
+		// trigger night
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+		
+		assertEquals( 4, redPlayer.getDiCardCount());
+		assertEquals( 5, bluePlayer.getDiCardCount());
+
+		assertEquals( DiCardList.TOTAL_DI_COUNT - 13, DiCardList.sumArray(game.availableDiCardList));
+		assertEquals(4, DiCardList.sumArray(game.discardedDiCardList));
+
 	}
 
 	@Test
@@ -529,6 +606,56 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
+	}
+	
+	@Test
+	public void test_RED_3_DIVINE_WOUND() {
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
+		assertEquals(4, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
+		
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+
+		// moved by teleport, only 1 cost
+		assertEquals(3, redPlayer.victoryPoints);
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+		
+		// pick divine wound
+		useDiCardOnDivineWound(DiCardList.PRAYER);
+
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		assertEquals(5, redPlayer.victoryPoints);
+	}
+	
+	@Test
+	public void test_RED_3_DIVINE_WOUND_lost() {
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
+		assertEquals(4, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
+		
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+
+		// moved by teleport, only 1 cost
+		assertEquals(3, redPlayer.victoryPoints);
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+		
+		// pick divine wound
+		endDivineWound();
+
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		assertEquals(3, redPlayer.victoryPoints);
 	}
 
 	@Test

@@ -15,6 +15,7 @@ import kemet.model.Player;
 import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.Validation;
+import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
@@ -61,6 +62,13 @@ public class BattleAction implements Action {
 	public boolean attackerRetreatTilePicked;
 	public boolean defenderRetreatPicked;
 	public boolean defenderRetreatTilePicked;
+	public boolean defenderTacticalChoicePicked;
+	public boolean attackerTacticalChoicePicked;
+
+	public boolean defenderDivineWoundPicked;
+	public boolean attackerDivineWoundPicked;
+	public byte defenderDivineWound;
+	public byte attackerDivineWound;
 
 	public ChainedAction pendingActions;
 
@@ -84,6 +92,13 @@ public class BattleAction implements Action {
 		defendingDiscardBattleCard = null;
 		defendingUsedBattleCard = null;
 		defenderRecall = false;
+		defenderTacticalChoicePicked = false;
+		attackerTacticalChoicePicked = false;
+
+		defenderDivineWoundPicked = false;
+		attackerDivineWoundPicked = false;
+		defenderDivineWound = 0;
+		attackerDivineWound = 0;
 
 		tile = null;
 		attackerWins = false;
@@ -156,6 +171,15 @@ public class BattleAction implements Action {
 		clone.attackerRetreatTilePicked = attackerRetreatTilePicked;
 		clone.defenderRetreatPicked = defenderRetreatPicked;
 		clone.defenderRetreatTilePicked = defenderRetreatTilePicked;
+		clone.defenderRecall = defenderRecall;
+		clone.attackerRecall = attackerRecall;
+		clone.defenderTacticalChoicePicked = defenderTacticalChoicePicked;
+		clone.attackerTacticalChoicePicked = attackerTacticalChoicePicked;
+
+		clone.defenderDivineWoundPicked = defenderDivineWoundPicked;
+		clone.attackerDivineWoundPicked = attackerDivineWoundPicked;
+		clone.defenderDivineWound = defenderDivineWound;
+		clone.attackerDivineWound = attackerDivineWound;
 
 		DiCardList.copyArray(attackingUsedDiCard, clone.attackingUsedDiCard);
 		DiCardList.copyArray(defendingUsedDiCard, clone.defendingUsedDiCard);
@@ -218,10 +242,12 @@ public class BattleAction implements Action {
 
 		byte score = attackingArmy.getScore(true, isAttackerBeastIgnored);
 		score += attackingUsedBattleCard.attackBonus;
-		
+
 		score += attackingUsedDiCard[DiCardList.WAR_RAGE.index];
 		score += attackingUsedDiCard[DiCardList.WAR_FURY.index] * 2;
-		
+
+		score += attackerDivineWound;
+
 		return score;
 	}
 
@@ -230,10 +256,12 @@ public class BattleAction implements Action {
 
 		byte score = defendingArmy.getScore(false, isDefenderBeastIgnored);
 		score += defendingUsedBattleCard.attackBonus;
-		
+
 		score += defendingUsedDiCard[DiCardList.WAR_RAGE.index];
 		score += defendingUsedDiCard[DiCardList.WAR_FURY.index] * 2;
-		
+
+		score += defenderDivineWound;
+
 		return score;
 	}
 
@@ -244,7 +272,7 @@ public class BattleAction implements Action {
 		if (attackingArmy.beast != null) {
 			score += attackingArmy.beast.damageBonus;
 		}
-		
+
 		score += attackingUsedDiCard[DiCardList.BLOOD_BATTLE.index];
 		score += attackingUsedDiCard[DiCardList.BLOOD_BATH.index] * 2;
 
@@ -258,10 +286,10 @@ public class BattleAction implements Action {
 		if (defendingArmy.beast != null) {
 			score += defendingArmy.beast.damageBonus;
 		}
-		
+
 		score += defendingUsedDiCard[DiCardList.BLOOD_BATTLE.index];
 		score += defendingUsedDiCard[DiCardList.BLOOD_BATH.index] * 2;
-		
+
 		return score;
 	}
 
@@ -275,7 +303,7 @@ public class BattleAction implements Action {
 
 		score += attackingUsedDiCard[DiCardList.BRONZE_WALL.index];
 		score += attackingUsedDiCard[DiCardList.IRON_WALL.index] * 2;
-		
+
 		return score;
 	}
 
@@ -289,16 +317,24 @@ public class BattleAction implements Action {
 
 		score += defendingUsedDiCard[DiCardList.BRONZE_WALL.index];
 		score += defendingUsedDiCard[DiCardList.IRON_WALL.index] * 2;
-		
+
 		return score;
 	}
 
 	public byte calculateDamageOnAttacker() {
+		if (attackingUsedDiCard[DiCardList.DIVINE_PROTECTION.index] > 0 && attackerWins) {
+			return 0;
+		}
+
 		return (byte) Math.min(Math.max(calculateDefenderDamage() - calculateAttackerShield(), 0),
 				attackingArmy.armySize);
 	}
 
 	public byte calculateDamageOnDefender() {
+		if (defendingUsedDiCard[DiCardList.DIVINE_PROTECTION.index] > 0 && !attackerWins) {
+			return 0;
+		}
+
 		return (byte) Math.min(Math.max(calculateAttackerDamage() - calculateDefenderShield(), 0),
 				defendingArmy.armySize);
 	}
@@ -356,8 +392,19 @@ public class BattleAction implements Action {
 		attackerWins = attackerScore > defenderScore;
 		if (attackerWins) {
 			applyHolyWarBonus(attackingArmy.owningPlayer);
+
+			byte gloryCount = attackingUsedDiCard[DiCardList.GLORY.index];
+			for (int i = 0; i < gloryCount; ++i) {
+				attackingArmy.owningPlayer.modifyPrayerPoints((byte) 4, DiCardList.GLORY.toString());
+			}
+
 		} else {
 			applyHolyWarBonus(defendingArmy.owningPlayer);
+
+			byte gloryCount = defendingUsedDiCard[DiCardList.GLORY.index];
+			for (int i = 0; i < gloryCount; ++i) {
+				defendingArmy.owningPlayer.modifyPrayerPoints((byte) 4, DiCardList.GLORY.toString());
+			}
 		}
 
 		if (game.printActivations) {
@@ -589,8 +636,6 @@ public class BattleAction implements Action {
 					}
 				}
 			}
-
-			checkToResolveBattle();
 		}
 
 		private void pickAttackerCardsBasedOnNeuralNetworkIfSimulation() {
@@ -838,11 +883,11 @@ public class BattleAction implements Action {
 	private boolean playerCanAffordDiCard(int cardIndex, Player player) {
 		byte cost = DiCardList.CARDS[cardIndex].powerCost;
 		cost = player.applyPriestOfRaBonus(cost);
-		
-		if( cost > 0  && player.getPrayerPoints() < cost) {
+
+		if (cost > 0 && player.getPrayerPoints() < cost) {
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -952,6 +997,113 @@ public class BattleAction implements Action {
 
 	}
 
+	public class TacticalChoice extends PlayerChoice {
+
+		public boolean isAttacker;
+		public boolean swap;
+
+		public TacticalChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
+		@Override
+		public String describe() {
+			String action = "Tactical Choice : ";
+			if (swap) {
+				action += "Tactical Choice : Swap Cards";
+			} else {
+				action = "Tactical Choice : Don't Swap Cards";
+			}
+			return action;
+		}
+
+		@Override
+		public void choiceActivate() {
+			if (isAttacker) {
+				attackerTacticalChoicePicked = true;
+				if (swap) {
+					BattleCard swap = attackingUsedBattleCard;
+					attackingUsedBattleCard = attackingDiscardBattleCard;
+					attackingDiscardBattleCard = swap;
+				}
+
+			} else {
+				defenderTacticalChoicePicked = true;
+
+				if (swap) {
+					BattleCard swap = defendingUsedBattleCard;
+					defendingUsedBattleCard = defendingDiscardBattleCard;
+					defendingDiscardBattleCard = swap;
+				}
+			}
+		}
+
+		@Override
+		public int getIndex() {
+			if (swap) {
+				return ChoiceInventory.TACTICAL_CHOICE_SWAP;
+			}
+			return ChoiceInventory.TACTICAL_CHOICE_KEEP;
+		}
+
+	}
+
+	public class DivineWoundChoice extends PlayerChoice {
+
+		private boolean isAttacker;
+		private int cardIndex;
+
+		public DivineWoundChoice(KemetGame game, Player player, boolean isAttacker, int cardIndex) {
+			super(game, player);
+			this.isAttacker = isAttacker;
+			this.cardIndex = cardIndex;
+		}
+
+		@Override
+		public String describe() {
+			if (cardIndex < 0) {
+				return "Stop spending DI cards on Divine Wounds";
+			}
+			StringBuilder builder = new StringBuilder();
+			builder.append("Inflict Divine Wound. Attacker Score : ");
+			builder.append(calculateAttackerScore());
+			builder.append(", Defender Score : ");
+			builder.append(calculateDefenderScore());
+			builder.append(", Using DI card : ");
+			builder.append(DiCardList.CARDS[cardIndex].name);
+
+			return builder.toString();
+		}
+
+		@Override
+		public void choiceActivate() {
+			if (cardIndex < 0) {
+				if (isAttacker) {
+					attackerDivineWoundPicked = true;
+				} else {
+					defenderDivineWoundPicked = true;
+				}
+			} else {
+				DiCardList.moveDiCard(player.diCards, game.discardedDiCardList, cardIndex, player.name,
+						KemetGame.DISCARDED_DI_CARDS, "divine wounds", game);
+				if (isAttacker) {
+					attackerDivineWound += 1;
+				} else {
+					defenderDivineWound += 1;
+				}
+			}
+		}
+
+		@Override
+		public int getIndex() {
+			if (cardIndex < 0) {
+				return ChoiceInventory.END_DIVINE_WOUND;
+			}
+			return ChoiceInventory.DIVINE_WOUND_DI_CARD + cardIndex;
+		}
+
+	}
+
 	public PlayerChoicePick pickRecallOption(boolean attacker) {
 
 		Army army = getArmy(attacker);
@@ -1016,7 +1168,7 @@ public class BattleAction implements Action {
 	}
 
 	private void checkToResolveBattle() {
-		if (defendingDiscardBattleCard != null && attackingDiscardBattleCard != null) {
+		if (attackerDivineWoundPicked && defenderDivineWoundPicked && !battleResolved) {
 			resolveBattle();
 		}
 	}
@@ -1026,26 +1178,79 @@ public class BattleAction implements Action {
 
 		// force defender to go first if this game is a simulation from the defender
 		// perspective
+		Player defendingPlayer = defendingArmy.owningPlayer;
 		if (isDefenderFirstToPick()) {
 			if (defendingUsedBattleCard == null) {
-				return addPickBattleCardChoice(defendingArmy.owningPlayer, false, false).validate();
+				return addPickBattleCardChoice(defendingPlayer, false, false).validate();
 			} else if (defendingDiscardBattleCard == null) {
-				return addPickBattleCardChoice(defendingArmy.owningPlayer, false, true).validate();
+				return addPickBattleCardChoice(defendingPlayer, false, true).validate();
 			}
 		}
 
+		Player attackingPlayer = attackingArmy.owningPlayer;
 		if (attackingUsedBattleCard == null) {
-			return addPickBattleCardChoice(attackingArmy.owningPlayer, true, false).validate();
+			return addPickBattleCardChoice(attackingPlayer, true, false).validate();
 		}
 		if (attackingDiscardBattleCard == null) {
-			return addPickBattleCardChoice(attackingArmy.owningPlayer, true, true).validate();
+			return addPickBattleCardChoice(attackingPlayer, true, true).validate();
 		}
 		if (defendingUsedBattleCard == null) {
-			return addPickBattleCardChoice(defendingArmy.owningPlayer, false, false).validate();
+			return addPickBattleCardChoice(defendingPlayer, false, false).validate();
 		}
 		if (defendingDiscardBattleCard == null) {
-			return addPickBattleCardChoice(defendingArmy.owningPlayer, false, true).validate();
+			return addPickBattleCardChoice(defendingPlayer, false, true).validate();
 		}
+
+		if (!attackerTacticalChoicePicked) {
+			if (attackingUsedDiCard[DiCardList.TACTICAL_CHOICE.index] > 0) {
+				return addPickTacticalChoice(attackingPlayer, true).validate();
+			}
+			attackerTacticalChoicePicked = true;
+
+		}
+
+		if (!defenderTacticalChoicePicked) {
+			if (defendingUsedDiCard[DiCardList.TACTICAL_CHOICE.index] > 0) {
+				return addPickTacticalChoice(defendingPlayer, false).validate();
+			}
+			defenderTacticalChoicePicked = true;
+
+		}
+
+		if (attackerDivineWoundPicked == false) {
+			if (attackingPlayer.hasPower(PowerList.RED_3_DIVINE_WOUND)) {
+				// ensure attacker didn't win yet
+				if (calculateAttackerScore() <= calculateDefenderScore()) {
+					if (DiCardList.sumArray(attackingPlayer.diCards) > 0) {
+						return addPickDivineWoundChoice(attackingPlayer, true);
+					}
+				}
+			}
+			attackerDivineWoundPicked = true;
+		}
+
+		if (defenderDivineWoundPicked == false) {
+			if (defendingPlayer.hasPower(PowerList.RED_3_DIVINE_WOUND)) {
+				// ensure defender didn't win yet
+				if (calculateAttackerScore() > calculateDefenderScore()) {
+					if (DiCardList.sumArray(defendingPlayer.diCards) > 0) {
+						return addPickDivineWoundChoice(defendingPlayer, true);
+					}
+				}
+			}
+			defenderDivineWoundPicked = true;
+		}
+
+		checkToResolveBattle();
+
+		if (pendingActions != null) {
+			PlayerChoicePick nextPlayerChoicePick = pendingActions.getNextPlayerChoicePick();
+			if (nextPlayerChoicePick != null) {
+				return nextPlayerChoicePick;
+			}
+		}
+
+		checkForForcedRecall();
 
 		if (!attackerRetreatPicked) {
 			return pickRecallOption(true).validate();
@@ -1088,6 +1293,43 @@ public class BattleAction implements Action {
 		}
 		// battle is over
 		return null;
+	}
+
+	private PlayerChoicePick addPickDivineWoundChoice(Player owningPlayer, boolean isAttacker) {
+		PlayerChoicePick pick = new PlayerChoicePick(game, owningPlayer, this);
+		List<Choice> choiceList = pick.choiceList;
+
+		byte[] diCards = owningPlayer.diCards;
+		for (int i = 0; i < diCards.length; i++) {
+			byte b = diCards[i];
+			if (b > 0) {
+
+				DivineWoundChoice choice = new DivineWoundChoice(game, owningPlayer, isAttacker, i);
+				choiceList.add(choice);
+			}
+		}
+		
+		// add the end choice
+		DivineWoundChoice choice = new DivineWoundChoice(game, owningPlayer, isAttacker, -1);
+		choiceList.add(choice);
+
+		return pick;
+	}
+
+	private PlayerChoicePick addPickTacticalChoice(Player player, boolean isAttacker) {
+		PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
+
+		TacticalChoice keep = new TacticalChoice(game, player);
+		keep.swap = false;
+		keep.isAttacker = isAttacker;
+		pick.choiceList.add(keep);
+
+		TacticalChoice swap = new TacticalChoice(game, player);
+		swap.swap = true;
+		swap.isAttacker = isAttacker;
+		pick.choiceList.add(swap);
+
+		return pick;
 	}
 
 	private boolean isDefenderFirstToPick() {
@@ -1163,6 +1405,18 @@ public class BattleAction implements Action {
 			} else if (defendingDiscardBattleCard == null) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
 						defendingArmy.owningPlayer.getState(playerIndex));
+			} else if (attackerTacticalChoicePicked == false) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			} else if (defenderDivineWoundPicked == false) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			} else if (attackerDivineWoundPicked == false) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND,
+						defendingArmy.owningPlayer.getState(playerIndex));
+			} else if (defenderDivineWoundPicked == false) {
+				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND,
+						defendingArmy.owningPlayer.getState(playerIndex));
 			}
 
 			else if (!attackerRetreatPicked) {
@@ -1221,31 +1475,59 @@ public class BattleAction implements Action {
 			giveBattleVictoryPoints(defenderBleed, attackerBleed, attackerHasDeepDesertSnake,
 					defenderHasDeepDesertSnake);
 
-			checkForForcedRecall();
+			// checkForForcedRecall();
 
 			moveWinnerToTile();
-			
+
 			discardUsedDiCards();
+
+			addReinforcementsDiCardActions();
 
 			battleResolved = true;
 		}
 	}
 
+	private void addReinforcementsDiCardActions() {
+		byte attackReinforcementsCount = attackingUsedDiCard[DiCardList.REINFORCEMENTS.index];
+
+		if (attackerWins && attackReinforcementsCount > 0) {
+			createPendingActions();
+			RecruitAction action = RecruitAction.create(game, attackingArmy.owningPlayer, pendingActions);
+			action.allowPaidRecruit = false;
+			action.freeRecruitLeft = (byte) (3 * attackReinforcementsCount);
+			action.canRecruitOnAnyArmy = true;
+			pendingActions.add(action);
+		}
+
+		byte defendingReinforcementsCount = defendingUsedDiCard[DiCardList.REINFORCEMENTS.index];
+
+		if (!attackerWins && defendingReinforcementsCount > 0) {
+			createPendingActions();
+			RecruitAction action = RecruitAction.create(game, defendingArmy.owningPlayer, pendingActions);
+			action.allowPaidRecruit = false;
+			action.freeRecruitLeft = (byte) (3 * defendingReinforcementsCount);
+			action.canRecruitOnAnyArmy = true;
+			pendingActions.add(action);
+		}
+	}
+
 	private void discardUsedDiCards() {
-		
+
 		Player attacker = attackingArmy.owningPlayer;
 		byte[] attackingDiCards = attacker.diCards;
 		Player defender = defendingArmy.owningPlayer;
 		byte[] defendingDiCards = defender.diCards;
 		byte[] discardedDiCardList = game.discardedDiCardList;
-		
-		for( int i=0;i<DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT;++i) {
-			for( int j=0; j< attackingUsedDiCard[i];++i) {
-				DiCardList.moveDiCard(attackingDiCards, discardedDiCardList, i, attacker.name, "discard pile", "used in battle", game);
+
+		for (int i = 0; i < DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT; ++i) {
+			for (int j = 0; j < attackingUsedDiCard[i]; ++j) {
+				DiCardList.moveDiCard(attackingDiCards, discardedDiCardList, i, attacker.name,
+						KemetGame.DISCARDED_DI_CARDS, "used in battle", game);
 			}
 
-			for( int j=0; j< defendingUsedDiCard[i];++i) {
-				DiCardList.moveDiCard(defendingDiCards, discardedDiCardList, i, defender.name, "discard pile", "used in battle", game);
+			for (int j = 0; j < defendingUsedDiCard[i]; ++j) {
+				DiCardList.moveDiCard(defendingDiCards, discardedDiCardList, i, defender.name,
+						KemetGame.DISCARDED_DI_CARDS, "used in battle", game);
 			}
 		}
 	}

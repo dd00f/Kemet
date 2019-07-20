@@ -20,18 +20,14 @@ import kemet.util.Cache;
  * 
  * @author Steve McDuff
  */
-public class BuyPowerAction implements Action {
+public class BuyPowerAction extends DiCardAction {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -6525066429860592023L;
 
-	private KemetGame game;
-	private Player player;
-
 	public Action nextAction;
-	private Action parent;
 
 	public Color color;
 	public byte costBoost;
@@ -53,13 +49,12 @@ public class BuyPowerAction implements Action {
 	}
 
 	@Override
-	public void initialize() {
-		game = null;
-		player = null;
+	public void internalInitialize() {
+
 		nextAction = null;
-		parent = null;
 		costBoost = 0;
 		color = null;
+		super.internalInitialize();
 	}
 
 	@Override
@@ -73,6 +68,7 @@ public class BuyPowerAction implements Action {
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
+		super.validate(expectedParent, currentGame);
 	}
 
 	@Override
@@ -80,10 +76,13 @@ public class BuyPowerAction implements Action {
 		// create the object
 		BuyPowerAction clone = CACHE.create();
 
+		copy(clone);
+
+		return clone;
+	}
+
+	private void copy(BuyPowerAction clone) {
 		// copy all objects
-		clone.game = game;
-		clone.player = player;
-		clone.parent = parent;
 		clone.color = color;
 		clone.costBoost = costBoost;
 
@@ -93,7 +92,7 @@ public class BuyPowerAction implements Action {
 			clone.nextAction = nextAction.deepCacheClone();
 			clone.nextAction.setParent(clone);
 		}
-		return clone;
+		super.copy(clone);
 	}
 
 	@Override
@@ -105,10 +104,9 @@ public class BuyPowerAction implements Action {
 		}
 
 		// null all references
-		game = null;
-		player = null;
 		nextAction = null;
-		parent = null;
+
+		super.release();
 
 		CACHE.release(this);
 	}
@@ -125,6 +123,8 @@ public class BuyPowerAction implements Action {
 		if (nextAction != null) {
 			nextAction.relink(clone);
 		}
+
+		super.relink(clone);
 	}
 
 	public static BuyPowerAction create(KemetGame game, Player player, Action parent, Color color, byte costBoost) {
@@ -141,16 +141,12 @@ public class BuyPowerAction implements Action {
 	}
 
 	@Override
-	public void setParent(Action parent) {
-		this.parent = parent;
-	}
-
-	public Player getPlayer() {
-		return player;
-	}
-
-	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
+
+		PlayerChoicePick nextPlayerChoicePick = super.getNextPlayerChoicePick();
+		if (nextPlayerChoicePick != null) {
+			return nextPlayerChoicePick;
+		}
 
 		if (nextAction != null) {
 
@@ -167,16 +163,13 @@ public class BuyPowerAction implements Action {
 		if (choiceList.size() == 0) {
 			return null;
 		}
+		
+		addGenericDiCardChoice(choiceList);
 
 		BuyNothingChoice nothing = new BuyNothingChoice(game, player);
 		choiceList.add(nothing);
 
 		return pick;
-	}
-
-	@Override
-	public Action getParent() {
-		return parent;
 	}
 
 	private void addAllPowerBuyOptions(Player currentPlayer, List<Choice> choiceList, Color filterColor) {

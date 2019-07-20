@@ -19,12 +19,16 @@ import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import kemet.util.CopyableRandom;
 import kemet.util.Game;
 import kemet.util.StackingMCTS;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class KemetGame implements Model, Game {
+
+	public static final String AVAILABLE_DI_CARDS = "Available DI cards";
+	public static final String DISCARDED_DI_CARDS = "Discarded DI cards";
 
 	public static final int VICTORY_POINTS_OBJECTIVE = 8;
 
@@ -61,6 +65,8 @@ public class KemetGame implements Model, Game {
 	public ByteCanonicalForm canonicalForm;
 
 	private boolean[] allValidMoves;
+	
+	public CopyableRandom random = new CopyableRandom();
 
 	public StackingMCTS simulationMcts;
 
@@ -105,6 +111,8 @@ public class KemetGame implements Model, Game {
 	public KemetGame deepCacheClone() {
 
 		KemetGame clone = GAME_CACHE.create();
+		
+		clone.random.copyFrom(random);
 
 		clone.tileList.clear();
 		for (Tile tile : tileList) {
@@ -198,24 +206,25 @@ public class KemetGame implements Model, Game {
 		action.validate(null, this);
 
 		validate(winner);
-		
+
 		validateDiCardCount();
 	}
 
 	private void validateDiCardCount() {
 		int count = 0;
-		
+
 		count += DiCardList.sumArray(availableDiCardList);
 		count += DiCardList.sumArray(discardedDiCardList);
-		
+
 		for (Player player : playerByInitiativeList) {
 			count += DiCardList.sumArray(player.diCards);
 		}
-		
-		if( count != DiCardList.TOTAL_DI_COUNT) {
-			Validation.validationFailed("Total DI card in play is wrong. Expected " + DiCardList.TOTAL_DI_COUNT + " but got " + count);
+
+		if (count != DiCardList.TOTAL_DI_COUNT) {
+			Validation.validationFailed(
+					"Total DI card in play is wrong. Expected " + DiCardList.TOTAL_DI_COUNT + " but got " + count);
 		}
-		
+
 	}
 
 	public void validate(Player player) {
@@ -429,17 +438,17 @@ public class KemetGame implements Model, Game {
 	public void provideNightDiCards() {
 
 		for (Player player : playerByInitiativeList) {
-			DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, "Available DI Cards", player.name,
-					"Night DI Card", this);
+			DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, AVAILABLE_DI_CARDS, player.name,
+					"Night DI Card", this, true);
 
 			if (player.hasPower(PowerList.WHITE_2_DIVINE_BOON)) {
-				DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, "Available DI Cards", player.name,
-						PowerList.WHITE_2_DIVINE_BOON.name, this);
+				DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, AVAILABLE_DI_CARDS, player.name,
+						PowerList.WHITE_2_DIVINE_BOON.name, this, true);
 			}
 
 			if (player.hasPower(PowerList.WHITE_4_MUMMY)) {
-				DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, "Available DI Cards", player.name,
-						PowerList.WHITE_4_MUMMY.name, this);
+				DiCardList.moveRandomDiCard(availableDiCardList, player.diCards, AVAILABLE_DI_CARDS, player.name,
+						PowerList.WHITE_4_MUMMY.name, this, true);
 			}
 		}
 
@@ -811,4 +820,37 @@ public class KemetGame implements Model, Game {
 
 	}
 
+	public void resetDiCards() {
+		
+		resetCachedChoices();
+		
+		if (printActivations) {
+			printEvent("DI Card reset triggered.");
+		}
+
+		for (Player player : playerByInitiativeList) {
+			DiCardList.fillArray(player.diCards, (byte) 0);
+		}
+		DiCardList.fillArray(discardedDiCardList, (byte) 0);
+		DiCardList.initializeGame(availableDiCardList);
+	}
+
+	public void moveDiscardedDiCardsToAvailableDiCardList() {
+		if (printActivations) {
+			printEvent(
+					"Moving all discarded DI cards back to available DI card stack because available DI cards stack was empty.");
+		}
+
+		boolean oldPrintActivation = printActivations;
+		printActivations = false;
+		DiCardList.moveAllDiCard(discardedDiCardList, availableDiCardList, "Discard DI cards", AVAILABLE_DI_CARDS,
+				"Reset DI cards.", this);
+		printActivations = oldPrintActivation;
+	}
+
+	public void giveDiCardToPlayer(DiCard cardToMove, Player redPlayer) {
+		DiCardList.moveDiCard(availableDiCardList, redPlayer.diCards, cardToMove.index, AVAILABLE_DI_CARDS,
+				redPlayer.name, "Give DI card", this);
+
+	}
 }

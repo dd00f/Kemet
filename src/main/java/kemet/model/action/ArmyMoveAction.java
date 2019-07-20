@@ -1,15 +1,16 @@
 package kemet.model.action;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import kemet.model.Army;
 import kemet.model.BeastList;
 import kemet.model.BoardInventory;
+import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
 import kemet.model.Tile;
-import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.model.action.choice.EndTurnChoice;
@@ -19,26 +20,25 @@ import kemet.util.Cache;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
-public class ArmyMoveAction extends EndableAction {
+public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3412984242415127309L;
 
-	private KemetGame game;
-	private Player player;
-
 	public boolean firstMove = true;
 	public Tile destinationTile;
 	public byte movementLeft = 1;
 	public Army army;
-	public Action overridingAction;
+	public BattleAction overridingAction;
 	public Action temporaryAction;
 	public boolean isTeleport = false;
+	public boolean freeTeleport = false;
+	public boolean freeBreachWalls = false;
+	public boolean escapePicked = false;
+	public boolean escapeTilePicked = false;
 	public byte powerCost = 0;
-
-	private Action parent;
 
 	public static Cache<ArmyMoveAction> CACHE = new Cache<ArmyMoveAction>(() -> new ArmyMoveAction());
 
@@ -48,8 +48,8 @@ public class ArmyMoveAction extends EndableAction {
 
 	@Override
 	public void internalInitialize() {
-		game = null;
-		player = null;
+		super.internalInitialize();
+
 		firstMove = true;
 		destinationTile = null;
 		movementLeft = 1;
@@ -57,15 +57,16 @@ public class ArmyMoveAction extends EndableAction {
 		overridingAction = null;
 		temporaryAction = null;
 		isTeleport = false;
+		freeTeleport = false;
+		freeBreachWalls = false;
+		escapePicked = false;
+		escapeTilePicked = false;
 		powerCost = 0;
-
-		parent = null;
 	}
 
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
-		currentGame.validate(game);
-		currentGame.validate(player);
+		super.validate(expectedParent, currentGame);
 		currentGame.validate(destinationTile);
 		currentGame.validate(army);
 
@@ -75,15 +76,11 @@ public class ArmyMoveAction extends EndableAction {
 		if (temporaryAction != null) {
 			temporaryAction.validate(this, currentGame);
 		}
-		if (expectedParent != parent) {
-			Validation.validationFailed("Action parent isn't as expected.");
-		}
 	}
 
 	@Override
 	public void relink(KemetGame clone) {
-		this.game = clone;
-		player = clone.getPlayerByCopy(player);
+
 		army = clone.getArmyByCopy(army);
 		destinationTile = clone.getTileByCopy(destinationTile);
 		if (overridingAction != null) {
@@ -107,8 +104,7 @@ public class ArmyMoveAction extends EndableAction {
 	}
 
 	private void copy(ArmyMoveAction clone) {
-		clone.game = game;
-		clone.player = player;
+
 		clone.firstMove = firstMove;
 		clone.destinationTile = destinationTile;
 		clone.movementLeft = movementLeft;
@@ -127,7 +123,10 @@ public class ArmyMoveAction extends EndableAction {
 
 		clone.isTeleport = isTeleport;
 		clone.powerCost = powerCost;
-		clone.parent = parent;
+		clone.freeTeleport = freeTeleport;
+		clone.freeBreachWalls = freeBreachWalls;
+		clone.escapePicked = escapePicked;
+		clone.escapeTilePicked = escapeTilePicked;
 
 		super.copy(clone);
 	}
@@ -137,22 +136,22 @@ public class ArmyMoveAction extends EndableAction {
 		if (overridingAction != null) {
 			overridingAction.release();
 		}
+
 		if (temporaryAction != null) {
 			temporaryAction.release();
 		}
-		clear();
+
+		super.release();
+
 		CACHE.release(this);
 	}
 
 	@Override
 	public void clear() {
-		game = null;
-		player = null;
 		destinationTile = null;
 		army = null;
 		overridingAction = null;
 		temporaryAction = null;
-		parent = null;
 
 		super.clear();
 	}
@@ -168,11 +167,6 @@ public class ArmyMoveAction extends EndableAction {
 		create.movementLeft = player.moveCapacity;
 
 		return create;
-	}
-
-	@Override
-	public Action getParent() {
-		return parent;
 	}
 
 	public String describe() {
@@ -261,6 +255,81 @@ public class ArmyMoveAction extends EndableAction {
 		}
 
 	}
+	
+
+	public class EscapeTileMoveChoice extends PlayerChoice {
+
+		public Tile pickDestinationTile;
+
+		public EscapeTileMoveChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
+
+		@Override
+		public String describe() {
+			StringBuilder builder = new StringBuilder();
+			Army currentArmy = overridingAction.defendingArmy;
+			builder.append("Escape battle with \"").append(currentArmy).append("\"");
+			if (currentArmy.tile != null) {
+				builder.append(" from tile ").append(currentArmy.tile.name);
+			}
+
+			builder.append(" to tile ").append(pickDestinationTile);
+			builder.append(".");
+
+			return builder.toString();
+		}
+
+		@Override
+		public void choiceActivate() {
+			overridingAction.defendingArmy.moveToTile(pickDestinationTile);
+			overridingAction.attackingArmy.moveToTile(overridingAction.tile);
+			end();
+		}
+
+		@Override
+		public int getIndex() {
+			return pickDestinationTile.getEscapeChoiceIndex(player.getIndex());
+		}
+
+	}
+
+	public class EscapeChoice extends PlayerChoice {
+
+		private boolean escape;
+
+		public EscapeChoice(KemetGame game, Player player, boolean escape) {
+			super(game, player);
+			this.escape = escape;
+		}
+
+		@Override
+		public String describe() {
+			if (escape) {
+				return "Use DI card : " + DiCardList.ESCAPE.toString();
+			}
+			return "Do not use DI card : " + DiCardList.ESCAPE.toString();
+		}
+
+		@Override
+		public void choiceActivate() {
+			if (escape) {
+				createVetoAction(DiCardList.ESCAPE.index, player);
+			} else {
+				escapePicked = true;
+				escapeTilePicked = true;
+			}
+		}
+
+		@Override
+		public int getIndex() {
+			if (escape) {
+				return ChoiceInventory.ACTIVATE_DI_CARD + DiCardList.ESCAPE.index;
+			}
+			return ChoiceInventory.SKIP_ESCAPE;
+		}
+
+	}
 
 	public void addArmyTileMoveChoice(List<Choice> choiceList) {
 		for (Tile tile : army.tile.connectedTiles) {
@@ -285,7 +354,6 @@ public class ArmyMoveAction extends EndableAction {
 			if (playerCanAffordCost(subChoice.pickPowerCost)) {
 				choiceList.add(subChoice);
 			}
-
 		}
 
 		if (armyCanTeleport()) {
@@ -299,7 +367,12 @@ public class ArmyMoveAction extends EndableAction {
 					TileMoveChoice subChoice = new TileMoveChoice(game, player);
 					subChoice.pickDestinationTile = tile;
 					subChoice.pickIsTeleport = true;
-					subChoice.pickPowerCost = player.getTeleportCost();
+
+					if (freeTeleport) {
+						subChoice.pickPowerCost = 0;
+					} else {
+						subChoice.pickPowerCost = player.getTeleportCost();
+					}
 
 					applyKhnumSphinxCostToMove(tile, subChoice);
 					if (playerCanAffordCost(subChoice.pickPowerCost)) {
@@ -330,10 +403,14 @@ public class ArmyMoveAction extends EndableAction {
 	}
 
 	private boolean armyHasPowerToBypassWalls() {
-		return player.hasPower(PowerList.RED_2_OPEN_GATE) || army.beast == BeastList.RED_4_PHOENIX;
+		return player.hasPower(PowerList.RED_2_OPEN_GATE) || army.beast == BeastList.RED_4_PHOENIX || freeBreachWalls;
 	}
 
 	private boolean armyCanTeleport() {
+
+		if (freeTeleport) {
+			return true;
+		}
 
 		if (!player.canTeleport()) {
 			// not enough power points to teleport
@@ -408,6 +485,11 @@ public class ArmyMoveAction extends EndableAction {
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
 
+		PlayerChoicePick nextPlayerChoicePick = super.getNextPlayerChoicePick();
+		if (nextPlayerChoicePick != null) {
+			return nextPlayerChoicePick;
+		}
+
 		if (temporaryAction != null) {
 			PlayerChoicePick tempNextChoice = temporaryAction.getNextPlayerChoicePick();
 			if (tempNextChoice == null) {
@@ -422,6 +504,44 @@ public class ArmyMoveAction extends EndableAction {
 		}
 
 		if (overridingAction != null) {
+
+			if (!escapeTilePicked) {
+				Player defender = overridingAction.defendingArmy.owningPlayer;
+
+				if (!escapePicked) {
+					// offer escape choice
+					if (defenderCanEscapeBattle()) {
+
+
+						PlayerChoicePick pick = new PlayerChoicePick(game, defender, this);
+						pick.choiceList.add(new EscapeChoice(game, defender, true));
+						pick.choiceList.add(new EscapeChoice(game, defender, false));
+
+						return pick;
+
+					}
+					escapeTilePicked = true;
+					escapePicked = true;
+				} else {
+					// ask for a tile
+					
+					PlayerChoicePick pick = new PlayerChoicePick(game, defender, this);
+
+					List<Tile> battleEscapeTileChoice = getBattleEscapeTileChoice();
+					for (Tile tile : battleEscapeTileChoice) {
+						EscapeTileMoveChoice escape = new EscapeTileMoveChoice(game, defender);
+						escape.pickDestinationTile = tile;
+						pick.choiceList.add(escape);
+					}
+					
+					if( pick.choiceList.size() == 1 ) {
+						pick.choiceList.get(0).activate();
+						return null;
+					}
+					return pick;
+				}
+			}
+
 			return overridingAction.getNextPlayerChoicePick();
 		}
 
@@ -429,6 +549,11 @@ public class ArmyMoveAction extends EndableAction {
 			// pick army
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 			addArmyPickMoveChoice(pick.choiceList);
+
+			addGenericDiCardChoice(pick.choiceList);
+
+			addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
+
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
 					ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
 			return pick.validate();
@@ -445,6 +570,12 @@ public class ArmyMoveAction extends EndableAction {
 					// no possible destination tile (usually because move landed on a island )
 					return null;
 				}
+
+				addGenericDiCardChoice(pick.choiceList);
+
+				addDiCardChoice(pick.choiceList, DiCardList.SWIFTNESS.index);
+				addDiCardChoice(pick.choiceList, DiCardList.TELEPORTATION.index);
+				addDiCardChoice(pick.choiceList, DiCardList.OPEN_GATES.index);
 
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this,
 						ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX);
@@ -463,6 +594,32 @@ public class ArmyMoveAction extends EndableAction {
 
 	}
 
+	private boolean defenderCanEscapeBattle() {
+		if (overridingAction.defendingArmy.owningPlayer.diCards[DiCardList.ESCAPE.index] <= 0) {
+			return false;
+		}
+
+		// check if there is a tile to move to
+		List<Tile> battleEscapeTileChoice = getBattleEscapeTileChoice();
+		if (battleEscapeTileChoice.size() == 0) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private List<Tile> getBattleEscapeTileChoice() {
+		List<Tile> escapeTiles = new ArrayList<>();
+		List<Tile> connectedTiles = overridingAction.tile.connectedTiles;
+		for (Tile tile : connectedTiles) {
+			// tile is empty
+			if (tile.getArmy() == null) {
+				escapeTiles.add(tile);
+			}
+		}
+		return escapeTiles;
+	}
+
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
@@ -470,9 +627,26 @@ public class ArmyMoveAction extends EndableAction {
 			return;
 		}
 
+		super.fillCanonicalForm(cannonicalForm, playerIndex);
+
 		cannonicalForm.set(BoardInventory.STATE_MOVE, player.getState(playerIndex));
 		cannonicalForm.set(BoardInventory.MOVES_LEFT, movementLeft);
 		cannonicalForm.set(BoardInventory.IS_FIRST_MOVE, (byte) (firstMove ? 1 : 0));
+
+		if (escapePicked) {
+			cannonicalForm.set(BoardInventory.ESCAPE_PICKED, (byte) 1);
+		}
+
+		if (escapeTilePicked) {
+			cannonicalForm.set(BoardInventory.ESCAPE_TILE_PICKED, (byte) 1);
+		}
+
+		if (freeBreachWalls) {
+			cannonicalForm.set(BoardInventory.MOVE_FREE_BREACH_WALL, (byte) 1);
+		}
+		if (freeTeleport) {
+			cannonicalForm.set(BoardInventory.MOVE_FREE_TELEPORT, (byte) 1);
+		}
 
 		if (temporaryAction != null) {
 			temporaryAction.fillCanonicalForm(cannonicalForm, playerIndex);
@@ -654,21 +828,21 @@ public class ArmyMoveAction extends EndableAction {
 				armyThatKeepsMoving = army;
 			}
 
-			if (!isTeleport) {
+			if (isTeleport) {
+				freeTeleport = false;
+			} else {
 				// normal move
 				movementLeft--;
 			}
 
 			if (armyThatKeepsMoving != null && movementLeft > 0 || powerCost > 0) {
-
 				army = armyThatKeepsMoving;
-				powerCost = 0;
-				isTeleport = false;
-				destinationTile = null;
 				firstMove = false;
-
 			}
 
+			powerCost = 0;
+			isTeleport = false;
+			destinationTile = null;
 		}
 
 		private boolean isDamageDoneFromDeadlyTrap(Army destinationArmy) {
@@ -774,8 +948,20 @@ public class ArmyMoveAction extends EndableAction {
 	}
 
 	@Override
-	public void setParent(Action parent) {
-		this.parent = parent;
+	public void applyDiCard(int index) {
+
+		if (index == DiCardList.SWIFTNESS.index) {
+			movementLeft++;
+		} else if (index == DiCardList.TELEPORTATION.index) {
+			freeTeleport = true;
+		} else if (index == DiCardList.OPEN_GATES.index) {
+			freeBreachWalls = true;
+		} else if (index == DiCardList.ESCAPE.index) {
+			escapePicked = true;
+		} else {
+			super.applyDiCard(index);
+		}
+
 	}
 
 }

@@ -7,13 +7,7 @@ import kemet.model.DiCardList;
 import kemet.model.PowerList;
 
 public class ChoiceInventory {
-	/*
-	 * Vector of all possible actions : 61 possible choices - end action 1 choice -
-	 * army size pick 7 choices : 1 to 7 - pick tile 13 choices : 2 player game has
-	 * 13 tiles - pick pyramid color 4 choices : 4 color - pick pyramid level 4
-	 * choices - pick battle card 8 choices : 1 per card - recall army 1 choice -
-	 * player token pick 10 choices - for each token
-	 */
+
 
 	public static int INDEXER = 0;
 
@@ -97,7 +91,7 @@ public class ChoiceInventory {
 	static {
 		INDEXER += BeastList.BEAST_INDEXER;
 	}
-	
+
 	// 1 pick
 	public static final int ONLY_BEAST_MOVE = INDEXER++;
 
@@ -106,7 +100,7 @@ public class ChoiceInventory {
 	static {
 		INDEXER += BoardInventory.LARGEST_ARMY;
 	}
-	
+
 	// 1 pick
 	public static final int BUY_NOTHING = INDEXER++;
 	public static final int KEEP_BEAST = INDEXER++;
@@ -117,7 +111,31 @@ public class ChoiceInventory {
 	static {
 		INDEXER += DiCardList.TOTAL_DI_CARD_TYPE_COUNT;
 	}
+
+	public static final int TACTICAL_CHOICE_SWAP = INDEXER++;
+	public static final int TACTICAL_CHOICE_KEEP = INDEXER++;
+
+	public static final int SKIP_DI_VETO = INDEXER++;
+	public static final int SKIP_ESCAPE = INDEXER++;
+
+	public static final int PICK_DI_CARD = INDEXER;
+	static {
+		INDEXER += DiCardList.TOTAL_DI_CARD_TYPE_COUNT;
+	}
 	
+	
+	// 13 picks for this
+	public static final int ESCAPE_TILE_CHOICE = INDEXER;
+	static {
+		INDEXER += BoardInventory.TILE_COUNT;
+	}
+
+	public static final int DIVINE_WOUND_DI_CARD = INDEXER;
+	static {
+		INDEXER += DiCardList.TOTAL_DI_CARD_TYPE_COUNT;
+	}
+	public static final int END_DIVINE_WOUND = INDEXER++;
+
 	public static final int TOTAL_CHOICE = INDEXER;
 
 	public static void main(String[] args) {
@@ -154,8 +172,18 @@ public class ChoiceInventory {
 		System.out.println("ARMY_SIZE_WITH_BEAST_CHOICE " + ARMY_SIZE_WITH_BEAST_CHOICE);
 		System.out.println("BUY_NOTHING " + BUY_NOTHING);
 		System.out.println("KEEP_BEAST " + KEEP_BEAST);
-		System.out.println("KEEP_BEAST " + END_RECRUIT);
 		System.out.println("UPGRADE_NOTHING " + UPGRADE_NOTHING);
+		System.out.println("END_RECRUIT " + END_RECRUIT);
+		System.out.println("ACTIVATE_DI_CARD " + ACTIVATE_DI_CARD);
+		System.out.println("TACTICAL_CHOICE_SWAP " + TACTICAL_CHOICE_SWAP);
+		System.out.println("TACTICAL_CHOICE_KEEP " + TACTICAL_CHOICE_KEEP);
+		System.out.println("SKIP_DI_VETO " + SKIP_DI_VETO);
+		System.out.println("SKIP_ESCAPE " + SKIP_ESCAPE);
+		System.out.println("PICK_DI_CARD " + PICK_DI_CARD);
+		System.out.println("ESCAPE_TILE_CHOICE " + ESCAPE_TILE_CHOICE);
+		System.out.println("DIVINE_WOUND_DI_CARD " + DIVINE_WOUND_DI_CARD);
+		System.out.println("END_DIVINE_WOUND " + END_DIVINE_WOUND);
+
 		System.out.println("LAST_INDEX " + (INDEXER - 1));
 
 //		Choice Index List
@@ -185,7 +213,20 @@ public class ChoiceInventory {
 //		PASS_RECRUIT_CHOICE_INDEX 68
 //		PASS_RECALL_CHOICE_INDEX 69
 //		BUY_POWER 70
-//		LAST_INDEX 119
+//		PICK_BEAST 134
+//		ARMY_SIZE_WITH_BEAST_CHOICE 145
+//		BUY_NOTHING 152
+//		KEEP_BEAST 153
+//		UPGRADE_NOTHING 154
+//		END_RECRUIT 155
+//		ACTIVATE_DI_CARD 156
+//		TACTICAL_CHOICE_SWAP 176
+//		TACTICAL_CHOICE_KEEP 177
+//		SKIP_DI_VETO 178
+//		SKIP_ESCAPE 179
+//		PICK_DI_CARD 180
+//		ESCAPE_TILE_CHOICE 200
+//		LAST_INDEX 212
 
 	}
 

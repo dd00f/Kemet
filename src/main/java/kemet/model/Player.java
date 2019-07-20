@@ -680,6 +680,10 @@ public class Player implements Model {
 		}
 		builder.append("\n");
 
+		builder.append("\tDI Cards : ");
+		DiCardList.describeDiCards(diCards, builder);
+		builder.append("\n");
+
 		builder.append("\tUsed Battle Cards  : ");
 		for (BattleCard used : usedBattleCards) {
 			builder.append(" ");
@@ -1012,4 +1016,23 @@ public class Player implements Model {
 		return build.toString();
 	}
 
+	public int getDiCardCount() {
+		return DiCardList.sumArray(diCards);
+	}
+
+	public void setCanonicalState(ByteCanonicalForm cannonicalForm, int stateOffset, int fromPlayerIndex) {
+		cannonicalForm.set(stateOffset + getCanonicalPlayerIndex(fromPlayerIndex), (byte) 1);
+	}
+
+	public byte getPrayActionPowerIncrease() {
+		byte increasedPower = 2;
+		if (hasPower(PowerList.WHITE_1_PRIEST_1)) {
+			increasedPower += 1;
+		}
+
+		if (hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
+			increasedPower += 1;
+		}
+		return increasedPower;
+	}
 }

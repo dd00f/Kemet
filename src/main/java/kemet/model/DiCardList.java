@@ -51,6 +51,8 @@ public class DiCardList {
 
 	public static final int TOTAL_BATTLE_DI_CARD_TYPE_COUNT = 10;
 
+	public static final int TOTAL_NON_BATTLE_DI_CARD_TYPE_COUNT = TOTAL_DI_CARD_TYPE_COUNT - TOTAL_BATTLE_DI_CARD_TYPE_COUNT;
+
 	public static final int MAX_DI_CARD_COUNT = 4;
 
 	public static final int TOTAL_DI_COUNT;
@@ -133,7 +135,7 @@ public class DiCardList {
 			canonicalForm.set(offset + i, diCardArray[i]);
 		}
 	}
-	
+
 	private static void fillCards(DiCard card) {
 		if (CARDS[card.index] != null) {
 			throw new IllegalArgumentException("CARDS array already has a card in " + card);
@@ -162,6 +164,15 @@ public class DiCardList {
 		}
 	}
 
+	public static void moveAllDiCard(byte[] source, byte[] destination, String sourceName, String destinationName,
+			String reason, KemetGame game) {
+		for (int i = 0; i < source.length; i++) {
+			while (source[i] > 0) {
+				moveDiCard(source, destination, i, sourceName, destinationName, reason, game);
+			}
+		}
+	}
+
 	public static void moveDiCard(byte[] source, byte[] destination, int index, String sourceName,
 			String destinationName, String reason, KemetGame game) {
 		if (index < 0) {
@@ -181,22 +192,47 @@ public class DiCardList {
 			throw new IllegalStateException("DI Card index " + index + " has a negative count " + source[index]);
 		}
 	}
+	
+	public static void describeDiCards(byte[] cards, StringBuilder builder ) {
+		boolean first = true;
+		for (int i = 0; i < cards.length; i++) {
+			byte b = cards[i];
+			if( b > 0 ) {
+				
+				if( first ) {
+					first = false;
+				} else {
+					builder.append(", ");
+				}
+				
+				builder.append(b);
+				builder.append(" ");
+				builder.append(CARDS[i].name);
+			}
+			
+		}
+		
+	}
 
 	public static void moveRandomDiCard(byte[] source, byte[] destination, String sourceName, String destinationName,
-			String reason, KemetGame game) {
-		double random = Math.random();
-		int indexToMove = getIndexToMove(source, random);
+			String reason, KemetGame game, boolean recuperateDiscardedCardsWhenSourceEmpty) {
+		int indexToMove = getIndexToMove(source, game);
+		if (indexToMove < 0 && recuperateDiscardedCardsWhenSourceEmpty) {
+			game.moveDiscardedDiCardsToAvailableDiCardList();
+			indexToMove = getIndexToMove(source, game);
+		}
+
 		moveDiCard(source, destination, indexToMove, sourceName, destinationName, reason, game);
 	}
 
-	public static int getIndexToMove(byte[] source, double random) {
-		float sumArray = sumArray(source);
+	public static int getIndexToMove(byte[] source, KemetGame game) {
+		byte sumArray = sumArray(source);
 
 		if (sumArray <= 0) {
 			return -1;
 		}
 
-		int indexCount = (int) (random * sumArray);
+		int indexCount = game.random.nextInt(sumArray);
 		int indexToMove = -1;
 
 		for (int i = 0; i < source.length; ++i) {
@@ -211,7 +247,7 @@ public class DiCardList {
 		}
 
 		if (indexToMove == -1) {
-			log.error("Non empty DI card list couldn't find random card index to return, random {}", random);
+			log.error("Non empty DI card list couldn't find random card index to return, random {}", indexCount);
 		}
 
 		return indexToMove;

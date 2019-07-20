@@ -284,11 +284,49 @@ public class BoardInventory {
 	static {
 		INDEXER += DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT;
 	}
-	
+
 	public static final int DI_CARD_PER_PLAYER = INDEXER;
 	static {
 		INDEXER += PLAYER_COUNT;
 	}
+
+	public static final int STATE_VETO_PLAYER = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT;
+	}
+
+	public static final int STATE_VETO_DI_CARD = INDEXER;
+	static {
+		INDEXER += DiCardList.TOTAL_NON_BATTLE_DI_CARD_TYPE_COUNT;
+	}
+
+	public static final int STATE_PLAYER_VETO_DONE = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT;
+	}
+
+	public static final int STATE_PLAYER_DOING_VETO_ON_VETO = INDEXER;
+	static {
+		INDEXER += PLAYER_COUNT;
+	}
+
+	public static final int MOVE_FREE_BREACH_WALL = INDEXER++;
+	public static final int MOVE_FREE_TELEPORT = INDEXER++;
+
+	public static final int AVAILABLE_DI = INDEXER;
+	static {
+		INDEXER += DiCardList.TOTAL_DI_CARD_TYPE_COUNT;
+	}
+
+	public static final int PICK_DI_STATE = INDEXER++;
+	public static final int PICK_DI_MOVE_REST_TO_DISCARD = INDEXER++;
+	public static final int RAINING_FIRE_STATE = INDEXER++;
+	public static final int ESCAPE_PICKED = INDEXER++;
+	public static final int ESCAPE_TILE_PICKED = INDEXER++;
+	public static final int STATE_PICK_ATTACKER_DIVINE_WOUND = INDEXER++;
+	public static final int STATE_PICK_DEFENDER_DIVINE_WOUND = INDEXER++;
+	public static final int STATE_PICK_ATTACKER_TACTICAL_CHOICE = INDEXER++;
+	public static final int STATE_PICK_DEFENDER_TACTICAL_CHOICE = INDEXER++;
 
 	public static final int TOTAL_STATE_COUNT = INDEXER;
 

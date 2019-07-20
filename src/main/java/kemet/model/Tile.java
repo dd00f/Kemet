@@ -217,6 +217,10 @@ public class Tile implements Model {
 
 	public String describe() {
 		StringBuilder build = new StringBuilder();
+		return describe(build);
+	}
+
+	public String describe(StringBuilder build) {
 		build.append(name);
 		if (pyramidColor != Color.NONE) {
 			build.append(" with pyramid ");
@@ -273,6 +277,10 @@ public class Tile implements Model {
 		return ChoiceInventory.PICK_TILE_CHOICE + getTileCanonicalIndex(playerIndex);
 	}
 
+	public int getEscapeChoiceIndex(int playerIndex) {
+		return ChoiceInventory.ESCAPE_TILE_CHOICE + getTileCanonicalIndex(playerIndex);
+	}
+	
 	public void setSelected(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
 		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
 		cannonicalForm.set(BoardInventory.TILE_SELECTED + tileCanonicalIndex, value);

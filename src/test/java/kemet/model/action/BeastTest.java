@@ -1091,21 +1091,20 @@ public class BeastTest extends TwoPlayerGameTest {
 
 		Tile startTile = redPlayer.cityTiles.get(1);
 
+		// red action 1
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_4_GIANT_SCORPION);
 		recruitBeastToTile(startTile);
-		
+
+		// blue action 1
 		assertEquals(3, bluePlayer.victoryPoints);
-		
 		buyPowerTile(PowerList.WHITE_4_MUMMY);
 		recruitBeastToTile(tileByName);
-		
 		assertEquals(3, bluePlayer.victoryPoints);
-		
 		assertEquals(5, bluePlayer.getPrayerPoints());
-
 		assertEquals(3, tileByName.getArmy().armySize);
 
+		// red action 2
 		moveRowTwoArmy(startTile, tileByName, 5, true);
 
 		assertEquals(3, redPlayer.victoryPoints);
@@ -1113,14 +1112,37 @@ public class BeastTest extends TwoPlayerGameTest {
 		// defense strength : 3 army + 2 beast + 3 card = 8
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.FERVENT_PURGE_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
-
 		skipRecruitBeast();
-		
+
+		// blue action 2
 		moveRowTwoZeroArmy();
 		// 1+2 damage
 		assertEquals(5, bluePlayer.getPrayerPoints());
-
 		assertEquals(3, redPlayer.victoryPoints);
+		
+		redPlayer.recuperateAllBattleCards();
+		bluePlayer.recuperateAllBattleCards();
+		
+		// action 3
+		prayRowTwo();
+		prayRowTwo();
+		
+		// action 4
+		prayRowThree();
+		prayRowThree();
+
+		assertEquals( 3, bluePlayer.getDiCardCount());
+
+		// action 5
+		moveRowOneZeroArmy();
+		moveRowOneZeroArmy();
+		
+		// trigger night phase
+		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.FERVENT_PURGE_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+		
+		assertEquals( 5, bluePlayer.getDiCardCount());
+		
 	}
 
 }

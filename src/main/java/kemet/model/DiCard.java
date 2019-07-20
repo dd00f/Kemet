@@ -1,5 +1,7 @@
 package kemet.model;
 
+import kemet.model.action.choice.ChoiceInventory;
+
 public class DiCard implements Model {
 
 	/**
@@ -23,8 +25,8 @@ public class DiCard implements Model {
 
 	@Override
 	public String toString() {
-		return "Divine Intervention Card " + name + ", index " + index + ", cost " + powerCost + ", phase : " + phase
-				+ ", description : " + description;
+		return name + ", index " + index + ", cost " + powerCost + ", phase : " + phase + ", description : "
+				+ description;
 	}
 
 	@Override
@@ -40,6 +42,22 @@ public class DiCard implements Model {
 	@Override
 	public void initialize() {
 
+	}
+
+	public int getActivateChoiceIndex() {
+		return ChoiceInventory.ACTIVATE_DI_CARD + index;
+	}
+	
+	public int getDivineWoundChoiceIndex() {
+		return ChoiceInventory.DIVINE_WOUND_DI_CARD + index;
+	}
+	
+	public int getVetoIndex() {
+		return BoardInventory.STATE_VETO_DI_CARD + index - DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT;
+	}
+
+	public int getPickChoiceIndex() {
+		return ChoiceInventory.PICK_DI_CARD + index;
 	}
 
 }

@@ -1,69 +1,144 @@
 
+	64 of 64 tiles done !
+	20 of 20 di card done !
+
+
+	
+- Battle : start simulation : erase other player DI card selection
+
+- Battle : start simulation : simulate other player DI card selection
 
 - BUG : 
 	- Recruit on top of an existing army doesn't trigger attack start powers, night/day
 
-
-	62 of 64 tiles done !
+- BUG : 
+	- Battle DI card selection in battle could lead to negative prayer points since they aren't paid upfront ?
 
 - Check that power tiles have a unique flag per player ( no negative )
 
 - State goes negative based on player - change to individual state fields
+
+- Battle : current player should always be in the same place ( flag to switch between attack & defense )
+
+- enable DI card reinforcements at the beginning of moves
+
+- enable DI card reinforcements at the end of turns
 
 - Player fillCannonical uses negative values for used battle cards
 		for (BattleCard card : usedBattleCards) {
 			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
 		}
 
-- Game feature : Power Tiles - DI - 4 tiles
-	- White : 3 : Vision : draw 5 DI card at night, pick one
-	- Red : 3 : Divine Wound : +1 strength per DI card spent
+- Disable canonical form locking + checks on set for speeeeed
 
-
-
-- Game feature : DI Cards - Battle
-	- 2x : glory : cost 0 : gain 4 prayer if you win the battle.
-	- 2x : divine protection : cost 0 : if you win battle, don't take any damage.
-	- 2x : reinforcements : cost 0 : if you win battle, recruit 3 units anywhere before retreat.
-	- 2x : tactical choice : cost 0 : play after battle cards : you can switch your revealed battle card with the discard.
-	 
-
-- Game feature : DI Cards - Non-Battle
-	- 2x : swiftness : cost 0 : beginning move action : +1 move.
-	- 2x : divine memory : cost 1: take back one DI from discard pile.
-	- 4x : Raining Fire : cost 1 : destroy one enemy unit.
-	- 2x : Prayer : cost 0 : gain 2 prayer point
-	- 4x : Enlistment : cost 0 : recruit 2 units anywhere.
-	- 2x : Mana Theft : cost 0 : each opponent loses 1 pp, you gain 1pp.
-	- 3x : Teleportation : cost 1 : Teleport any army to an obelisk. Played with a movement action.
-	- 1x : Open gates : cost 1 : Ignore wall effects.  Played with a movement action.
-	- 2x : Veto : cost 0 : Cancel a DI card, not during battle.
-	- 1x : Escape : cost 0 : No battle takes place, move to a free territory.
-	
 - Funny questions for game designers
-	- Khnum's Sphinx : Is there a 2 power cost to recruit on top of an enemy army with Khnum's sphinx in your city.
-	- Is it legal to move an army and leave the beast behind, alone, with no units, therefore forcing an automatic recall of the beast ?
-	- When an army moves and leaves a beast behind, do the beast bonus movement still apply to the army that keeps moving ?
-	- When an army moves and leaves a Phoenix behind just before crossing city walls, does that army still get to bypass city walls ?
-	- When an army moves and leaves a Phoenix behind one tile before reaching the opponent city front, does that army still get to bypass city walls ?
-	- When army with Phoenix is about to do a second move to a enemy walled city tile which has an army with Deep Desert Snake, 
-		does the phoenix power sill allow it to bypass city walls ?
-	- When army with Griffin Sphinx is about to teleport from an obelisk to another obelisk which has an army with Deep Desert Snake, 
-		does the Griffin Sphinx power sill allow it to teleport from an obelisk ?
-	- When using Blue 4 power Reinforcements, can it trigger a battle during night phase in your city ?
-	- If army with devourer moves on tile with enemy army with Deep Desert Snake & Deadly Trap, does the attacker take deadly trap damage ?
+	
+	- Does BLUE_1_RECRUITING_SCRIBE influence the ENLISTMENT DI card to give extra free recruits ?
+		Assumption : yes, because it triggers a special recruit action.
+			
+	- Does BLUE 1 RECRUITING SCRIBE influence the Reinforcements DI card to give extra free recruits at the end of a battle ?
+		Assumption : no, it's a day power
+
+	- Does BLUE 1 RECRUITING SCRIBE influence the Blue 4 power Reinforcements to give extra free recruits ?
+		Assumption : no, it's a day power
+	
+	- Does TELEPORT reduce the cost of the Teleport DI card by 1 ?
+		Assumption : no, because it's the DI card that costs 1, not the teleportation itself.
+	
+	- Does Priest of Ra (reduce all cost by 1) prevent the -1 mana from the DI card : Mana Theft
+		Assumption : no, because the mana is stolen, not spent. 
+	
+	- When using Blue 4 power Reinforcements, can it trigger a battle during night phase in your city by recruiting on top of an enemy army ?
+		Assumption : yes
+		
+	- When using Blue 4 power Reinforcements triggers a battle at night : Do "day" powers activate for this battle ( Initiative, Deadly Trap, dedication to battle )
+		Assumption : no, they only work during the day phase.
+	
+	- When using Blue 4 power Reinforcements in combination with the Legion power( max 7 army size ). Can the new recruits be put on an army to reach a size 6 or 7, considering that Legion is a day power
+		Assumption : yes ( it just feels odd otherwise )
+	
+	- If an army with devourer moves on tile with enemy army with Deep Desert Snake & Deadly Trap, does the attacker take deadly trap damage ?
 		- Devourer negates damage outside of combat.
 		- Deep Desert snake negates enemy beast.
-	- If army with Deep Desert Snake & Initiative moves on tile with enemy army with Devourer, does the defender take Initiative damage ?
+		Assumption : no
+		
+	- If an army with Deep Desert Snake & Initiative moves on tile with enemy army with Devourer, does the defender take Initiative damage ?
 		- Devourer negates damage outside of combat.
 		- Deep Desert snake negates enemy beast.
-	- If army with devourer moves on tile with enemy army with Deep Desert Snake, the devourer then wins the battle & does 2 damage to the enemy 
-		army, forcing them to retreat or recall. does the attacker get an extra VP for the battle victory
+		Assumption : no
+		
+	- If a DI card gets vetoed, does the player who played it still have to pay the mana cost for DI card that won't get activated ?
+		Assumption : yes, DI card is first played & paid for, then the veto is applied.
+		
+	- If army with devourer moves on tile with enemy army with Deep Desert Snake, the attacker then wins the battle & does 2 damage to the enemy 
+		army, forcing them to retreat or recall. does the attacker get an extra VP for the battle victory from the Devourer ?
 		- Devourer gets an extra VP on battle win with 2 damage
 		- Deep Desert snake negates enemy beast.
 		- However, Deep Desert Snake is gone after the battle
+		Assumption : no, because the whole battle is done as if the Devourer wasn't there.
+
+	- If an army gets 1 damage because of the "deadly trap" power, can the player use the DI card ENLISTMENT be used just before the battle
+		begins to fill his army back ?
+		Assumption : No, because the game state switches to "battle" & reinforcements is a day DI card.
+		
+	- When using the DI card escape, can the escaping army use teleport 
+		either from one of its city district, or the teleport DI card, or the teleport ability from an obelisk ?
+		assumption : no
+
+	- When using the DI card escape, does the movement action of the attacking army end ?
+		assumption : yes, otherwise they could keep on moving to attack. 
+
+	- Khnum's Sphinx : Is there a 2 power cost to recruit on top of an enemy army with Khnum's sphinx in your city.
+		Assumption : no : icon & text implies a 2 power cost on Move action. Not on Recruit action. 
+	
+	- Is it legal to move an army and leave the beast behind, alone, with no units, therefore forcing an automatic recall of the beast ?
+		Assumption : yes
+	
+	- When an army moves and leaves a beast behind, do the beast bonus movement still apply to the army that keeps moving ?
+		Assumption : yes, army movement capacity is fixed from the beginning of the move action, regardless of how it evolves.
+
+	- When an army moves and joins another army with a beast that gives a movement bonus, does the army movement capacity increase during the current action  ?
+		Assumption : no, army movement capacity is fixed from the beginning of the move action, regardless of how it evolves.
+	
+	- When an army moves and leaves a Phoenix behind just before crossing city walls, does that army still get to bypass city walls ?
+		Assumption : no, the army must have the Phoenix with it to cross walls.
+	
+	- When an army moves and leaves a Phoenix behind one tile before reaching the opponent city front, does that army still get to bypass city walls ?
+		Assumption : no, the army must have the Phoenix with it to cross walls.
+	
+	- When army with Phoenix is about to do a second move to a enemy walled city tile which has an army with Deep Desert Snake, 
+		does the phoenix power still allow it to bypass city walls since Deep Desert Snake cancels the Phoenix?
+		Assumption : yes, the move happens before Deep Desert Snake disables the creature.
+		
+	- When army with Griffin Sphinx is about to teleport from an obelisk to another obelisk which has an army with Deep Desert Snake, 
+		does the Griffin Sphinx power sill allow it to teleport from an obelisk ?
+		Assumption : yes, teleportation happens before Deep Desert Snake disables the creature.
+		
 	- What happens if there are not enough DI cards to distribute at night ?
-		Example : 5 player game, 2 DI cards left in the stack, all other cards are owned by players. Who gets the remaining cards ? ( player order ? )
+		Example : 5 player game, 2 DI cards left in the available & discard stack, all other cards are owned by players. Who gets the remaining cards ?
+		Assumption : Cards are given in player order, if cards run out, all remaining players will not get a DI card.
+
+	- For the following DI Cards that give bonus when battle is won:
+		 Glory + 4 prayer points if battle is won
+		 Reinforcements : 3 free recruit if battle is won
+		 Divine Protection : no damage is battle is won
+		 If the player who played those DI card gets wins the battle, but his entire army killed due to damage inflicted by his 
+		 opponent and/or his battle card, do those DI card still get activated ?
+		 Assumption : yes, they are applied after battle winner resolution, but before battle damage. It's the only execution order that 
+		 makes sense for "Divine Protection"
+	
+	- Is the following move legal ?
+		Starting with an army with 5 troops that can move by 3 tiles & breach walls, located in front of a opponent city. 
+		The opponent has no troops in all its city districts.
+		The opponent has a level 4 pyramid in all its city districts.
+		Can the army do the following moves : 
+		1 - Move to the first opponent district with the whole army.
+		2 - Move to the second opponent district with 4 troops, leaving 1 troop behind.
+		3 - Move to the third opponent district with 3 troops, leaving 1 troop behind.
+		Impact : this move transfers 3 pyramid victory points from one player to another in a single action.
+		Assumption : yes, it's legal.
+		House rule : Capturing pyramid ends the move action to avoid this move which is too strong.
+		
 	
 	
 - Game feature : Power Tiles - Extra
