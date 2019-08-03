@@ -259,21 +259,23 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			PickDiCardAction pickAction = PickDiCardAction.create(game, player, this);
 			pickAction.moveToDiscard = false;
 			DiCardList.copyArray(game.discardedDiCardList, pickAction.availableDiCards);
+			// can't pick divine memory back.
+			pickAction.availableDiCards[DiCardList.DIVINE_MEMORY.index] = 0;
 			diAction = pickAction;
 		} else if (index == DiCardList.RAINING_FIRE.index) {
-			
+
 			RainingFireAction rfa = RainingFireAction.create(game, player, this);
 			diAction = rfa;
-			
+
 		} else if (index == DiCardList.ENLISTMENT.index) {
 			RecruitAction recruit = RecruitAction.create(game, player, this);
 			recruit.allowPaidRecruit = false;
 			recruit.freeRecruitLeft = 2;
-			if( player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE_1)) {
+			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE_1)) {
 				recruit.freeRecruitLeft += 2;
 			}
 			diAction = recruit;
-			
+
 		} else {
 			log.error("unknown di card index {}", index);
 		}
@@ -307,8 +309,24 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 	public void addGenericDiCardChoice(List<Choice> choiceList) {
 		addDiCardChoice(choiceList, DiCardList.PRAYER.index);
 		addDiCardChoice(choiceList, DiCardList.MANA_THEFT.index);
-		addDiCardChoice(choiceList, DiCardList.DIVINE_MEMORY.index);
+
+		if (player.diCards[DiCardList.DIVINE_MEMORY.index] > 0 && DiCardList.sumArray(game.discardedDiCardList) > 0) {
+
+			addDiCardChoice(choiceList, DiCardList.DIVINE_MEMORY.index);
+		}
 		addDiCardChoice(choiceList, DiCardList.RAINING_FIRE.index);
+	}
+
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		if (veto != null) {
+			veto.enterSimulationMode(playerIndex);
+		}
+		if (diAction != null) {
+			diAction.enterSimulationMode(playerIndex);
+		}
+		super.enterSimulationMode(playerIndex);
 	}
 
 }

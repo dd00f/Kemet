@@ -169,4 +169,13 @@ public class RemoveBattleCardAction implements Action {
 		this.parent = parent;
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

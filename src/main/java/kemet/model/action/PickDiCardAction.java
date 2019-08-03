@@ -20,6 +20,8 @@ public class PickDiCardAction extends EndableAction {
 	 */
 	private static final long serialVersionUID = -1148319752018577895L;
 
+	public static final String VISION_AVAILABLE_DI_CARDS = "Vision available DI cards";
+
 	public Player player;
 
 	private KemetGame game;
@@ -169,6 +171,7 @@ public class PickDiCardAction extends EndableAction {
 
 	public class PickDiChoice extends PlayerChoice {
 
+
 		public PickDiChoice(KemetGame game, Player player) {
 			super(game, player);
 		}
@@ -179,11 +182,11 @@ public class PickDiCardAction extends EndableAction {
 		public void choiceActivate() {
 			if (moveToDiscard) {
 				// cards have already been moved from selection
-				DiCardList.moveDiCard(availableDiCards, player.diCards, index, KemetGame.AVAILABLE_DI_CARDS,
+				DiCardList.moveDiCard(availableDiCards, player.diCards, index, VISION_AVAILABLE_DI_CARDS,
 						player.name, "Picked card from selection", game);
 
-				DiCardList.moveAllDiCard(availableDiCards, game.discardedDiCardList, KemetGame.AVAILABLE_DI_CARDS,
-						KemetGame.DISCARDED_DI_CARDS, "DI card not picked", game);
+				DiCardList.moveAllDiCard(availableDiCards, game.availableDiCardList, VISION_AVAILABLE_DI_CARDS,
+						KemetGame.AVAILABLE_DI_CARDS, "DI card not picked", game);
 
 			} else {
 				DiCardList.moveDiCard(game.discardedDiCardList, player.diCards, index, KemetGame.DISCARDED_DI_CARDS,
@@ -211,4 +214,14 @@ public class PickDiCardAction extends EndableAction {
 		return parent;
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		super.enterSimulationMode(playerIndex);
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

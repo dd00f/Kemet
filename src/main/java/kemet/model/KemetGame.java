@@ -3,7 +3,9 @@ package kemet.model;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -27,6 +29,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class KemetGame implements Model, Game {
 
+	private static final int SIMULATED_ACTION_INCREMENT = 1000;
 	public static final String AVAILABLE_DI_CARDS = "Available DI cards";
 	public static final String DISCARDED_DI_CARDS = "Discarded DI cards";
 
@@ -65,8 +68,13 @@ public class KemetGame implements Model, Game {
 	public ByteCanonicalForm canonicalForm;
 
 	private boolean[] allValidMoves;
-	
-	public CopyableRandom random = new CopyableRandom();
+
+	public static CopyableRandom SIMULATION_RANDOMIZER = new CopyableRandom();
+
+	private CopyableRandom random = new CopyableRandom();
+
+	private long initialSeed = random.getSeed();
+	private long simulationSeed = 0;
 
 	public StackingMCTS simulationMcts;
 
@@ -92,6 +100,8 @@ public class KemetGame implements Model, Game {
 		printActivations = true;
 		battleCount = 0;
 		simulatedPlayerIndex = -1;
+		initialSeed = random.getSeed();
+		simulationSeed = 0;
 
 		tileList.clear();
 		playerByInitiativeList.clear();
@@ -111,8 +121,10 @@ public class KemetGame implements Model, Game {
 	public KemetGame deepCacheClone() {
 
 		KemetGame clone = GAME_CACHE.create();
-		
+
 		clone.random.copyFrom(random);
+		clone.simulationSeed = simulationSeed;
+		clone.initialSeed = initialSeed;
 
 		clone.tileList.clear();
 		for (Tile tile : tileList) {
@@ -251,9 +263,65 @@ public class KemetGame implements Model, Game {
 		builder.append("Game turn ");
 		builder.append(this.roundNumber);
 		builder.append("\n");
-		builder.append("Actions : \n\t");
-		builder.append(Arrays.toString(getActivatedActions()));
-		builder.append("\n");
+		builder.append("Replay : \n");
+		builder.append("\tgame.setInitialSeed(");
+		builder.append(initialSeed);
+		builder.append("l);\n");
+		builder.append("\tgame.replayMultipleActions(new int[] { ");
+
+		boolean first = true;
+		int i = 0;
+		for (; i < actions.length; i++) {
+			int currentAction = actions[i];
+
+			// end of replay
+			if (currentAction < 0) {
+				break;
+			}
+
+			if (currentAction < SIMULATED_ACTION_INCREMENT) {
+				if (first) {
+					first = false;
+				} else {
+					builder.append(", ");
+				}
+				builder.append(currentAction);
+			} else {
+				break;
+			}
+		}
+		builder.append("});\n");
+
+		if (simulatedPlayerIndex >= 0) {
+
+			builder.append("\tgame.enterSimulationMode(");
+			builder.append(simulatedPlayerIndex);
+			builder.append(", null, ");
+			builder.append(simulationSeed);
+			builder.append("l);\n");
+			builder.append("\tgame.replayMultipleActions(new int[] { ");
+			first = true;
+
+			for (; i < actions.length; i++) {
+				int currentAction = actions[i];
+
+				// end of replay
+				if (currentAction < 0) {
+					break;
+				}
+
+				if (first) {
+					first = false;
+				} else {
+					builder.append(", ");
+				}
+				builder.append(currentAction - SIMULATED_ACTION_INCREMENT);
+			}
+			builder.append("});\n");
+		}
+
+		// builder.append(Arrays.toString(getActivatedActions()));
+
 		for (Player player : playerByInitiativeList) {
 			player.describePlayer(builder);
 		}
@@ -549,9 +617,18 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public void replayMultipleActions(int[] actions) {
+		
+		Map<ByteCanonicalForm, String> canonicalFormMap = new HashMap<ByteCanonicalForm, String>();
+		
 		for (int i = 0; i < actions.length; i++) {
 			int j = actions[i];
 			activateAction(getNextPlayer(), j);
+			
+			ByteCanonicalForm nextForm = getCanonicalForm(getNextPlayer());
+			if( canonicalFormMap.get(nextForm) != null ) {
+				throw new IllegalStateException("Game rotated to identical form");
+			}
+			canonicalFormMap.put(nextForm, "busy");
 		}
 	}
 
@@ -560,7 +637,7 @@ public class KemetGame implements Model, Game {
 
 		if (recordActionIndex < Options.GAME_TRACK_MAX_ACTION_COUNT && index >= 0) {
 			if (isSimulation()) {
-				actions[recordActionIndex++] = index + 1000;
+				actions[recordActionIndex++] = index + SIMULATED_ACTION_INCREMENT;
 			} else {
 				actions[recordActionIndex++] = index;
 			}
@@ -610,7 +687,11 @@ public class KemetGame implements Model, Game {
 				+ printChoiceList(currentPlayerChoicePick) + "\nPlayer :\n"
 				+ currentPlayerChoicePick.player.describePlayer();
 		LOGGER.error(message);
-		throw new IllegalArgumentException(message);
+		
+		this.canonicalForm = null;
+		getCanonicalForm(player);
+		
+		throw new IllegalStateException(message);
 	}
 
 	private String printChoiceList(PlayerChoicePick currentPlayerChoicePick) {
@@ -777,10 +858,30 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public void enterSimulationMode(int playerIndex, StackingMCTS mcts) {
+
+		// reset the random game seed to ensure all simulations explore different
+		// probability spaces
+		long newSeed = SIMULATION_RANDOMIZER.nextLong();
+
+		enterSimulationMode(playerIndex, mcts, CopyableRandom.generateSeed(newSeed));
+	}
+
+	public void enterSimulationMode(int playerIndex, StackingMCTS mcts, long newSeed) {
+
+		if (printActivations) {
+			this.printEvent("Kemet Game Entering Simulation Mode from the perspective of player " + playerIndex + " "
+					+ getPlayerByIndex(playerIndex).name);
+		}
+
+		random.setDirectSeed(newSeed);
+		simulationSeed = newSeed;
+
 		resetCachedChoices();
 
 		simulatedPlayerIndex = playerIndex;
 		simulationMcts = mcts;
+
+		action.enterSimulationMode(playerIndex);
 
 		for (Player player : playerByInitiativeList) {
 			player.enterSimulationMode(playerIndex);
@@ -821,9 +922,9 @@ public class KemetGame implements Model, Game {
 	}
 
 	public void resetDiCards() {
-		
+
 		resetCachedChoices();
-		
+
 		if (printActivations) {
 			printEvent("DI Card reset triggered.");
 		}
@@ -852,5 +953,14 @@ public class KemetGame implements Model, Game {
 		DiCardList.moveDiCard(availableDiCardList, redPlayer.diCards, cardToMove.index, AVAILABLE_DI_CARDS,
 				redPlayer.name, "Give DI card", this);
 
+	}
+
+	public int getNextRandomInt(byte maxValue) {
+		return random.nextInt(maxValue);
+	}
+
+	public void setInitialSeed(long newInitialSeed) {
+		initialSeed = newInitialSeed;
+		random.setDirectSeed(newInitialSeed);
 	}
 }

@@ -129,7 +129,7 @@ public class PolicyVector implements Serializable {
 
 	public int pickRandomAction() {
 		float nextFloat = random.nextFloat();
-		int action = 0;
+		int action = -1;
 		for (int i = 0; i < vector.length; i++) {
 			float f = vector[i];
 			if (f > 0) {
@@ -168,7 +168,7 @@ public class PolicyVector implements Serializable {
 		}
 
 		if (foundNan) {
-			throw new IllegalArgumentException("Policy value returned a NaN value " + Arrays.toString(vector));
+			throw new IllegalStateException("Policy value returned a NaN value " + Arrays.toString(vector));
 		}
 	}
 

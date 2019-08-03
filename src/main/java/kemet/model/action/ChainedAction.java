@@ -7,6 +7,7 @@ import kemet.model.KemetGame;
 import kemet.model.Validation;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
+import lombok.Getter;
 
 public class ChainedAction implements Action {
 
@@ -15,6 +16,7 @@ public class ChainedAction implements Action {
 	 */
 	private static final long serialVersionUID = -2573734854040221566L;
 
+	@Getter
 	private List<Action> actionChain = new ArrayList<Action>();
 
 	private KemetGame game;
@@ -157,6 +159,30 @@ public class ChainedAction implements Action {
 
 	public int size() {
 		return actionChain.size();
+	}
+
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		for (Action action : actionChain) {
+			action.enterSimulationMode(playerIndex);
+		}
+	}
+	
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
+
+	public void insertActionInSecondPlace(Action pendingAction) {
+		
+		int insertIndex = 1;
+		if( actionChain.size() == 0 ) {
+			insertIndex = 0;
+		}
+		pendingAction.setParent(this);
+
+		actionChain.add(insertIndex, pendingAction);
 	}
 
 }

@@ -20,20 +20,20 @@ import kemet.util.Cache;
  * 
  * @author Steve McDuff
  */
-public class InitializationPlayerRecruitAction implements Action
-{
-    /**
+public class InitializationPlayerRecruitAction implements Action {
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -7880098728096469284L;
 	private KemetGame game;
-    private Player player;
+	private Player player;
 
-    private byte soldierLeft = 10;
-    private byte tileIndex = 0;
+	private byte soldierLeft = 10;
+	private byte tileIndex = 0;
 	private Action parent;
-	
-	public static Cache<InitializationPlayerRecruitAction> CACHE = new Cache<InitializationPlayerRecruitAction>(() -> new InitializationPlayerRecruitAction());
+
+	public static Cache<InitializationPlayerRecruitAction> CACHE = new Cache<InitializationPlayerRecruitAction>(
+			() -> new InitializationPlayerRecruitAction());
 
 	@Override
 	public void initialize() {
@@ -43,16 +43,16 @@ public class InitializationPlayerRecruitAction implements Action
 		game = null;
 		parent = null;
 	}
-	
+
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
 		currentGame.validate(game);
 		currentGame.validate(player);
-		if( expectedParent != parent ) {
+		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
 	}
-	
+
 	@Override
 	public InitializationPlayerRecruitAction deepCacheClone() {
 		// create the object
@@ -87,151 +87,160 @@ public class InitializationPlayerRecruitAction implements Action
 		player = clone.getPlayerByCopy(player);
 	}
 
-	
+	public static InitializationPlayerRecruitAction create(KemetGame game, Player player, Action parent) {
+		InitializationPlayerRecruitAction create = CACHE.create();
+		create.initialize();
+		create.game = game;
+		create.player = player;
+		create.parent = parent;
 
-    public static InitializationPlayerRecruitAction create(KemetGame game, Player player, Action parent)
-    {
-    	InitializationPlayerRecruitAction create = CACHE.create();
-    	create.initialize();
-    	create.game = game;
-    	create.player = player;
-    	create.parent = parent;
-    	
-    	return create;
-    }
-    
+		return create;
+	}
+
 	@Override
 	public void setParent(Action parent) {
 		this.parent = parent;
 	}
 
-    @Override
-    public PlayerChoicePick getNextPlayerChoicePick()
-    {
-        if (soldierLeft == 0)
-        {
-            return null;
-        }
+	@Override
+	public PlayerChoicePick getNextPlayerChoicePick() {
+		if (soldierLeft == 0) {
+			return null;
+		}
 
-        byte minimum = 0;
-        byte maximum = 5;
-        Tile tile = player.cityTiles.get(tileIndex);
-        PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
+		byte minimum = 0;
+		byte maximum = 5;
+		Tile tile = player.cityTiles.get(tileIndex);
+		PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
-        if (tileIndex == 0)
-        {
+		if (tileIndex == 0) {
 
-        }
-        else if (tileIndex == 1)
-        {
-            minimum = (byte) (soldierLeft - 5);
-        }
-        else if (tileIndex == 2)
-        {
+		} else if (tileIndex == 1) {
+			minimum = (byte) (soldierLeft - 5);
+		} else if (tileIndex == 2) {
 
-        }
+		}
 
-        for (int i = minimum; i <= maximum; ++i)
-        {
-            createInitialRecruitChoice(player, (byte) i, tile, pick.choiceList);
-        }
+		for (int i = minimum; i <= maximum; ++i) {
+			createInitialRecruitChoice(player, (byte) i, tile, pick.choiceList);
+		}
 
-        return pick.validate();
+		return pick.validate();
 
-    }
-    
+	}
+
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		
-        if (soldierLeft == 0)
-        {
-            return;
-        }
+
+		if (soldierLeft == 0) {
+			return;
+		}
 
 		cannonicalForm.set(BoardInventory.STATE_INITIAL_ARMY, player.getState(playerIndex));
-		
-        Tile tile = player.cityTiles.get(tileIndex);
-        tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
-		
-	}    
 
-    public class InitialRecruitChoice extends PlayerChoice
-    {
+		Tile tile = player.cityTiles.get(tileIndex);
+		tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
 
-        public InitialRecruitChoice(KemetGame game, Player player)
-        {
-            super(game, player);
-        }
+	}
 
-        public byte soldierCount;
-        public Tile tile;
+	public class InitialRecruitChoice extends PlayerChoice {
 
-        @Override
-        public void choiceActivate()
-        {
+		public InitialRecruitChoice(KemetGame game, Player player) {
+			super(game, player);
+		}
 
-            tileIndex++;
-            soldierLeft -= soldierCount;
-            if (soldierCount > 0)
-            {
-                Army modifiedArmy = player.createArmy();
-                modifiedArmy.moveToTile(tile);
-                modifiedArmy.recruit(soldierCount);
-            }
+		public byte soldierCount;
+		public Tile tile;
 
-            if (tileIndex == 2 && soldierLeft > 0)
-            {
-                Army modifiedArmy = player.createArmy();
-                modifiedArmy.moveToTile(player.cityTiles.get(tileIndex));
-                modifiedArmy.recruit(soldierLeft);
-                soldierLeft = 0;
-            }
-        }
+		@Override
+		public void choiceActivate() {
 
-        @Override
-        public String describe()
-        {
-            String retVal = "Initial Recruit : recruit " + soldierCount + " soldiers " + "on tile \"" + tile.name +
-                "\" creating \"" + player.getNextArmyName() + "\"";
+			tileIndex++;
+			soldierLeft -= soldierCount;
+			if (soldierCount > 0) {
+				Army modifiedArmy = player.createArmy();
+				modifiedArmy.moveToTile(tile);
+				modifiedArmy.recruit(soldierCount);
+			}
+			
+			if (tileIndex == 1 && soldierLeft == 10) {
+				Army modifiedArmy = player.createArmy();
+				modifiedArmy.moveToTile(player.cityTiles.get(tileIndex));
+				modifiedArmy.recruit((byte) 5);
+				
+				tileIndex++;
+				
+				modifiedArmy = player.createArmy();
+				modifiedArmy.moveToTile(player.cityTiles.get(tileIndex));
+				modifiedArmy.recruit((byte) 5);
+				
+				soldierLeft = 0;
+			}
 
-            if (soldierCount == 0)
-            {
-                retVal = "Initial Recruit : no recruitment on tile \"" + tile.name + "\"";
-            }
+			if (tileIndex == 2 && soldierLeft > 0) {
+				Army modifiedArmy = player.createArmy();
+				modifiedArmy.moveToTile(player.cityTiles.get(tileIndex));
+				modifiedArmy.recruit(soldierLeft);
+				soldierLeft = 0;
+			}
+		}
 
-            if (tileIndex == 1 && soldierLeft - soldierCount > 0)
-            {
-                retVal += " and an army of size " + (soldierLeft - soldierCount) + " on tile \"" +
-                    player.cityTiles.get(2).name + "\"";
-            }
+		@Override
+		public String describe() {
+			String retVal = "Initial Recruit : recruit " + soldierCount + " soldiers " + "on tile \"" + tile.name
+					+ "\" creating \"" + player.getNextArmyName() + "\"";
 
-            return retVal;
-        }
+			if (soldierCount == 0) {
+				retVal = "Initial Recruit : no recruitment on tile \"" + tile.name + "\"";
+			}
+
+			if (tileIndex == 1 && soldierLeft - soldierCount > 0) {
+				retVal += " and an army of size " + (soldierLeft - soldierCount) + " on tile \""
+						+ player.cityTiles.get(2).name + "\"";
+			}
+
+			if (tileIndex == 0 && soldierLeft - soldierCount == 10) {
+				retVal += " and an army of size 5 on tile \"" + player.cityTiles.get(1).name + "\""
+						+ " and an army of size 5 on tile \"" + player.cityTiles.get(2).name + "\"";
+			}
+
+			return retVal;
+		}
 
 		@Override
 		public int getIndex() {
-			if( soldierCount == 0 ) {
+			if (soldierCount == 0) {
 				return ChoiceInventory.ZERO_ARMY_SIZE_CHOICE_INDEX;
 			}
 			return ChoiceInventory.ARMY_SIZE_CHOICE + soldierCount - 1;
 		}
 
-    }
+	}
 
-    private void createInitialRecruitChoice(Player player, byte soldierCount, Tile tile, List<Choice> choiceList)
-    {
+	private void createInitialRecruitChoice(Player player, byte soldierCount, Tile tile, List<Choice> choiceList) {
 
-        assert (tile != null);
-        assert (player != null);
+		assert (tile != null);
+		assert (player != null);
 
-        InitialRecruitChoice choice = new InitialRecruitChoice(game, player);
-        choice.soldierCount = soldierCount;
-        choice.tile = tile;
-        choiceList.add(choice);
-    }
+		InitialRecruitChoice choice = new InitialRecruitChoice(game, player);
+		choice.soldierCount = soldierCount;
+		choice.tile = tile;
+		choiceList.add(choice);
+	}
 
 	@Override
 	public Action getParent() {
 		return parent;
 	}
+
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+	}
+	
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
+
 }

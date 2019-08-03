@@ -116,4 +116,13 @@ public class NightAction implements Action {
 		return parent;
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

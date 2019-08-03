@@ -267,7 +267,7 @@ public class Army implements Model {
 
 	public void describeArmy(StringBuilder builder) {
 
-		builder.append("\t Army : ");
+		builder.append("Army : ");
 		builder.append(name);
 		builder.append(" of size ");
 		builder.append(armySize);
@@ -281,7 +281,7 @@ public class Army implements Model {
 			builder.append(" on tile : ");
 			tile.describe(builder);
 		}
-		builder.append("\n");
+		// builder.append("\n");
 	}
 
 	public void validate(KemetGame currentGame) {

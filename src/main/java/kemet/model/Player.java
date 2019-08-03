@@ -331,8 +331,7 @@ public class Player implements Model {
 			prayerPoints = MAXIMUM_PRAYER_POINTS;
 		}
 		if (prayerPoints < 0) {
-			log.warn("Player {} managed to reach {} prayer points.", name, prayerPoints);
-			prayerPoints = 0;
+			throw new IllegalStateException("Player " + name + " managed to reach "+prayerPoints+" prayer points.");
 		}
 		if (game.printActivations) {
 			game.printEvent("Player " + name + " modified prayer points by " + modification + " due to " + reason
@@ -706,7 +705,9 @@ public class Player implements Model {
 		builder.append("\n");
 
 		for (Army army : armyList) {
+			builder.append("\t");
 			army.describeArmy(builder);
+			builder.append("\n");
 		}
 
 	}
@@ -906,6 +907,17 @@ public class Player implements Model {
 			// return all discard battle cards for simulations to act as if those cards were
 			// available.
 			recoverAllDiscardedBattleCards();
+
+			int diCardCount = getDiCardCount();
+
+			// randomize DI cards
+			DiCardList.moveAllDiCard(diCards, game.availableDiCardList, name, KemetGame.AVAILABLE_DI_CARDS,
+					"Enter Simulation, randomize DI cards, return card.", game);
+
+			for (int i = 0; i < diCardCount; ++i) {
+				DiCardList.moveRandomDiCard(game.availableDiCardList, diCards, KemetGame.AVAILABLE_DI_CARDS, name,
+						"Enter Simulation, randomize DI cards, assign different card.", game, true);
+			}
 		}
 
 	}

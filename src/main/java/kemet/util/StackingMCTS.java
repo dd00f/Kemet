@@ -126,7 +126,8 @@ public class StackingMCTS {
 
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
-		Map<Integer, Integer> map = getBoardInformation(gameString).boardActionHitCountNsa;
+		MctsBoardInformation boardInformation = getBoardInformation(gameString);
+		Map<Integer, Integer> map = boardInformation.boardActionHitCountNsa;
 
 		Set<Entry<Integer, Integer>> actionIndexCount = map.entrySet();
 		for (Entry<Integer, Integer> entry : actionIndexCount) {
@@ -148,6 +149,12 @@ public class StackingMCTS {
 
 		pooler.getActionProbabilityTotalCount++;
 		pooler.getActionProbabilityTotalDepth += maxSearchDepth;
+
+		// TODO remove
+		int REMOVE_ME;
+		if (probabilitiesOfAllActions.vector[0] > 0 && gameString.getCanonicalForm()[11] != 0) {
+			throw new IllegalStateException("Game just allowed action zero on defense card pick.");
+		}
 
 		return probabilitiesOfAllActions;
 	}
@@ -283,6 +290,7 @@ public class StackingMCTS {
 			int nextPlayer = searchData.game.getNextPlayer();
 			ByteCanonicalForm canonicalForm = searchData.game.getCanonicalForm(nextPlayer);
 			GameInformation providedPrediction = pooler.providedPredictions.get(canonicalForm);
+			providedPrediction.usedCount++;
 			PolicyVector allActionProbability = providedPrediction.policy;
 			boolean[] validMoves = providedPrediction.validMoves;
 

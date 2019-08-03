@@ -209,7 +209,12 @@ public class RainingFireAction extends EndableAction {
 		@Override
 		public void choiceActivate() {
 			
-			pickTile.getArmy().bleedArmy((byte) 1, DiCardList.RAINING_FIRE.name);
+			Army army = pickTile.getArmy();
+			army.bleedArmy((byte) 1, DiCardList.RAINING_FIRE.name);
+			
+			if( army.armySize == 0 ) {
+				army.destroyArmy();
+			}
 			
 			end();
 		}
@@ -232,4 +237,14 @@ public class RainingFireAction extends EndableAction {
 		return parent;
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		super.enterSimulationMode(playerIndex);
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

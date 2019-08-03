@@ -46,4 +46,9 @@ public abstract class EndableAction implements Action, Endable
     
     public abstract void internalInitialize();
 
+    @Override
+    public void enterSimulationMode(int playerIndex) {
+    	
+    }
+    
 }

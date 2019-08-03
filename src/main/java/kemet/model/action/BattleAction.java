@@ -57,6 +57,7 @@ public class BattleAction implements Action {
 	public boolean defenderDestroyed;
 	public byte defenderScore;
 	public byte attackerScore;
+	public boolean diCardDiscarded;
 	public boolean battleResolved;
 	public boolean attackerRetreatPicked;
 	public boolean attackerRetreatTilePicked;
@@ -107,6 +108,7 @@ public class BattleAction implements Action {
 		defenderScore = 0;
 		attackerScore = 0;
 		battleResolved = false;
+		diCardDiscarded = false;
 		attackerRetreatPicked = false;
 		attackerRetreatTilePicked = false;
 		defenderRetreatPicked = false;
@@ -167,6 +169,7 @@ public class BattleAction implements Action {
 		clone.defenderScore = defenderScore;
 		clone.attackerScore = attackerScore;
 		clone.battleResolved = battleResolved;
+		clone.diCardDiscarded = diCardDiscarded;
 		clone.attackerRetreatPicked = attackerRetreatPicked;
 		clone.attackerRetreatTilePicked = attackerRetreatTilePicked;
 		clone.defenderRetreatPicked = defenderRetreatPicked;
@@ -535,12 +538,7 @@ public class BattleAction implements Action {
 
 			DiCard diCard = DiCardList.CARDS[cardIndex];
 
-			if (diCard.powerCost > 0) {
-				byte cost = diCard.powerCost;
-				Player player = getBattlePlayer(isAttacker);
-				cost = player.applyPriestOfRaBonus(cost);
-				player.modifyPrayerPoints((byte) -cost, "Activated DI Card");
-			}
+			payForDiCard(diCard, player);
 
 			if (isAttacker) {
 				attackingUsedDiCard[cardIndex] += 1;
@@ -555,6 +553,20 @@ public class BattleAction implements Action {
 			return ChoiceInventory.ACTIVATE_DI_CARD + cardIndex;
 		}
 
+	}
+
+	private boolean payForDiCard(DiCard diCard, Player player) {
+
+		if (diCard.powerCost > 0) {
+			byte cost = diCard.powerCost;
+			cost = player.applyPriestOfRaBonus(cost);
+			if (player.getPrayerPoints() >= cost) {
+				player.modifyPrayerPoints((byte) -cost, "Activated DI Card");
+			} else {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public class PickBattleCardChoice extends PlayerChoice {
@@ -718,44 +730,94 @@ public class BattleAction implements Action {
 			}
 		}
 
-		private BattleCard pickCardForPlayerBasedOnNeuralNetwork(Player defender) {
+		private BattleCard pickCardForPlayerBasedOnNeuralNetwork(Player simulatedPlayer) {
 			game.resetCachedChoices();
 
-			ByteCanonicalForm canonicalForm = game.getCanonicalForm(defender.getIndex());
+			ByteCanonicalForm canonicalForm = game.getCanonicalForm(simulatedPlayer.getIndex());
 
-			List<BattleCard> availableBattleCards = defender.availableBattleCards;
+			List<BattleCard> availableBattleCards = simulatedPlayer.availableBattleCards;
 
-			validateCanonicalFormForSimulatedMove(defender, canonicalForm);
+			validateCanonicalFormForSimulatedMove(simulatedPlayer, canonicalForm);
 
 			StackingMCTS simulationMcts = game.simulationMcts;
 			MctsBoardInformation mctsBoardInformation = simulationMcts.getBoardInformation(canonicalForm);
 			PolicyVector policy = mctsBoardInformation.choiceValuePredictionForBoardPs;
 			if (policy == null) {
-				policy = fetchPolicyFromNeuralNetwork(defender, canonicalForm, simulationMcts, mctsBoardInformation);
+				policy = fetchPolicyFromNeuralNetwork(simulatedPlayer, canonicalForm, simulationMcts,
+						mctsBoardInformation);
 			}
 
-			int simulatedActionIndex = policy.pickRandomAction();
-
 			BattleCard found = null;
-			List<BattleCard> list = availableBattleCards;
-			for (BattleCard battleCard : list) {
-				if (battleCard.getPickChoiceIndex() == simulatedActionIndex) {
-					found = battleCard;
-					break;
+			int simulatedActionIndex = 0;
+			boolean done = false;
+
+			while (!done) {
+				simulatedActionIndex = policy.pickRandomAction();
+
+				if (isDiCardActionIndex(simulatedActionIndex)) {
+					attemptToActivateDiCard(simulatedPlayer, simulatedActionIndex);
+
+				} else {
+					List<BattleCard> list = availableBattleCards;
+					for (BattleCard battleCard : list) {
+						if (battleCard.getPickChoiceIndex() == simulatedActionIndex) {
+							found = battleCard;
+							break;
+						}
+					}
+					done = true;
 				}
 			}
 
 			if (found == null) {
 				// force a card at random.
 				StringBuilder builder = new StringBuilder();
-				defender.describePlayer(builder);
+				simulatedPlayer.describePlayer(builder);
 				String message = "MCTS battle card selection at index {} couldn't be found in the player's available cards. BattleCard Start index {}, Player : {}";
 				log.error(message, simulatedActionIndex, ChoiceInventory.PICK_BATTLE_CARD_CHOICE, builder);
 
-				found = list.get(0);
+				found = availableBattleCards.get(0);
 			}
 
 			return found;
+		}
+
+		private void attemptToActivateDiCard(Player simulatedPlayer, int simulatedActionIndex) {
+
+			int cardIndex = simulatedActionIndex - ChoiceInventory.ACTIVATE_DI_CARD;
+
+			byte[] diCardList = defendingUsedDiCard;
+			if (simulatedPlayer.getIndex() == attackingArmy.owningPlayer.getIndex()) {
+				diCardList = attackingUsedDiCard;
+			}
+
+			if (simulatedPlayer.diCards[cardIndex] > diCardList[cardIndex]) {
+
+				boolean successDiCard = payForDiCard(DiCardList.CARDS[cardIndex], simulatedPlayer);
+				if( successDiCard ) {
+					byte cost = DiCardList.CARDS[cardIndex].powerCost;
+					cost = player.applyPriestOfRaBonus(cost);
+					if (cost > 0 && player.getPrayerPoints() >= cost) {
+						player.modifyPrayerPoints((byte) -cost, "Simulated DI card selection");
+					}
+	
+					if (game.printActivations) {
+						game.printEvent(
+								"Simulated DI card for " + simulatedPlayer.name + " : " + DiCardList.CARDS[cardIndex].name);
+					}
+	
+					diCardList[cardIndex] += 1;
+				}
+			}
+		}
+
+		private boolean isDiCardActionIndex(int simulatedActionIndex) {
+			if (simulatedActionIndex >= ChoiceInventory.ACTIVATE_DI_CARD
+					&& simulatedActionIndex <= (ChoiceInventory.ACTIVATE_DI_CARD
+							+ DiCardList.TOTAL_DI_CARD_TYPE_COUNT)) {
+				return true;
+			}
+			return false;
 		}
 
 		private void validateCanonicalFormForSimulatedMove(Player defender, ByteCanonicalForm canonicalForm) {
@@ -789,7 +851,7 @@ public class BattleAction implements Action {
 			}
 		}
 
-		private PolicyVector fetchPolicyFromNeuralNetwork(Player defender, ByteCanonicalForm canonicalForm,
+		private PolicyVector fetchPolicyFromNeuralNetwork(Player simulatedPlayer, ByteCanonicalForm canonicalForm,
 				StackingMCTS simulationMcts, MctsBoardInformation mctsBoardInformation) {
 			PolicyVector policy;
 			Pair<PolicyVector, Float> predict = simulationMcts.pooler.neuralNet.predict(canonicalForm);
@@ -797,7 +859,7 @@ public class BattleAction implements Action {
 			mctsBoardInformation.choiceValuePredictionForBoardPs = predict.getLeft();
 			boolean[] validMoves = game.getValidMoves();
 
-			for (BattleCard card : defender.availableBattleCards) {
+			for (BattleCard card : simulatedPlayer.availableBattleCards) {
 				if (validMoves[card.getPickChoiceIndex()] != true) {
 					log.error("available battle card {} not showing up in valid moves {}", card.index, validMoves);
 
@@ -806,7 +868,7 @@ public class BattleAction implements Action {
 				}
 			}
 
-			for (BattleCard card : defender.usedBattleCards) {
+			for (BattleCard card : simulatedPlayer.usedBattleCards) {
 				if (validMoves[card.getPickChoiceIndex()] != false) {
 					log.error("used battle card {} IS showing up in valid moves {}", card.index, validMoves);
 
@@ -1216,6 +1278,8 @@ public class BattleAction implements Action {
 			defenderTacticalChoicePicked = true;
 
 		}
+		
+		checkToDiscardDiCards();
 
 		if (attackerDivineWoundPicked == false) {
 			if (attackingPlayer.hasPower(PowerList.RED_3_DIVINE_WOUND)) {
@@ -1234,7 +1298,7 @@ public class BattleAction implements Action {
 				// ensure defender didn't win yet
 				if (calculateAttackerScore() > calculateDefenderScore()) {
 					if (DiCardList.sumArray(defendingPlayer.diCards) > 0) {
-						return addPickDivineWoundChoice(defendingPlayer, true);
+						return addPickDivineWoundChoice(defendingPlayer, false);
 					}
 				}
 			}
@@ -1280,19 +1344,22 @@ public class BattleAction implements Action {
 			}
 		}
 
-		if (pendingActions != null) {
-			PlayerChoicePick nextPlayerChoicePick = pendingActions.getNextPlayerChoicePick();
-			if (nextPlayerChoicePick != null) {
-				return nextPlayerChoicePick;
-			}
-		}
-
 		if (!incrementedCounter) {
 			incrementedCounter = true;
 			game.battleCount++;
 		}
 		// battle is over
 		return null;
+	}
+
+	private void checkToDiscardDiCards() {
+		if( ! diCardDiscarded ) {
+			
+			discardUsedDiCards();
+			
+			diCardDiscarded = true;
+		}
+		
 	}
 
 	private PlayerChoicePick addPickDivineWoundChoice(Player owningPlayer, boolean isAttacker) {
@@ -1308,7 +1375,7 @@ public class BattleAction implements Action {
 				choiceList.add(choice);
 			}
 		}
-		
+
 		// add the end choice
 		DivineWoundChoice choice = new DivineWoundChoice(game, owningPlayer, isAttacker, -1);
 		choiceList.add(choice);
@@ -1407,40 +1474,42 @@ public class BattleAction implements Action {
 						defendingArmy.owningPlayer.getState(playerIndex));
 			} else if (attackerTacticalChoicePicked == false) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE,
-						defendingArmy.owningPlayer.getState(playerIndex));
-			} else if (defenderDivineWoundPicked == false) {
+						attackingArmy.owningPlayer.getState(playerIndex));
+			} else if (defenderTacticalChoicePicked == false) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE,
 						defendingArmy.owningPlayer.getState(playerIndex));
 			} else if (attackerDivineWoundPicked == false) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND,
-						defendingArmy.owningPlayer.getState(playerIndex));
+						attackingArmy.owningPlayer.getState(playerIndex));
 			} else if (defenderDivineWoundPicked == false) {
 				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND,
 						defendingArmy.owningPlayer.getState(playerIndex));
-			}
-
-			else if (!attackerRetreatPicked) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
-						attackingArmy.owningPlayer.getState(playerIndex));
-			}
-
-			else if (!attackerRetreatTilePicked) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
-						defendingArmy.owningPlayer.getState(playerIndex));
-			}
-
-			else if (!defenderRetreatPicked) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
-						defendingArmy.owningPlayer.getState(playerIndex));
-			}
-
-			else if (!defenderRetreatTilePicked) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
-						attackingArmy.owningPlayer.getState(playerIndex));
 			} else {
-				if (pendingActions != null) {
+
+				if (pendingActions != null && pendingActions.size() > 0) {
 					pendingActions.fillCanonicalForm(cannonicalForm, playerIndex);
 				}
+
+				else if (!attackerRetreatPicked) {
+					cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
+							attackingArmy.owningPlayer.getState(playerIndex));
+				}
+
+				else if (!attackerRetreatTilePicked) {
+					cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
+							defendingArmy.owningPlayer.getState(playerIndex));
+				}
+
+				else if (!defenderRetreatPicked) {
+					cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
+							defendingArmy.owningPlayer.getState(playerIndex));
+				}
+
+				else if (!defenderRetreatTilePicked) {
+					cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
+							attackingArmy.owningPlayer.getState(playerIndex));
+				}
+
 			}
 		}
 	}
@@ -1475,11 +1544,9 @@ public class BattleAction implements Action {
 			giveBattleVictoryPoints(defenderBleed, attackerBleed, attackerHasDeepDesertSnake,
 					defenderHasDeepDesertSnake);
 
-			// checkForForcedRecall();
-
 			moveWinnerToTile();
 
-			discardUsedDiCards();
+			// discardUsedDiCards();
 
 			addReinforcementsDiCardActions();
 
@@ -1520,12 +1587,15 @@ public class BattleAction implements Action {
 		byte[] discardedDiCardList = game.discardedDiCardList;
 
 		for (int i = 0; i < DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT; ++i) {
-			for (int j = 0; j < attackingUsedDiCard[i]; ++j) {
+
+			byte usedAttackCardCount = attackingUsedDiCard[i];
+			for (int j = 0; j < usedAttackCardCount; ++j) {
 				DiCardList.moveDiCard(attackingDiCards, discardedDiCardList, i, attacker.name,
 						KemetGame.DISCARDED_DI_CARDS, "used in battle", game);
 			}
 
-			for (int j = 0; j < defendingUsedDiCard[i]; ++j) {
+			byte usedDefenseCardCount = defendingUsedDiCard[i];
+			for (int j = 0; j < usedDefenseCardCount; ++j) {
 				DiCardList.moveDiCard(defendingDiCards, discardedDiCardList, i, defender.name,
 						KemetGame.DISCARDED_DI_CARDS, "used in battle", game);
 			}
@@ -1576,6 +1646,58 @@ public class BattleAction implements Action {
 	@Override
 	public void setParent(Action parent) {
 		this.parent = parent;
+	}
+
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		if (pendingActions != null) {
+			pendingActions.enterSimulationMode(playerIndex);
+		}
+
+		if (!battleResolved) {
+			if (playerIndex == attackingArmy.owningPlayer.getIndex()) {
+				// reset the defender DI cards
+				byte[] source = defendingUsedDiCard;
+				Player owningPlayer = defendingArmy.owningPlayer;
+				String reason = "Enter Simulation from Attacker perspective";
+
+				recoverAndRefundAllDiCards(source, owningPlayer, reason);
+
+			} else if (playerIndex == defendingArmy.owningPlayer.getIndex()) {
+				// reset the attacker DI cards
+
+				Player owningPlayer = attackingArmy.owningPlayer;
+
+				recoverAndRefundAllDiCards(attackingUsedDiCard, owningPlayer, 
+						"Enter Simulation from Defender perspective");
+
+			}
+		}
+	}
+
+	private void recoverAndRefundAllDiCards(byte[] source, Player owningPlayer, String reason) {
+		for (int i = 0; i < source.length; i++) {
+			if (source[i] > 0) {
+				byte cost = owningPlayer.applyPriestOfRaBonus(DiCardList.CARDS[i].powerCost);
+				if (cost > 0) {
+					owningPlayer.modifyPrayerPoints((byte) (cost * source[i]), "Recuperate DI card cost");
+				}
+
+				if (game.printActivations) {
+					String cardName = DiCardList.CARDS[i].name;
+					game.printEvent(
+							"Removing " + source[i] + " DI Card \"" + cardName + "\" from battle due to " + reason);
+				}
+			}
+		}
+
+		DiCardList.fillArray(source, (byte) 0);
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
 	}
 
 }

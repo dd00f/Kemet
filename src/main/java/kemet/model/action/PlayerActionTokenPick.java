@@ -31,8 +31,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 	 */
 	private static final long serialVersionUID = -9034661106772891860L;
 
-
-	public Action nextAction;
+	public ChainedAction nextAction;
 	private boolean donePicking = false;
 	private boolean firstPick = true;
 	private boolean mainTokenPicked = false;
@@ -50,9 +49,9 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
-		
+
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
-		
+
 		cannonicalForm.set(BoardInventory.STATE_PICK_ACTION_TOKEN, player.getState(playerIndex));
 
 		if (mainTokenPicked) {
@@ -107,14 +106,16 @@ public class PlayerActionTokenPick extends DiCardAction {
 	}
 
 	private int getPendingActionCount() {
-		if (nextAction instanceof ChainedAction) {
-			ChainedAction nextChain = (ChainedAction) nextAction;
-			return nextChain.size();
-		}
+		int count = 0;
 		if (nextAction != null) {
-			return 1;
+			List<Action> actionChain = nextAction.getActionChain();
+			for (Action action : actionChain) {
+				if (!(action instanceof BattleAction)) {
+					count++;
+				}
+			}
 		}
-		return 0;
+		return count;
 	}
 
 	private int getSelectedActionCount() {
@@ -132,9 +133,9 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 	@Override
 	public void internalInitialize() {
-		
+
 		super.internalInitialize();
-		
+
 		nextAction = null;
 		donePicking = false;
 		firstPick = true;
@@ -147,7 +148,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 	@Override
 	public void validate(Action expectedParent, KemetGame currentGame) {
-		
+
 		super.validate(expectedParent, currentGame);
 
 		if (expectedParent != parent) {
@@ -161,14 +162,14 @@ public class PlayerActionTokenPick extends DiCardAction {
 		PlayerActionTokenPick clone = CACHE.create();
 
 		copy(clone);
-		
+
 		return clone;
 	}
 
 	private void copy(PlayerActionTokenPick clone) {
-		
+
 		super.copy(clone);
-		
+
 		// copy all objects
 		clone.donePicking = donePicking;
 		clone.firstPick = firstPick;
@@ -188,7 +189,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 	@Override
 	public void release() {
-		
+
 		super.release();
 
 		// release all owned objects
@@ -204,7 +205,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 	@Override
 	public void relink(KemetGame clone) {
-		
+
 		super.relink(clone);
 
 		// release all owned objects
@@ -226,12 +227,12 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
-		
+
 		PlayerChoicePick diPick = super.getNextPlayerChoicePick();
 		if (diPick != null) {
 			return diPick;
 		}
-		
+
 		if (donePicking && nextAction != null) {
 			PlayerChoicePick nextPlayerChoicePick = nextAction.getNextPlayerChoicePick();
 			if (nextPlayerChoicePick == null) {
@@ -282,9 +283,9 @@ public class PlayerActionTokenPick extends DiCardAction {
 		}
 
 		addAllGoldTokenActions(player, choiceList);
-		
+
 		addGenericDiCardChoice(choiceList);
-		
+
 		addDiCardChoice(choiceList, DiCardList.ENLISTMENT.index);
 
 		if (mainTokenPicked) {
@@ -382,7 +383,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 			super(game, player);
 			this.row = row;
 			this.isGold = isGold;
-			
+
 			increasedPower = player.getPrayActionPowerIncrease();
 		}
 
@@ -597,7 +598,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 		}
 		log.error("unknown color to buy power {}", color);
 
-		throw new IllegalArgumentException();
+		throw new IllegalStateException();
 
 	}
 
@@ -633,27 +634,17 @@ public class PlayerActionTokenPick extends DiCardAction {
 			}
 		}
 
+		if (nextAction == null) {
+			nextAction = ChainedAction.create(game, this);
+		}
+
+		action.setParent(nextAction);
+		nextAction.add(action);
+
 		if (!mainTokenPicked || player.canUseGoldToken() || player.canUseSilverToken()) {
-			// chain picks
-			ChainedAction next = null;
-			if (nextAction == null) {
-				next = ChainedAction.create(game, this);
-				nextAction = next;
-			} else {
-				next = (ChainedAction) nextAction;
-			}
-			action.setParent(next);
-			next.add(action);
+			// can keep on picking actions
 		} else {
 			donePicking = true;
-
-			if (nextAction == null) {
-				nextAction = action;
-			} else {
-				ChainedAction next = (ChainedAction) nextAction;
-				action.setParent(next);
-				next.add(action);
-			}
 		}
 	}
 
@@ -739,4 +730,24 @@ public class PlayerActionTokenPick extends DiCardAction {
 		}
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		super.enterSimulationMode(playerIndex);
+
+		// release all owned objects
+		if (nextAction != null) {
+			nextAction.enterSimulationMode(playerIndex);
+		}
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		if (nextAction == null) {
+			nextAction = ChainedAction.create(game, this);
+		}
+
+		nextAction.insertActionInSecondPlace(pendingAction);
+
+	}
 }

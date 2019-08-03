@@ -46,6 +46,8 @@ public class BuyPowerAction extends DiCardAction {
 		if (nextAction != null) {
 			nextAction.fillCanonicalForm(cannonicalForm, playerIndex);
 		}
+		
+		super.fillCanonicalForm(cannonicalForm, playerIndex);
 	}
 
 	@Override
@@ -296,4 +298,21 @@ public class BuyPowerAction extends DiCardAction {
 		}
 
 	}
+	
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		// release all owned objects
+		if (nextAction != null) {
+			nextAction.enterSimulationMode(playerIndex);
+		}
+
+		super.enterSimulationMode(playerIndex);
+	}
+	
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
+
 }

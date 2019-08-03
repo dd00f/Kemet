@@ -229,5 +229,21 @@ public class ChoiceInventory {
 //		LAST_INDEX 212
 
 	}
+	
+	public static String printValidMoves(boolean[] validMoves) {
+		if( validMoves == null ) {
+			return "null";
+		}
+		
+		StringBuilder build = new StringBuilder("Valid Moves : ");
+		for (int i = 0; i < validMoves.length; i++) {
+			if(  validMoves[i] ) {
+				build.append(i);
+				build.append(" ");
+			}
+		}
+		String string = build.toString();
+		return string;
+	}
 
 }

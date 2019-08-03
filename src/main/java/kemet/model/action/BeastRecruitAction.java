@@ -240,4 +240,15 @@ public class BeastRecruitAction extends EndableAction {
 		return parent;
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		super.enterSimulationMode(playerIndex);
+	}
+	
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
+
 }

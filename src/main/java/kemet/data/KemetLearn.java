@@ -1,5 +1,6 @@
 package kemet.data;
 
+import kemet.Options;
 import kemet.ai.KemetNeuralNetwork;
 import kemet.ai.KemetRecurrentNeuralNetBuilder;
 import kemet.util.Coach;
@@ -18,6 +19,16 @@ public class KemetLearn {
 
 		KemetRecurrentNeuralNetBuilder.NESTEROV_MOMENTUM = 0.15;
 		KemetRecurrentNeuralNetBuilder.NESTEROV_LEARN_RATE = 0.001;
+		
+		int TODO_DISABLE;
+		
+		Options.VALIDATE_GAME_BETWEEN_PICKS = true;
+		Options.VALIDATE_PLAYER_CHOICE_PICK_INDEX = true;
+		Options.VALIDATE_POOLED_GAMES = true;
+		Options.ARENA_VALIDATE_MOVES = true;
+		Options.COACH_VALIDATE_PLAYER_NAME = true;
+		Options.MCTS_VALIDATE_MOVE_FOR_BOARD = true;
+		Options.SIMULATION_VALIDATE_GAME_AFTER_CLONE = true;
 		
 	    GameFactory gameFactory = new TwoPlayerGame();
 	    

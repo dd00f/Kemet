@@ -655,8 +655,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		if (overridingAction != null) {
 			overridingAction.fillCanonicalForm(cannonicalForm, playerIndex);
 		}
-
-		if (army == null) {
+		else if (army == null) {
 			// pick army source tile
 			cannonicalForm.set(BoardInventory.STATE_PICK_SOURCE_TILE, player.getState(playerIndex));
 		} else if (movementLeft > 0) {
@@ -698,7 +697,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		} else {
 			addAllArmySizeMoveChoice(choiceList, (byte) 1, sourceArmySize, false);
 			if (army.beast != null) {
-				addAllArmySizeMoveChoice(choiceList, (byte) 0, sourceArmySize, true);
+				addAllArmySizeMoveChoice(choiceList, (byte) 1, sourceArmySize, true);
 			}
 		}
 	}
@@ -725,9 +724,9 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		public String describe() {
 			String armyModified = "Moving army \"" + army.name + "\" " + moveSoldierCount + " soldiers";
 			if (moveBeast) {
-				armyModified += " and the beast " + army.beast;
+				armyModified += " and the beast " + army.beast.name;
 			} else if (army.beast != null) {
-				armyModified += ", leaving behind the beast " + army.beast;
+				armyModified += ", leaving behind the beast " + army.beast.name;
 			}
 			int remainingArmy = army.armySize - moveSoldierCount;
 			if (remainingArmy > 0) {
@@ -964,4 +963,21 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+		
+		if (overridingAction != null) {
+			overridingAction.enterSimulationMode(playerIndex);
+		}
+		if (temporaryAction != null) {
+			temporaryAction.enterSimulationMode(playerIndex);
+		}
+		super.enterSimulationMode(playerIndex);		
+
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

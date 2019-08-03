@@ -232,7 +232,7 @@ public class DiCardList {
 			return -1;
 		}
 
-		int indexCount = game.random.nextInt(sumArray);
+		int indexCount = game.getNextRandomInt(sumArray);
 		int indexToMove = -1;
 
 		for (int i = 0; i < source.length; ++i) {

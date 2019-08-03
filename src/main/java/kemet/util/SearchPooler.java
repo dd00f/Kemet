@@ -73,12 +73,12 @@ public class SearchPooler {
 			}
 
 			if (!Arrays.equals(game.getValidMoves(), info.validMoves)) {
-				throw new IllegalArgumentException(
+				throw new IllegalStateException(
 						"2 games with the same canonical form dont have the same valid moves");
 			}
 
 			if (info.gameEnded != game.isGameEnded()) {
-				throw new IllegalArgumentException(
+				throw new IllegalStateException(
 						"2 games with the same canonical form dont have the same ended flag");
 			}
 		}
@@ -124,6 +124,7 @@ public class SearchPooler {
 		public int[] movesToReachBoard;
 		public Game game;
 		public int nextPlayerIndex;
+		public int usedCount;
 
 		public void fillNeuralNetResult(PolicyVector inPolicy, float inValue) {
 			boardValue = inValue;

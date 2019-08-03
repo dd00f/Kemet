@@ -51,8 +51,10 @@ public class BattleActionTest {
 		PlayerActionTokenPick tokenPick2 = PlayerActionTokenPick.create(game, redPlayer, game.action.chainedActions);
 		game.action.chainedActions.add(tokenPick2);
 
-		ArmyMoveAction armyMoveAction = ArmyMoveAction.create(game, bluePlayer, tokenPick);
-		tokenPick.nextAction = armyMoveAction;
+		ChainedAction chain = ChainedAction.create(game, tokenPick);
+		tokenPick.nextAction = chain;
+		ArmyMoveAction armyMoveAction = ArmyMoveAction.create(game, bluePlayer, chain);
+		chain.add(armyMoveAction);
 		battle = BattleAction.create(game, armyMoveAction);
 		armyMoveAction.overridingAction = battle;
 

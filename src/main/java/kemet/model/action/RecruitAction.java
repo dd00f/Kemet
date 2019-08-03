@@ -33,7 +33,7 @@ public class RecruitAction extends DiCardAction {
 	public boolean allowPaidRecruit = true;
 	public boolean canRecruitOnAnyArmy = false;
 	public List<Tile> pickedTiles = new ArrayList<>();
-	public ChainedAction battles;
+	// public ChainedAction battles;
 	public byte freeRecruitLeft = -1;
 
 	public static Cache<RecruitAction> CACHE = new Cache<RecruitAction>(() -> new RecruitAction());
@@ -55,15 +55,15 @@ public class RecruitAction extends DiCardAction {
 
 		cannonicalForm.set(BoardInventory.FREE_RECRUIT_LEFT, freeRecruitLeft);
 
-		if (isEnded()) {
-			// trigger battle actions
-			battles.fillCanonicalForm(cannonicalForm, playerIndex);
-			return;
-		}
+//		if (isEnded()) {
+//			// trigger battle actions
+//			battles.fillCanonicalForm(cannonicalForm, playerIndex);
+//			return;
+//		}
 
 		for (Tile tile : pickedTiles) {
 			// reverse selection for tiles that were already picked
-			tile.setSelected(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
+			tile.setSelectedSource(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
 		}
 
 		if (tile == null) {
@@ -72,12 +72,12 @@ public class RecruitAction extends DiCardAction {
 		} else if (recruitSize < 0) {
 			// pick size
 			cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
-			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+			tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
 
 		} else if (playerHasBeastAvailable()) {
 			cannonicalForm.set(BoardInventory.STATE_PICK_BEAST, player.getState(playerIndex));
 			cannonicalForm.set(BoardInventory.PICKED_SIZE, recruitSize);
-			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+			tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
 		}
 
 	}
@@ -92,7 +92,7 @@ public class RecruitAction extends DiCardAction {
 		freeRecruitLeft = -1;
 		recruitSize = -1;
 		pickedTiles.clear();
-		battles = null;
+//		battles = null;
 		allowPaidRecruit = true;
 		canRecruitOnAnyArmy = false;
 	}
@@ -107,9 +107,9 @@ public class RecruitAction extends DiCardAction {
 			currentGame.validate(pickedTile);
 		}
 
-		if (battles != null) {
-			battles.validate(this, currentGame);
-		}
+//		if (battles != null) {
+//			battles.validate(this, currentGame);
+//		}
 
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
@@ -126,11 +126,10 @@ public class RecruitAction extends DiCardAction {
 			pickedTiles.set(i, game.getTileByCopy(pickedTiles.get(i)));
 		}
 
-		if (battles != null) {
-			battles.relink(clone);
-		}
+//		if (battles != null) {
+//			battles.relink(clone);
+//		}
 
-		super.relink(clone);
 	}
 
 	@Override
@@ -157,8 +156,8 @@ public class RecruitAction extends DiCardAction {
 		clone.pickedTiles.clear();
 		clone.pickedTiles.addAll(pickedTiles);
 
-		clone.battles = battles.deepCacheClone();
-		clone.battles.setParent(clone);
+//		clone.battles = battles.deepCacheClone();
+//		clone.battles.setParent(clone);
 
 		super.copy(clone);
 	}
@@ -173,10 +172,10 @@ public class RecruitAction extends DiCardAction {
 	@Override
 	public void clear() {
 		super.clear();
-		if (battles != null) {
-			battles.release();
-		}
-		battles = null;
+//		if (battles != null) {
+//			battles.release();
+//		}
+//		battles = null;
 		tile = null;
 		beast = null;
 		pickedTiles.clear();
@@ -190,7 +189,7 @@ public class RecruitAction extends DiCardAction {
 		create.game = game;
 		create.player = player;
 		create.parent = parent;
-		create.battles = ChainedAction.create(game, create);
+//		create.battles = ChainedAction.create(game, create);
 
 		return create;
 	}
@@ -343,7 +342,8 @@ public class RecruitAction extends DiCardAction {
 			battle.defendingArmy = tile.getArmy();
 			battle.tile = tile;
 
-			battles.add(battle);
+			parent.stackPendingActionOnParent(battle);
+//			battles.add(battle);
 		} else {
 			army.moveToTile(tile);
 		}
@@ -380,7 +380,8 @@ public class RecruitAction extends DiCardAction {
 
 		if (isEnded()) {
 			// trigger battle actions
-			return battles.getNextPlayerChoicePick();
+//			return battles.getNextPlayerChoicePick();
+			return null;
 		}
 
 		if (tile != null) {
@@ -422,7 +423,8 @@ public class RecruitAction extends DiCardAction {
 
 				// no valid choices left
 				end();
-				return battles.getNextPlayerChoicePick();
+//				return battles.getNextPlayerChoicePick();
+				return null;
 
 			}
 
@@ -604,11 +606,25 @@ public class RecruitAction extends DiCardAction {
 
 	@Override
 	public void applyDiCard(int index) {
-		if (index == DiCardList.REINFORCEMENTS.index) {
+		if (index == DiCardList.ENLISTMENT.index) {
 			freeRecruitLeft += 2;
 		} else {
 			super.applyDiCard(index);
 		}
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+		super.enterSimulationMode(playerIndex);
+
+//		if (battles != null) {
+//			battles.enterSimulationMode(playerIndex);
+//		}
+
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

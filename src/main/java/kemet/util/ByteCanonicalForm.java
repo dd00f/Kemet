@@ -84,6 +84,21 @@ public class ByteCanonicalForm implements Serializable {
 		return array;
 
 	}
+	
+	public String printCanonicalForm() {
+		
+		StringBuilder build = new StringBuilder("Canonical Form : \n");
+		for (int i = 0; i < canonicalForm.length; i++) {
+			if(  canonicalForm[i] != 0 ) {
+				build.append(i);
+				build.append(" : ");
+				build.append(canonicalForm[i]);
+				build.append("\n");
+			}
+		}
+		String string = build.toString();
+		return string;
+	}
 
 
 }

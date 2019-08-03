@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -16,6 +17,9 @@ import org.apache.commons.lang3.SerializationUtils;
 import kemet.Options;
 import kemet.ai.TrialPlayerAI;
 import kemet.model.KemetGame;
+import kemet.model.action.choice.ChoiceInventory;
+import kemet.util.SearchPooler.GameInformation;
+import kemet.util.StackingMCTS.MctsBoardInformation;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -97,17 +101,17 @@ public class Coach {
 		}
 	}
 
-	private void activateFirstValidMoveOnError(Game game, int currentPlayer, boolean[] validMoves) {
-		int actionIndex;
-		for (int i = 0; i < validMoves.length; i++) {
-			boolean valid = validMoves[i];
-			if (valid) {
-				actionIndex = i;
-				log.error("Activated action index {} as a temporary fix.", actionIndex);
-				game.activateAction(currentPlayer, actionIndex);
-			}
-		}
-	}
+//	private void activateFirstValidMoveOnError(Game game, int currentPlayer, boolean[] validMoves) {
+//		int actionIndex;
+//		for (int i = 0; i < validMoves.length; i++) {
+//			boolean valid = validMoves[i];
+//			if (valid) {
+//				actionIndex = i;
+//				log.error("Activated action index {} as a temporary fix.", actionIndex);
+//				game.activateAction(currentPlayer, actionIndex);
+//			}
+//		}
+//	}
 
 	/**
 	 * Performs numIters iterations with numEps episodes of this.play in each
@@ -487,6 +491,15 @@ public class Coach {
 
 			if (episodeStep % PLAY_PRINT_INTERVAL == 0) {
 				pooler.printStats("Self play " + episodeStep + " | ");
+
+				if (episodeStep > 1500) {
+					try {
+						throw new IllegalStateException("Reached 1500 steps in a game.");
+					} catch (Exception ex) {
+
+					}
+					break;
+				}
 			}
 
 		}
@@ -529,13 +542,13 @@ public class Coach {
 			if (mcts != null) {
 				try {
 					activateActionOnGame(temperature, mcts);
-					
+
 					mcts.cleanupOldCycles();
 					mcts.incrementCycle();
 
 					// purge ended games
 					remainingGameCount = checkIfGameEnded(gameList, remainingGameCount, j, mcts, trainExamples);
-					
+
 				} catch (Exception ex) {
 					// scrap games that generated errors
 					log.error("Unexpected error in Coach.runPooledGameAction", ex);
@@ -603,7 +616,20 @@ public class Coach {
 			game.activateAction(currentPlayer, actionIndex);
 		} catch (Exception ex) {
 			log.error("Activate action failed", ex);
-			activateFirstValidMoveOnError(game, currentPlayer, validMoves);
+			
+			StringBuilder build = new StringBuilder();
+			game.describeGame(build);
+			
+			log.error(build.toString());
+			
+			// check MCTS for valid moves
+			MctsBoardInformation mctsBoardInformation = mcts.boardInformationMemory.get(canonicalForm);
+			log.error("Valid moves in the mcts board memory : " + ChoiceInventory.printValidMoves(mctsBoardInformation.validMoves));
+			
+			log.error(canonicalForm.printCanonicalForm());
+			
+			// activateFirstValidMoveOnError(game, currentPlayer, validMoves);
+			throw ex;
 		}
 	}
 
@@ -613,6 +639,17 @@ public class Coach {
 		pooler.fetchAllPendingPredictions();
 
 		finishSearch(gameList);
+		
+		// TODO remove this.
+		int TODOREMOVE;
+		Collection<GameInformation> values = pooler.providedPredictions.values();
+		for (GameInformation gameInformation : values) {
+			if( gameInformation.usedCount == 0 ) {
+				gameInformation.game.printDescribeGame();
+				throw new IllegalStateException("Found a neural net prediction that wasn't used. " );
+			}
+		}
+		
 	}
 
 	private void finishSearch(StackingMCTS[] gameList) {

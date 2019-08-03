@@ -25,5 +25,11 @@ public interface Action extends Model {
 	public Action deepCacheClone();
 	
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex);
+
+	public void enterSimulationMode(int playerIndex);
+	
+	public void stackPendingActionOnParent(Action pendingAction);
+	
+	
 	
 }

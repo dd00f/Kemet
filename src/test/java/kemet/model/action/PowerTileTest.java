@@ -163,8 +163,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals( 4, redPlayer.getDiCardCount());
 		assertEquals( 5, bluePlayer.getDiCardCount());
 
-		assertEquals( DiCardList.TOTAL_DI_COUNT - 13, DiCardList.sumArray(game.availableDiCardList));
-		assertEquals(4, DiCardList.sumArray(game.discardedDiCardList));
+		assertEquals( DiCardList.TOTAL_DI_COUNT - 9, DiCardList.sumArray(game.availableDiCardList));
+		assertEquals(0, DiCardList.sumArray(game.discardedDiCardList));
 
 	}
 
@@ -658,6 +658,52 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(3, redPlayer.victoryPoints);
 	}
 
+	@Test
+	public void test_RED_3_DIVINE_WOUND_Defense_win() {
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
+		assertEquals(4, redPlayer.getPrayerPoints());
+		
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
+				BattleCard.CAVALRY_BLITZ_CARD);
+		
+		// pick divine wound
+		useDiCardOnDivineWound(DiCardList.PRAYER);
+		useDiCardOnDivineWound(DiCardList.MANA_THEFT);
+
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		assertEquals(3, bluePlayer.victoryPoints);
+	}
+	
+	@Test
+	public void test_RED_3_DIVINE_WOUND_defense_lost() {
+		
+		
+		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
+		assertEquals(4, redPlayer.getPrayerPoints());
+		
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
+				BattleCard.CAVALRY_BLITZ_CARD);
+		
+		// pick divine wound
+		endDivineWound();
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		assertEquals(5, bluePlayer.victoryPoints);
+	}
+	
 	@Test
 	public void test_RED_3_BLADES_OF_NEITH_defense() {
 		assertEquals(7, redPlayer.getPrayerPoints());

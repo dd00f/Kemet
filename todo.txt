@@ -2,25 +2,21 @@
 	64 of 64 tiles done !
 	20 of 20 di card done !
 
+- TODO : 
+	- Lose unit on Temple at night for 5 PP is optional.
 
-	
-- Battle : start simulation : erase other player DI card selection
+- TODO : 
+	- Vision power : put unused cards back in draw pile
 
-- Battle : start simulation : simulate other player DI card selection
 
 - BUG : 
 	- Recruit on top of an existing army doesn't trigger attack start powers, night/day
 
-- BUG : 
-	- Battle DI card selection in battle could lead to negative prayer points since they aren't paid upfront ?
 
-- Check that power tiles have a unique flag per player ( no negative )
 
 - State goes negative based on player - change to individual state fields
 
 - Battle : current player should always be in the same place ( flag to switch between attack & defense )
-
-- enable DI card reinforcements at the beginning of moves
 
 - enable DI card reinforcements at the end of turns
 

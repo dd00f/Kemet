@@ -298,6 +298,7 @@ public class UpgradePyramidAction extends DiCardAction {
 				}
 			}
 			
+			// only allow DI card selection before picking a tile to upgrade
 			addGenericDiCardChoice(pick.choiceList);
 
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
@@ -309,8 +310,6 @@ public class UpgradePyramidAction extends DiCardAction {
 
 			createAllPyramidLevelChoices(tile.getPyramidLevel(), pick.choiceList);
 			
-			addGenericDiCardChoice(pick.choiceList);
-
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();
@@ -332,8 +331,6 @@ public class UpgradePyramidAction extends DiCardAction {
 				pick.choiceList.add(new UpgradePyramidPickColorChoice(game, player, Color.RED));
 			}
 			
-			addGenericDiCardChoice(pick.choiceList);
-			
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();
@@ -342,5 +339,14 @@ public class UpgradePyramidAction extends DiCardAction {
 		return null;
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
 
+		super.enterSimulationMode(playerIndex);
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

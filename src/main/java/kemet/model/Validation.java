@@ -8,15 +8,15 @@ public class Validation {
 	public static void validationFailed(String reason) {
 		log.error(reason);
 		
-		try {
-			IllegalArgumentException ex  = new IllegalArgumentException(reason);
+//		try {
+			IllegalStateException ex  = new IllegalStateException(reason);
 			ex.printStackTrace();
 			throw ex;
-		} catch ( Exception ex ) {
-			
-		}
+//		} catch ( Exception ex ) {
+//			
+//		}
 		
-		System.exit(-1);
+//		System.exit(-1);
 		
 	}
 

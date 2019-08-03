@@ -176,8 +176,8 @@ public class GameAction implements Action {
 				action.moveToDiscard = true;
 				for (int i = 0; i < 5; ++i) {
 					DiCardList.moveRandomDiCard(game.availableDiCardList, action.availableDiCards,
-							KemetGame.AVAILABLE_DI_CARDS, "Vision available DI cards", "Night Vision Power", game,
-							true);
+							KemetGame.AVAILABLE_DI_CARDS, PickDiCardAction.VISION_AVAILABLE_DI_CARDS,
+							"Night Vision Power", game, true);
 				}
 
 				chainedActions.add(action);
@@ -228,6 +228,17 @@ public class GameAction implements Action {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		chainedActions.fillCanonicalForm(cannonicalForm, playerIndex);
+	}
+
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+		chainedActions.enterSimulationMode(playerIndex);
+	}
+
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		chainedActions.insertActionInSecondPlace(pendingAction);
 	}
 
 }

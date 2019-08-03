@@ -15,6 +15,7 @@ import kemet.model.Power;
 import kemet.model.Tile;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
+import kemet.util.CopyableRandom;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -28,16 +29,14 @@ public class TwoPlayerGameTest {
 
 	@BeforeEach
 	void setupGame() {
-		
-		
-		
+
 		tpg = new TwoPlayerGame();
 		tpg.createAIPlayer("red");
 		tpg.createAIPlayer("blue");
 		tpg.createTiles();
 
 		game = tpg.game;
-		game.random.setSeed(12341234);
+		game.setInitialSeed(CopyableRandom.generateSeed(12341234));
 		// game.setPrintActivations(false);
 
 		redPlayer = game.playerByInitiativeList.get(0);
@@ -114,6 +113,7 @@ public class TwoPlayerGameTest {
 //				45, 41, 14, 11, 5, 0, 41, 14, 13, 5, 43, 11, 0, 43, 0, 37, 36, 37, 36, 66, 45, 45, 46, 46, 44, 15, 29,
 //				44, 15, 29, 41, 0, 41, 0, 42, 155, 42, 155, 34, 35, 34, 35, 66 });
 //		
+
 		// initialization
 		pickPyramidLevel(2);
 		pickPyramidColor(Color.RED);
@@ -215,7 +215,7 @@ public class TwoPlayerGameTest {
 	public void startUpgradePyramid() {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_ROW_TWO_UPGRADE_PYRAMID);
 	}
-	
+
 	public void endUpgradePyramid() {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.UPGRADE_NOTHING);
 	}
@@ -267,7 +267,10 @@ public class TwoPlayerGameTest {
 	@SuppressWarnings("null")
 	public void activateActionOnGame(int nextPlayer, int pickIndex) {
 		KemetGame deepCacheClone = null;
+		
+		game.resetCachedChoices();
 		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
+		ByteCanonicalForm originalCanonicalForm = game.getCanonicalForm(nextPlayer);
 
 		int size = nextPlayerChoicePick.choiceList.size();
 		if (size <= 1) {
@@ -283,6 +286,11 @@ public class TwoPlayerGameTest {
 			PlayerChoicePick cloneNextPick = deepCacheClone.getNextPlayerChoicePick();
 			int newCount = cloneNextPick.choiceList.size();
 
+			if (CANNONICAL_ON_ALL_MOVES) {
+				validateCanonicalFormEquals(game.getCanonicalForm(nextPlayer),
+						deepCacheClone.getCanonicalForm(nextPlayer));
+			}
+			
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
 			deepCacheClone.validate();
 			if (CANNONICAL_ON_ALL_MOVES) {
@@ -295,7 +303,7 @@ public class TwoPlayerGameTest {
 				log.info("Cloned Game");
 				PlayerChoicePick.logChoiceList(cloneNextPick.choiceList);
 				System.out.println("Game choice");
-			
+
 				System.out.println(nextPlayerChoicePick);
 				System.out.println("Clone choice");
 				System.out.println(cloneNextPick);
@@ -322,6 +330,11 @@ public class TwoPlayerGameTest {
 
 		if (CANNONICAL_ON_ALL_MOVES) {
 			validateCanonicalForm(game.getCanonicalForm(nextPlayer));
+			
+			ByteCanonicalForm postCloneMoveCanonicalForm = game.getCanonicalForm(nextPlayer);
+			validateCanonicalFormEquals(originalCanonicalForm, postCloneMoveCanonicalForm);
+
+			
 		}
 		game.activateAction(nextPlayer, pickIndex);
 		game.validate();
@@ -335,6 +348,21 @@ public class TwoPlayerGameTest {
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
 			deepCacheClone.validate();
 		}
+	}
+
+	private void validateCanonicalFormEquals(ByteCanonicalForm canonicalForm, ByteCanonicalForm canonicalForm2) {
+		// TODO Auto-generated method stub
+		byte[] canonicalForm3 = canonicalForm.getCanonicalForm();
+		byte[] canonicalForm4 = canonicalForm2.getCanonicalForm();
+		for (int i = 0; i < canonicalForm3.length; i++) {
+			byte b1 = canonicalForm3[i];
+			byte b2 = canonicalForm4[i];
+			if (b1 != b2) {
+				fail("Clone has different canonical value at index : " + i + ", original : " + b1 + ", clone : " + b2);
+			}
+
+		}
+
 	}
 
 	private void validateCanonicalForm(ByteCanonicalForm canonicalForm) {
@@ -408,7 +436,7 @@ public class TwoPlayerGameTest {
 	public void rainingFireToTile(Tile to) {
 		moveSelectTile(to);
 	}
-	
+
 	public void recruitBeast(Beast beast) {
 		activateActionOnGame(game.getNextPlayer(), beast.getRecruitChoiceIndex());
 	}
@@ -416,7 +444,7 @@ public class TwoPlayerGameTest {
 	public void moveNextTile(Tile to, int size) {
 		moveNextTile(to, size, false);
 	}
-	
+
 	public void moveEscapeTile(Tile to) {
 		activateActionOnGame(game.getNextPlayer(), to.getEscapeChoiceIndex(game.getNextPlayer()));
 	}
@@ -452,23 +480,23 @@ public class TwoPlayerGameTest {
 	public void useDiCardOnDivineWound(DiCard diCard) {
 		activateActionOnGame(game.getNextPlayer(), diCard.getDivineWoundChoiceIndex());
 	}
-	
+
 	public void activateDiCard(DiCard diCard) {
 		activateActionOnGame(game.getNextPlayer(), diCard.getActivateChoiceIndex());
 	}
-	
+
 	public void pickDiCard(DiCard diCard) {
 		activateActionOnGame(game.getNextPlayer(), diCard.getPickChoiceIndex());
 	}
-	
+
 	public void endDivineWound() {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.END_DIVINE_WOUND);
 	}
-	
+
 	public void skipVeto() {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.SKIP_DI_VETO);
 	}
-	
+
 	public void pickBattleCard(BattleCard battleCard) {
 		activateActionOnGame(game.getNextPlayer(), battleCard.getPickChoiceIndex());
 	}
@@ -493,4 +521,14 @@ public class TwoPlayerGameTest {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_GOLD_MOVE);
 
 	}
+	
+	public void replayMultipleActions(int[] actions) {
+		for (int i = 0; i < actions.length; i++) {
+			int actionIndex = actions[i];
+			
+			activateActionOnGame(game.getNextPlayer(), actionIndex);
+		}
+		
+	}
+
 }

@@ -9,7 +9,7 @@ public class CopyableRandom extends Random implements Copyable<CopyableRandom> {
 	 */
 	private static final long serialVersionUID = -6127855221899436376L;
 
-	private AtomicLong seed; //  = new AtomicLong(0L);
+	private AtomicLong seed; // = new AtomicLong(0L);
 
 	private final static long multiplier = 0x5DEECE66DL;
 	private final static long addend = 0xBL;
@@ -25,12 +25,24 @@ public class CopyableRandom extends Random implements Copyable<CopyableRandom> {
 		setSeed(seed);
 	}
 
+	public long getSeed() {
+		return seed.get();
+	}
+
+	public void setDirectSeed(long newSeed) {
+		seed.set(newSeed);
+	}
+
 	@Override
 	public synchronized void setSeed(long newSeed) {
-		if( seed == null ) {
+		if (seed == null) {
 			seed = new AtomicLong();
 		}
-		seed.set((newSeed ^ multiplier) & mask);
+		seed.set(generateSeed(newSeed));
+	}
+
+	public static long generateSeed(long newSeed) {
+		return (newSeed ^ multiplier) & mask;
 	}
 
 	/**
@@ -58,7 +70,16 @@ public class CopyableRandom extends Random implements Copyable<CopyableRandom> {
 	}
 
 	public static void main(String[] args) {
+
 		CopyableRandom cr = new CopyableRandom();
+
+		long seed1 = cr.getSeed();
+		cr.setSeed(123123);
+		long seed2 = cr.getSeed();
+		cr.setSeed(seed2);
+		long seed3 = cr.getSeed();
+		System.out.println("Seed evolution : initial : " + seed1 + " setSeed(123123) : " + seed2 + " setSeed from "
+				+ seed2 + " lead to " + seed3);
 
 		/* changes intern state of cr */
 		for (int i = 0; i < 10; i++) {

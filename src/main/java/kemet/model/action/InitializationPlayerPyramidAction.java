@@ -245,4 +245,13 @@ public class InitializationPlayerPyramidAction implements Action {
 		
 	}
 
+	@Override
+	public void enterSimulationMode(int playerIndex) {
+
+	}
+	
+	@Override
+	public void stackPendingActionOnParent(Action pendingAction) {
+		parent.stackPendingActionOnParent(pendingAction);
+	}
 }

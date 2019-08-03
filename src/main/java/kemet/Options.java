@@ -49,7 +49,7 @@ public class Options {
 
 	// number of games to play when training the neural network
 	// TODO reset to 100
-	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 500;
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 200;
 
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network

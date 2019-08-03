@@ -1021,13 +1021,32 @@ public class DiTest extends TwoPlayerGameTest {
 	}
 
 	@Test
-	public void REINFORCEMENTS() {
+	public void ENLISTMENT() {
 		bluePlayer.recuperateAllBattleCards();
 		redPlayer.recuperateAllBattleCards();
 
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.ENLISTMENT, redPlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
+		activateDiCard(DiCardList.ENLISTMENT);
+
+		recruitArmy(redPlayer.cityTiles.get(2), 2);
+
+		moveRowOneZeroArmy();
+
+		assertEquals(7, redPlayer.getPrayerPoints());
+	}
+
+	@Test
+	public void ENLISTMENT_duringRecruit() {
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.ENLISTMENT, redPlayer);
+		assertEquals(7, redPlayer.getPrayerPoints());
+
+		startRecruit();
 		activateDiCard(DiCardList.ENLISTMENT);
 
 		recruitArmy(redPlayer.cityTiles.get(2), 2);
@@ -1073,14 +1092,20 @@ public class DiTest extends TwoPlayerGameTest {
 		game.giveDiCardToPlayer(DiCardList.DIVINE_MEMORY, redPlayer);
 		assertEquals(1, redPlayer.diCards[DiCardList.DIVINE_MEMORY.index]);
 		assertEquals(7, redPlayer.getPrayerPoints());
-		activateDiCard(DiCardList.DIVINE_MEMORY);
+
+		try {
+			activateDiCard(DiCardList.DIVINE_MEMORY);
+			fail("Should not be possible");
+		} catch (Exception ex) {
+
+		}
 
 		moveRowOneZeroArmy();
 
 		// only one card can come back.
 		assertEquals(1, redPlayer.diCards[DiCardList.DIVINE_MEMORY.index]);
 
-		assertEquals(6, redPlayer.getPrayerPoints());
+		assertEquals(7, redPlayer.getPrayerPoints());
 	}
 
 	@Test
@@ -1134,31 +1159,30 @@ public class DiTest extends TwoPlayerGameTest {
 
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
-		
+
 		prayRowThree();
-		
+
 		// blue attacks middle temple
 		Tile from = bluePlayer.cityTiles.get(1);
 		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		Tile entrance = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
 		moveRowTwoArmy(from, tileByName, 3);
 
-		assertEquals( null, entrance.getArmy());
+		assertEquals(null, entrance.getArmy());
 
 		activateDiCard(DiCardList.ESCAPE);
 		prayRowTwo();
-		
+
 		// no choice, red army moves to medium temple entrance
-		assertEquals( 5, entrance.getArmy().armySize);
+		assertEquals(5, entrance.getArmy().armySize);
 	}
-	
+
 	@Test
 	public void ESCAPE_multi_choice() {
 
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
-		
-		
+
 		Tile from = bluePlayer.cityTiles.get(1);
 		Tile tileByName = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
 		Tile entrance = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
@@ -1170,18 +1194,18 @@ public class DiTest extends TwoPlayerGameTest {
 		// blue attacks middle obelisk
 		moveRowTwoArmy(from, tileByName, 3);
 
-		assertEquals( null, entrance.getArmy());
+		assertEquals(null, entrance.getArmy());
 
 		activateDiCard(DiCardList.ESCAPE);
-		
+
 		moveEscapeTile(entrance);
-		
+
 		prayRowTwo();
-		
+
 		// no choice, red army moves to medium temple entrance
-		assertEquals( 5, entrance.getArmy().armySize);
+		assertEquals(5, entrance.getArmy().armySize);
 	}
-	
+
 	@Test
 	public void ESCAPE_no_choice() {
 
@@ -1198,12 +1222,11 @@ public class DiTest extends TwoPlayerGameTest {
 		assertEquals(9, bluePlayer.getPrayerPoints());
 
 		// ensure no escape choice is given
-		
+
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 	}
 
-	
 }
