@@ -1,5 +1,10 @@
 package kemet.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import kemet.util.ByteCanonicalForm;
+
 public class BoardInventory {
 
 	private static final int MAX_ACTION_PER_TURN = 3;
@@ -329,12 +334,184 @@ public class BoardInventory {
 	public static final int STATE_PICK_DEFENDER_TACTICAL_CHOICE = INDEXER++;
 
 	public static final int TOTAL_STATE_COUNT = INDEXER;
-	
-	public static void main(String[] args) {
+
+	public static final List<Integer> NUMBER_LIST = new ArrayList<>();
+	public static final List<String> NAME_LIST = new ArrayList<>();
+
+	public static void registerNumber(String name, int number) {
+
+		if (!NUMBER_LIST.isEmpty()) {
+			Integer last = NUMBER_LIST.get(NUMBER_LIST.size() - 1);
+			if (number <= last) {
+				String message = "number " + number + " smaller than " + last + ", new name " + name + " previous name "
+						+ NAME_LIST.get(NAME_LIST.size() - 1);
+				throw new IllegalStateException(message);
+			}
+		}
+
+		NUMBER_LIST.add(number);
+		NAME_LIST.add(name);
+	}
+
+	static {
+		registerNumber("ROUND_NUMBER ", ROUND_NUMBER);
+
+		registerNumber("STATE_RECRUIT ", STATE_RECRUIT);
+		registerNumber("STATE_FREE_RECRUIT ", STATE_FREE_RECRUIT);
+		registerNumber("STATE_MOVE ", STATE_MOVE);
+		registerNumber("STATE_BATTLE ", STATE_BATTLE);
+		registerNumber("STATE_UPGRADE_PYRAMID ", STATE_UPGRADE_PYRAMID);
+		registerNumber("STATE_INITIAL_PYRAMID ", STATE_INITIAL_PYRAMID);
+		registerNumber("STATE_INITIAL_ARMY ", STATE_INITIAL_ARMY);
+		registerNumber("STATE_PICK_ACTION_TOKEN ", STATE_PICK_ACTION_TOKEN);
+		registerNumber("STATE_PICK_ATTACK_BATTLE_CARD ", STATE_PICK_ATTACK_BATTLE_CARD);
+		registerNumber("STATE_PICK_ATTACK_DISCARD ", STATE_PICK_ATTACK_DISCARD);
+		registerNumber("STATE_PICK_DEFENSE_BATTLE_CARD ", STATE_PICK_DEFENSE_BATTLE_CARD);
+		registerNumber("STATE_PICK_DEFENSE_DISCARD ", STATE_PICK_DEFENSE_DISCARD);
+		registerNumber("STATE_PICK_ARMY_SIZE ", STATE_PICK_ARMY_SIZE);
+		registerNumber("STATE_PICK_TILE ", STATE_PICK_TILE);
+		registerNumber("STATE_PICK_BEAST ", STATE_PICK_BEAST);
+		registerNumber("STATE_PICK_SOURCE_TILE ", STATE_PICK_SOURCE_TILE);
+		registerNumber("STATE_PICK_PYRAMID_COLOR ", STATE_PICK_PYRAMID_COLOR);
+		registerNumber("STATE_PICK_PYRAMID_LEVEL ", STATE_PICK_PYRAMID_LEVEL);
+		registerNumber("STATE_PICK_ATTACKER_RECALL ", STATE_PICK_ATTACKER_RECALL);
+		registerNumber("STATE_PICK_DEFENDER_RECALL ", STATE_PICK_DEFENDER_RECALL);
+		registerNumber("STATE_PICK_ATTACKER_RETREAT ", STATE_PICK_ATTACKER_RETREAT);
+		registerNumber("STATE_PICK_DEFENDER_RETREAT ", STATE_PICK_DEFENDER_RETREAT);
+		registerNumber("STATE_PICK_INITIATIVE_BATTLE_CARD ", STATE_PICK_INITIATIVE_BATTLE_CARD);
+		registerNumber("STATE_PICK_INITIATIVE_DISCARD ", STATE_PICK_INITIATIVE_DISCARD);
+		registerNumber("STATE_PICK_INITIATIVE_DAWN_TOKEN ", STATE_PICK_INITIATIVE_DAWN_TOKEN);
+		registerNumber("STATE_PICK_INITIATIVE_ORDER ", STATE_PICK_INITIATIVE_ORDER);
+		registerNumber("STATE_PICK_BATTLECARD_TO_REMOVE ", STATE_PICK_BATTLECARD_TO_REMOVE);
+		registerNumber("STATE_BUY_POWER_COLOR ", STATE_BUY_POWER_COLOR);
+		registerNumber("PICKED_ACTION_IN_ORDER ", PICKED_ACTION_IN_ORDER);
+		registerNumber("MAIN_TOKEN_PICKED ", MAIN_TOKEN_PICKED);
+		registerNumber("PICKED_SIZE ", PICKED_SIZE);
+		registerNumber("PICKED_LEVEL ", PICKED_LEVEL);
+		registerNumber("MOVES_LEFT ", MOVES_LEFT);
+		registerNumber("IS_FIRST_MOVE ", IS_FIRST_MOVE);
+		registerNumber("BATTLE_ATTACKER_STRENGTH ", BATTLE_ATTACKER_STRENGTH);
+		registerNumber("BATTLE_ATTACKER_SHIELD ", BATTLE_ATTACKER_SHIELD);
+		registerNumber("BATTLE_ATTACKER_DAMAGE ", BATTLE_ATTACKER_DAMAGE);
+		registerNumber("BATTLE_DEFENDER_STRENGTH ", BATTLE_DEFENDER_STRENGTH);
+		registerNumber("BATTLE_DEFENDER_SHIELD ", BATTLE_DEFENDER_SHIELD);
+		registerNumber("BATTLE_DEFENDER_DAMAGE ", BATTLE_DEFENDER_DAMAGE);
+		registerNumber("BATTLE_ATTACKER_WON ", BATTLE_ATTACKER_WON);
+		registerNumber("FREE_RECRUIT_LEFT ", FREE_RECRUIT_LEFT);
+		registerNumber("TILE_PLAYER_ARMY_SIZE ", TILE_PLAYER_ARMY_SIZE);
+		registerNumber("TILE_SELECTED ", TILE_SELECTED);
+		registerNumber("TILE_SOURCE_SELECTED ", TILE_SOURCE_SELECTED);
+		registerNumber("TILE_BLACK_PYRAMID_LEVEL ", TILE_BLACK_PYRAMID_LEVEL);
+		registerNumber("TILE_RED_PYRAMID_LEVEL ", TILE_RED_PYRAMID_LEVEL);
+		registerNumber("TILE_BLUE_PYRAMID_LEVEL ", TILE_BLUE_PYRAMID_LEVEL);
+		registerNumber("TILE_WHITE_PYRAMID_LEVEL ", TILE_WHITE_PYRAMID_LEVEL);
+		registerNumber("PLAYER_VICTORY_POINTS ", PLAYER_VICTORY_POINTS);
+		registerNumber("PLAYER_BATTLE_POINTS ", PLAYER_BATTLE_POINTS);
+		registerNumber("PLAYER_PRAYER_POINTS ", PLAYER_PRAYER_POINTS);
+		registerNumber("PLAYER_AVAILABLE_ARMY_TOKENS ", PLAYER_AVAILABLE_ARMY_TOKENS);
+		registerNumber("PLAYER_ROW_ONE_MOVE_USED ", PLAYER_ROW_ONE_MOVE_USED);
+		registerNumber("PLAYER_ROW_ONE_RECRUIT_USED ", PLAYER_ROW_ONE_RECRUIT_USED);
+		registerNumber("PLAYER_ROW_TWO_MOVE_USED ", PLAYER_ROW_TWO_MOVE_USED);
+		registerNumber("PLAYER_ROW_TWO_UPGRADE_PYRAMID_USED ", PLAYER_ROW_TWO_UPGRADE_PYRAMID_USED);
+		registerNumber("PLAYER_ROW_TWO_PRAY_USED ", PLAYER_ROW_TWO_PRAY_USED);
+		registerNumber("PLAYER_ROW_THREE_PRAY_USED ", PLAYER_ROW_THREE_PRAY_USED);
+		registerNumber("PLAYER_ROW_THREE_BUILD_WHITE_USED ", PLAYER_ROW_THREE_BUILD_WHITE_USED);
+		registerNumber("PLAYER_ROW_THREE_BUILD_RED_USED ", PLAYER_ROW_THREE_BUILD_RED_USED);
+		registerNumber("PLAYER_ROW_THREE_BUILD_BLUE_USED ", PLAYER_ROW_THREE_BUILD_BLUE_USED);
+		registerNumber("PLAYER_ROW_THREE_BUILD_BLACK_USED ", PLAYER_ROW_THREE_BUILD_BLACK_USED);
+		registerNumber("PLAYER_ACTION_TOKEN_LEFT ", PLAYER_ACTION_TOKEN_LEFT);
+		registerNumber("PLAYER_TEMPLE_COUNT ", PLAYER_TEMPLE_COUNT);
+		registerNumber("PLAYER_BATTLE_CARD_AVALIABLE ", PLAYER_BATTLE_CARD_AVALIABLE);
+		registerNumber("PLAYER_DAWN_TOKEN ", PLAYER_DAWN_TOKEN);
+		registerNumber("PLAYER_SILVER_TOKEN_USED ", PLAYER_SILVER_TOKEN_USED);
+		registerNumber("PLAYER_GOLD_TOKEN_USED ", PLAYER_GOLD_TOKEN_USED);
+		registerNumber("PLAYER_DAWN_STRENGTH ", PLAYER_DAWN_STRENGTH);
+		registerNumber("PLAYER_SELECTED_ORDER ", PLAYER_SELECTED_ORDER);
+		registerNumber("PLAYER_ORDER ", PLAYER_ORDER);
+		registerNumber("PLAYER_POWERS ", PLAYER_POWERS);
+		registerNumber("RECRUIT_BEAST ", RECRUIT_BEAST);
+		registerNumber("BEAST_POSITION ", BEAST_POSITION);
+		registerNumber("BEAST_AVAILABLE ", BEAST_AVAILABLE);
+		registerNumber("DI_DISCARD ", DI_DISCARD);
+		registerNumber("CURRENT_PLAYER_DI ", CURRENT_PLAYER_DI);
+		registerNumber("CURRENT_PLAYER_ACTIVATED_DI ", CURRENT_PLAYER_ACTIVATED_DI);
+		registerNumber("DI_CARD_PER_PLAYER ", DI_CARD_PER_PLAYER);
+		registerNumber("STATE_VETO_PLAYER ", STATE_VETO_PLAYER);
+		registerNumber("STATE_VETO_DI_CARD ", STATE_VETO_DI_CARD);
+		registerNumber("STATE_PLAYER_VETO_DONE ", STATE_PLAYER_VETO_DONE);
+		registerNumber("STATE_PLAYER_DOING_VETO_ON_VETO ", STATE_PLAYER_DOING_VETO_ON_VETO);
+		registerNumber("MOVE_FREE_BREACH_WALL ", MOVE_FREE_BREACH_WALL);
+		registerNumber("MOVE_FREE_TELEPORT ", MOVE_FREE_TELEPORT);
+		registerNumber("AVAILABLE_DI ", AVAILABLE_DI);
+		registerNumber("PICK_DI_STATE ", PICK_DI_STATE);
+		registerNumber("PICK_DI_MOVE_REST_TO_DISCARD ", PICK_DI_MOVE_REST_TO_DISCARD);
+		registerNumber("RAINING_FIRE_STATE ", RAINING_FIRE_STATE);
+		registerNumber("ESCAPE_PICKED ", ESCAPE_PICKED);
+		registerNumber("ESCAPE_TILE_PICKED ", ESCAPE_TILE_PICKED);
+		registerNumber("STATE_PICK_ATTACKER_DIVINE_WOUND ", STATE_PICK_ATTACKER_DIVINE_WOUND);
+		registerNumber("STATE_PICK_DEFENDER_DIVINE_WOUND ", STATE_PICK_DEFENDER_DIVINE_WOUND);
+		registerNumber("STATE_PICK_ATTACKER_TACTICAL_CHOICE ", STATE_PICK_ATTACKER_TACTICAL_CHOICE);
+		registerNumber("STATE_PICK_DEFENDER_TACTICAL_CHOICE ", STATE_PICK_DEFENDER_TACTICAL_CHOICE);
+	}
+
+	public static String describeCanonicalFormat(ByteCanonicalForm canonicalForm) {
+
+		byte[] bs = canonicalForm.getCanonicalForm();
+
+		return describeCanonicalFormat(bs);
+
+	}
+
+	public static String describeCanonicalFormat(byte[] bs) {
+
+		StringBuilder build = new StringBuilder();
+
+		for (int i = 0; i < bs.length; i++) {
+			byte b = bs[i];
+			if (b != 0) {
+
+				getDescription(i, build);
+
+				build.append(" is ");
+				build.append(b);
+				build.append("\n");
+			}
+
+		}
 		
+		return build.toString();
+	}
+
+	private static void getDescription(int index, StringBuilder build) {
+		int previous = 0;
+		for (int i = 0; i < NUMBER_LIST.size(); i++) {
+			Integer next = NUMBER_LIST.get(i);
+
+			if (next > index) {
+				int nameIndex = i - 1;
+				int delta = index - previous;
+				fillName(build, index, nameIndex, delta);
+				return;
+			}
+			previous = next;
+		}
+		int delta = index - previous;
+		fillName(build, index, NAME_LIST.size() - 1, delta);
+	}
+
+	private static void fillName(StringBuilder build, int index, int nameIndex, int delta) {
+		build.append(index);
+		build.append(" ");
+		build.append(NAME_LIST.get(nameIndex));
+		build.append(" + ");
+		build.append(delta);
+	}
+
+	public static void main(String[] args) {
+
 		System.out.println("Board Inventory");
 		System.out.println("ROUND_NUMBER " + ROUND_NUMBER);
-		
+
 		System.out.println("STATE_RECRUIT " + STATE_RECRUIT);
 		System.out.println("STATE_FREE_RECRUIT " + STATE_FREE_RECRUIT);
 		System.out.println("STATE_MOVE " + STATE_MOVE);
@@ -431,14 +608,12 @@ public class BoardInventory {
 		System.out.println("STATE_PICK_DEFENDER_DIVINE_WOUND " + STATE_PICK_DEFENDER_DIVINE_WOUND);
 		System.out.println("STATE_PICK_ATTACKER_TACTICAL_CHOICE " + STATE_PICK_ATTACKER_TACTICAL_CHOICE);
 		System.out.println("STATE_PICK_DEFENDER_TACTICAL_CHOICE " + STATE_PICK_DEFENDER_TACTICAL_CHOICE);
-		
-		
+
 		System.out.println("TOTAL_STATE_COUNT " + TOTAL_STATE_COUNT);
 
 	}
 
 }
-
 
 //Board Inventory
 //ROUND_NUMBER 0

@@ -31,7 +31,7 @@ public class Options {
 	 * try to explore more options. Used to end games quickly if there is a clear
 	 * winner after X moves on average.
 	 */
-	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 300;
+	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 400;
 
 	/**
 	 * Number of iterations to coach. In each iteration, games are played and then
@@ -49,7 +49,7 @@ public class Options {
 
 	// number of games to play when training the neural network
 	// TODO reset to 100
-	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 200;
+	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 100;
 
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network

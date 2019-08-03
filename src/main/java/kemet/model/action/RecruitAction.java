@@ -393,8 +393,8 @@ public class RecruitAction extends DiCardAction {
 
 				addRecruitArmySizeChoice(pick.choiceList);
 
-				addGenericDiCardChoice(pick.choiceList);
-				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
+//				addGenericDiCardChoice(pick.choiceList);
+//				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
 
 
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
@@ -406,8 +406,8 @@ public class RecruitAction extends DiCardAction {
 
 				addRecruitBeastChoice(pick.choiceList);
 
-				addGenericDiCardChoice(pick.choiceList);
-				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
+//				addGenericDiCardChoice(pick.choiceList);
+//				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
 
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 				return pick.validate();

@@ -27,6 +27,8 @@ public class StackingMCTS {
 	public static final float EPSILON = 0.00000001f;
 
 	public Game game;
+	
+	public ByteCanonicalForm currentSimulationStartingPointCanonicalForm;
 
 	public List<TrainExample> trainExamples = new ArrayList<>();
 
@@ -122,7 +124,10 @@ public class StackingMCTS {
 
 	public PolicyVector getActionProbabilityAfterSearch(float temperature) {
 
-		ByteCanonicalForm gameString = game.getCanonicalForm(game.getNextPlayer());
+		// THIS_IS_WRONG;
+		// ByteCanonicalForm gameString = game.getCanonicalForm(game.getNextPlayer());
+		
+		 ByteCanonicalForm gameString = currentSimulationStartingPointCanonicalForm;
 
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
@@ -280,6 +285,8 @@ public class StackingMCTS {
 		Game clone = game.clone();
 		clone.enterSimulationMode(clone.getNextPlayer(), this);
 		clone.setPrintActivations(Options.PRINT_MCTS_SEARCH_ACTIONS);
+		
+		currentSimulationStartingPointCanonicalForm = clone.getCanonicalForm(game.getNextPlayer());
 		searchData.game = clone;
 		runSearchUntilNeuralNetPredict();
 	}
