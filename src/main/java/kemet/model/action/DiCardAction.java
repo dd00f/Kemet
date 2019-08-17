@@ -28,7 +28,7 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 	public Player player;
 
 	private VetoAction veto;
-	private Action diAction;
+	//private Action diAction;
 
 	public Action parent;
 
@@ -42,7 +42,7 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 		player = null;
 
 		veto = null;
-		diAction = null;
+		//diAction = null;
 
 		parent = null;
 	}
@@ -55,9 +55,9 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 		if (veto != null) {
 			veto.validate(this, currentGame);
 		}
-		if (diAction != null) {
-			diAction.validate(this, currentGame);
-		}
+//		if (diAction != null) {
+//			diAction.validate(this, currentGame);
+//		}
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
 		}
@@ -71,9 +71,9 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 		if (veto != null) {
 			veto.relink(clone);
 		}
-		if (diAction != null) {
-			diAction.relink(clone);
-		}
+//		if (diAction != null) {
+//			diAction.relink(clone);
+//		}
 		super.relink(clone);
 
 	}
@@ -88,11 +88,11 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			clone.veto.setParent(clone);
 		}
 
-		clone.diAction = diAction;
-		if (diAction != null) {
-			clone.diAction = diAction.deepCacheClone();
-			clone.diAction.setParent(clone);
-		}
+//		clone.diAction = diAction;
+//		if (diAction != null) {
+//			clone.diAction = diAction.deepCacheClone();
+//			clone.diAction.setParent(clone);
+//		}
 
 		clone.parent = parent;
 
@@ -105,9 +105,9 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			veto.release();
 		}
 
-		if (diAction != null) {
-			diAction.release();
-		}
+//		if (diAction != null) {
+//			diAction.release();
+//		}
 		clear();
 	}
 
@@ -116,7 +116,7 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 		game = null;
 		player = null;
 		veto = null;
-		diAction = null;
+//		diAction = null;
 		parent = null;
 
 		super.clear();
@@ -197,18 +197,18 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			return veto.getNextPlayerChoicePick();
 		}
 
-		if (diAction != null) {
-			PlayerChoicePick tempNextChoice = diAction.getNextPlayerChoicePick();
-			if (tempNextChoice == null) {
-				diAction = null;
-			} else {
-				return tempNextChoice;
-			}
-		}
+//		if (diAction != null) {
+//			PlayerChoicePick tempNextChoice = diAction.getNextPlayerChoicePick();
+//			if (tempNextChoice == null) {
+//				diAction = null;
+//			} else {
+//				return tempNextChoice;
+//			}
+//		}
 
-		if (isEnded()) {
-			return null;
-		}
+//		if (isEnded()) {
+//			return null;
+//		}
 
 		return null;
 
@@ -237,9 +237,9 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			veto.fillCanonicalForm(cannonicalForm, playerIndex);
 		}
 
-		if (diAction != null) {
-			diAction.fillCanonicalForm(cannonicalForm, playerIndex);
-		}
+//		if (diAction != null) {
+//			diAction.fillCanonicalForm(cannonicalForm, playerIndex);
+//		}
 
 	}
 
@@ -257,15 +257,17 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			applyManaTheftDiCard();
 		} else if (index == DiCardList.DIVINE_MEMORY.index) {
 			PickDiCardAction pickAction = PickDiCardAction.create(game, player, this);
-			pickAction.moveToDiscard = false;
-			DiCardList.copyArray(game.discardedDiCardList, pickAction.availableDiCards);
+			pickAction.pickFromDiscard = true;
+			// DiCardList.copyArray(game.discardedDiCardList, pickAction.availableDiCards);
 			// can't pick divine memory back.
-			pickAction.availableDiCards[DiCardList.DIVINE_MEMORY.index] = 0;
-			diAction = pickAction;
+			// pickAction.availableDiCards[DiCardList.DIVINE_MEMORY.index] = 0;
+//			diAction = pickAction;
+			stackPendingActionOnParent(pickAction);
 		} else if (index == DiCardList.RAINING_FIRE.index) {
 
 			RainingFireAction rfa = RainingFireAction.create(game, player, this);
-			diAction = rfa;
+//			diAction = rfa;
+			stackPendingActionOnParent(rfa);
 
 		} else if (index == DiCardList.ENLISTMENT.index) {
 			RecruitAction recruit = RecruitAction.create(game, player, this);
@@ -274,7 +276,8 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 			if (player.hasPower(PowerList.BLUE_1_RECRUITING_SCRIBE_1)) {
 				recruit.freeRecruitLeft += 2;
 			}
-			diAction = recruit;
+//			diAction = recruit;
+			stackPendingActionOnParent(recruit);
 
 		} else {
 			log.error("unknown di card index {}", index);
@@ -323,9 +326,9 @@ public abstract class DiCardAction extends EndableAction implements DiCardExecut
 		if (veto != null) {
 			veto.enterSimulationMode(playerIndex);
 		}
-		if (diAction != null) {
-			diAction.enterSimulationMode(playerIndex);
-		}
+//		if (diAction != null) {
+//			diAction.enterSimulationMode(playerIndex);
+//		}
 		super.enterSimulationMode(playerIndex);
 	}
 

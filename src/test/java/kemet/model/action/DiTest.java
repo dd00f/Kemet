@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import kemet.data.TwoPlayerGame;
 import kemet.model.BattleCard;
 import kemet.model.BeastList;
+import kemet.model.BoardInventory;
 import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.PowerList;
@@ -375,6 +376,7 @@ public class DiTest extends TwoPlayerGameTest {
 
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 4 card = 7
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE));
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_SWAP);
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
@@ -406,6 +408,8 @@ public class DiTest extends TwoPlayerGameTest {
 
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 4 card = 7
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE));
+		
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_KEEP);
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
@@ -437,6 +441,7 @@ public class DiTest extends TwoPlayerGameTest {
 
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 1 card = 4
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE));
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_SWAP);
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
@@ -468,6 +473,7 @@ public class DiTest extends TwoPlayerGameTest {
 
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 1 card = 4
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE));
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_KEEP);
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
@@ -1130,6 +1136,132 @@ public class DiTest extends TwoPlayerGameTest {
 
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
+	
+	@Test
+	public void RAINING_FIRE_midTurn() {
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+		
+		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
+
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		assertEquals(7, redPlayer.getPrayerPoints());
+
+		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+
+		assertEquals(3, tileByName.getArmy().armySize);
+		
+		startRowOneMove();
+		
+		activateDiCard(DiCardList.RAINING_FIRE);
+
+		rainingFireToTile(tileByName);
+
+		assertEquals(2, tileByName.getArmy().armySize);
+
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
+
+		assertEquals(6, redPlayer.getPrayerPoints());
+	}
+	
+	@Test
+	public void RAINING_FIRE_midTurn_noVeto() {
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+		
+		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
+
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		assertEquals(7, redPlayer.getPrayerPoints());
+
+		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+
+		assertEquals(3, tileByName.getArmy().armySize);
+		
+		startRowOneMove();
+		
+		activateDiCard(DiCardList.RAINING_FIRE);
+		
+		skipVeto();
+
+		rainingFireToTile(tileByName);
+
+		assertEquals(2, tileByName.getArmy().armySize);
+
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
+
+		assertEquals(6, redPlayer.getPrayerPoints());
+	}
+	
+
+	@Test
+	public void RAINING_FIRE_midTurn_recruit_noVeto() {
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+		
+		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
+
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		assertEquals(7, redPlayer.getPrayerPoints());
+
+		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+
+		assertEquals(3, tileByName.getArmy().armySize);
+		
+		startRecruit();
+		
+		activateDiCard(DiCardList.RAINING_FIRE);
+		
+		game.enterSimulationMode(1, null, 224479744080311l);
+		
+		skipVeto();
+
+		rainingFireToTile(tileByName);
+
+		assertEquals(2, tileByName.getArmy().armySize);
+
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
+
+		assertEquals(6, redPlayer.getPrayerPoints());
+	}
+	
+	@Test
+	public void RAINING_FIRE_midrecruit_noVeto() {
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+		
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		assertEquals(7, redPlayer.getPrayerPoints());
+
+		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+
+		assertEquals(3, tileByName.getArmy().armySize);
+		
+		startRecruit();
+		
+		activateDiCard(DiCardList.RAINING_FIRE);
+		
+		skipVeto();
+
+		rainingFireToTile(tileByName);
+
+		assertEquals(2, tileByName.getArmy().armySize);
+		
+		game.resetCachedChoices();
+		game.getNextPlayerChoicePick();
+
+		endRecruit();
+
+		assertEquals(6, redPlayer.getPrayerPoints());
+	}
+
 
 	@Test
 	public void RAINING_FIRE_skip_devourer() {
@@ -1196,8 +1328,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 		assertEquals(null, entrance.getArmy());
 
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ESCAPE));
 		activateDiCard(DiCardList.ESCAPE);
 
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_ESCAPE_SELECT_TILE));
 		moveEscapeTile(entrance);
 
 		prayRowTwo();
@@ -1206,6 +1340,35 @@ public class DiTest extends TwoPlayerGameTest {
 		assertEquals(5, entrance.getArmy().armySize);
 	}
 
+	@Test
+	public void ESCAPE_skip() {
+
+		game.resetDiCards();
+		game.giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
+
+		Tile from = bluePlayer.cityTiles.get(1);
+		Tile tileByName = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile entrance = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
+
+		// teleport to middle obelisk
+		moveRowOneArmy(redPlayer.cityTiles.get(1), tileByName, 5);
+		endMove();
+
+		// blue attacks middle obelisk
+		moveRowTwoArmy(from, tileByName, 3);
+
+		assertEquals(null, entrance.getArmy());
+
+		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ESCAPE));
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.SKIP_ESCAPE);
+
+		assertEquals( 0, getCanonicalValue(BoardInventory.STATE_PICK_ESCAPE));
+		
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
+				BattleCard.PHALANX_DEFENSE_CARD);
+
+	}
+	
 	@Test
 	public void ESCAPE_no_choice() {
 

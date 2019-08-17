@@ -161,7 +161,7 @@ public class SearchPooler {
 				movesToReachBoard = game.getActivatedActions();
 			}
 
-			game = null;
+			// game = null;
 		}
 	}
 }

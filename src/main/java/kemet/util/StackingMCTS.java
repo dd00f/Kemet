@@ -27,7 +27,7 @@ public class StackingMCTS {
 	public static final float EPSILON = 0.00000001f;
 
 	public Game game;
-	
+
 	public ByteCanonicalForm currentSimulationStartingPointCanonicalForm;
 
 	public List<TrainExample> trainExamples = new ArrayList<>();
@@ -124,14 +124,18 @@ public class StackingMCTS {
 
 	public PolicyVector getActionProbabilityAfterSearch(float temperature) {
 
-		// THIS_IS_WRONG;
-		// ByteCanonicalForm gameString = game.getCanonicalForm(game.getNextPlayer());
-		
-		 ByteCanonicalForm gameString = currentSimulationStartingPointCanonicalForm;
+		ByteCanonicalForm gameString = currentSimulationStartingPointCanonicalForm;
 
 		int actionSize = game.getActionSize();
 		int[] actionHitCounts = new int[actionSize];
 		MctsBoardInformation boardInformation = getBoardInformation(gameString);
+
+		if (boardInformation.boardHitCountNs == 0) {
+			game.printDescribeGame();
+			throw new IllegalStateException(
+					"Tried to get action probabilities for a board that had zero hit count. Usually indicates that simulation is breaking the game.");
+		}
+
 		Map<Integer, Integer> map = boardInformation.boardActionHitCountNsa;
 
 		Set<Entry<Integer, Integer>> actionIndexCount = map.entrySet();
@@ -154,12 +158,6 @@ public class StackingMCTS {
 
 		pooler.getActionProbabilityTotalCount++;
 		pooler.getActionProbabilityTotalDepth += maxSearchDepth;
-
-		// TODO remove
-		int REMOVE_ME;
-		if (probabilitiesOfAllActions.vector[0] > 0 && gameString.getCanonicalForm()[11] != 0) {
-			throw new IllegalStateException("Game just allowed action zero on defense card pick.");
-		}
 
 		return probabilitiesOfAllActions;
 	}
@@ -285,7 +283,7 @@ public class StackingMCTS {
 		Game clone = game.clone();
 		clone.enterSimulationMode(clone.getNextPlayer(), this);
 		clone.setPrintActivations(Options.PRINT_MCTS_SEARCH_ACTIONS);
-		
+
 		currentSimulationStartingPointCanonicalForm = clone.getCanonicalForm(game.getNextPlayer());
 		searchData.game = clone;
 		runSearchUntilNeuralNetPredict();
@@ -355,7 +353,9 @@ public class StackingMCTS {
 					newLayer.currentPlayer = currentPlayerIndex;
 					addSearchLayer(newLayer);
 
-					activateActionOnGame(currentGame, currentPlayerIndex, canonicalForm, actionIndexOfNextSimulationA);
+					currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
+					// activateActionOnGame(currentGame, currentPlayerIndex, canonicalForm,
+					// actionIndexOfNextSimulationA);
 
 				}
 			}
@@ -444,6 +444,26 @@ public class StackingMCTS {
 						// action isn't in a loop
 						bestActionValue = currentActionValueU;
 						bestActionIndex = actionIndexA;
+					} else {
+						// flag action index as loop inducing.
+						MctsBoardInformation boardInformation = getBoardInformation(boardS);
+
+						// lower the value of actions that leads to loops.
+						Float currentValue = boardInformation.valueAtBoardActionQsa.get(actionIndexA);
+						float newValue = -1;
+						if (currentValue != null) {
+							newValue = (currentValue - 0.1f);
+							if (currentValue > 0) {
+								newValue = newValue / 2;
+							} else {
+								newValue *= 2;
+							}
+
+							if (newValue < -1) {
+								newValue = -1;
+							}
+						}
+						boardInformation.valueAtBoardActionQsa.put(actionIndexA, newValue);
 					}
 				}
 			}
@@ -549,9 +569,11 @@ public class StackingMCTS {
 			// update the value of the current board+action
 			Integer currentBoardActionHitCountNsa = boardInformation.boardActionHitCountNsa.get(actionIndexA);
 
-			// merge the new board value with the old one proportionally
-			newValue = (currentBoardActionHitCountNsa * previousBoardActionValueQ + newBoardActionValueV)
-					/ (currentBoardActionHitCountNsa + 1);
+			if (currentBoardActionHitCountNsa != null) {
+				// merge the new board value with the old one proportionally
+				newValue = (currentBoardActionHitCountNsa * previousBoardActionValueQ + newBoardActionValueV)
+						/ (currentBoardActionHitCountNsa + 1);
+			}
 		}
 
 		log.debug("Adjusted action {} from value {} merged with {} resulting value {} at depth {}", describeAction,

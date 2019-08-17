@@ -13,6 +13,7 @@ public class Army implements Model {
 	public byte armySize = 0;
 	public Player owningPlayer;
 	public Tile tile;
+	public Tile battleTile;
 
 	private static Cache<Army> CACHE = new Cache<Army>(() -> new Army());
 
@@ -28,7 +29,7 @@ public class Army implements Model {
 		armySize = 0;
 		owningPlayer = null;
 		tile = null;
-
+		battleTile = null;
 	}
 
 	public static Army create() {
@@ -47,6 +48,7 @@ public class Army implements Model {
 		clone.armySize = armySize;
 		clone.owningPlayer = owningPlayer;
 		clone.tile = tile;
+		clone.battleTile  =battleTile;
 
 		return clone;
 	}
@@ -56,12 +58,14 @@ public class Army implements Model {
 
 		owningPlayer = null;
 		tile = null;
+		battleTile = null;
 
 		CACHE.release(this);
 	}
 
 	public void relink(KemetGame game) {
 		tile = game.getTileByCopy(tile);
+		battleTile = game.getTileByCopy(battleTile);
 		owningPlayer = game.getPlayerByCopy(owningPlayer);
 	}
 
@@ -119,6 +123,7 @@ public class Army implements Model {
 		}
 
 		moveToTile(null);
+		moveToBattleTile(null);
 
 		owningPlayer.armyList.remove(this);
 		owningPlayer.destroyedArmyList.add(this);
@@ -183,8 +188,8 @@ public class Army implements Model {
 
 	public void addBeast(Beast beastAdd) {
 		if (beast != null) {
-			log.warn("Army.addBeast with beast {} on army {} that already has a beast ", beastAdd.name, describeArmy());
-			return;
+			throw new IllegalStateException("Army.addBeast with beast " + beastAdd.name + " on army " + describeArmy()
+					+ " that already has a beast ");
 		}
 
 		if (beastAdd != null) {
@@ -192,11 +197,29 @@ public class Army implements Model {
 			if (success) {
 				beast = beastAdd;
 			} else {
-				log.warn("Army.addBeast on beast that wasnt in player inventory " + beastAdd.name);
+				throw new IllegalStateException(
+						"Army.addBeast on beast that wasnt in player inventory " + beastAdd.name);
 			}
 		}
 	}
 
+	public void moveToBattleTile(Tile newTile) {
+
+		if( newTile != null && newTile.getArmy() == null ) {
+			throw new IllegalStateException("moveToBattleTile can't be done on a tile without an opposing army");
+		}
+
+		if( battleTile != null ) {
+			battleTile.setBattleArmy(null);
+		}
+
+		battleTile = newTile;
+		
+		if( battleTile != null ) {
+			battleTile.setBattleArmy(this);
+		}
+	}
+	
 	public void moveToTile(Tile newTile) {
 
 		if (newTile != null && newTile.getArmy() == this) {
@@ -208,14 +231,18 @@ public class Army implements Model {
 			return;
 		}
 		if (newTile != null) {
+		
+			// reset battle tile 
+			moveToBattleTile( null );
+
 			newTile.setArmy(this);
 		}
 		if (tile != null) {
 			// remove the old army association
 			tile.setArmy(null);
+			
 		}
 		tile = newTile;
-
 	}
 
 	public boolean isArmySizeFull() {
@@ -281,6 +308,12 @@ public class Army implements Model {
 			builder.append(" on tile : ");
 			tile.describe(builder);
 		}
+		
+		if (battleTile != null) {
+			builder.append(" battling on tile : ");
+			battleTile.describe(builder);
+		}
+		
 		// builder.append("\n");
 	}
 
@@ -290,6 +323,7 @@ public class Army implements Model {
 
 		currentGame.validate(owningPlayer);
 		currentGame.validate(tile);
+		currentGame.validate(battleTile);
 	}
 
 	public byte getAttackStrength(boolean isBeastIgnored) {

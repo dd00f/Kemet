@@ -147,6 +147,16 @@ public class BeastRecruitAction extends EndableAction {
 		if (isEnded()) {
 			return null;
 		}
+		
+		// beast was recruited elsewhere, cancel this action.
+		if( !player.availableBeasts.contains(beast)) {
+			// happens during:
+			// - move, leave beast behind, trigger battle
+			// - win battle, trigger DI card to do a recruit
+			// - recruit beast elsewhere
+			// - get back to this recruit action.
+			return null;
+		}
 
 		// pick tile
 		PlayerChoicePick pick = new PlayerChoicePick(game, player, this);

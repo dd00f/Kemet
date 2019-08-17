@@ -26,8 +26,8 @@ public class PickDiCardAction extends EndableAction {
 
 	private KemetGame game;
 	private Action parent;
-	public byte[] availableDiCards = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
-	public boolean moveToDiscard;
+	//public byte[] availableDiCards = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
+	public boolean pickFromDiscard;
 
 	public static Cache<PickDiCardAction> CACHE = new Cache<PickDiCardAction>(() -> new PickDiCardAction());
 
@@ -39,13 +39,14 @@ public class PickDiCardAction extends EndableAction {
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
 		cannonicalForm.set(BoardInventory.PICK_DI_STATE, player.getState(playerIndex));
-		if (moveToDiscard) {
+		if (pickFromDiscard) {
 
 			cannonicalForm.set(BoardInventory.PICK_DI_MOVE_REST_TO_DISCARD, (byte) 1);
 		}
+		
+		byte[] diCardList = getDiCardList();
 
-		DiCardList.fillCanonicalForm(availableDiCards, cannonicalForm, BoardInventory.AVAILABLE_DI);
-
+		DiCardList.fillCanonicalForm(diCardList, cannonicalForm, BoardInventory.AVAILABLE_DI);
 	}
 
 	@Override
@@ -53,8 +54,8 @@ public class PickDiCardAction extends EndableAction {
 		game = null;
 		player = null;
 		parent = null;
-		DiCardList.fillArray(availableDiCards, (byte) 0);
-		moveToDiscard = false;
+		//DiCardList.fillArray(availableDiCards, (byte) 0);
+		pickFromDiscard = false;
 
 	}
 
@@ -89,9 +90,9 @@ public class PickDiCardAction extends EndableAction {
 	private void copy(PickDiCardAction clone) {
 		clone.game = game;
 		clone.player = player;
-		clone.moveToDiscard = moveToDiscard;
+		clone.pickFromDiscard = pickFromDiscard;
 
-		DiCardList.copyArray(availableDiCards, clone.availableDiCards);
+		//DiCardList.copyArray(availableDiCards, clone.availableDiCards);
 
 		clone.parent = parent;
 
@@ -158,15 +159,28 @@ public class PickDiCardAction extends EndableAction {
 	}
 
 	public void addDiPickChoices(List<Choice> choiceList) {
+		
+		byte[] diCardList = getDiCardList();
 
-		for (int i = 0; i < availableDiCards.length; i++) {
-			byte b = availableDiCards[i];
+		for (int i = 0; i < diCardList.length; i++) {
+			byte b = diCardList[i];
 			if (b > 0) {
-				PickDiChoice choice = new PickDiChoice(game, player);
-				choice.index = i;
-				choiceList.add(choice);
+				// skip divine memory for discard pick
+				if( !pickFromDiscard || i != DiCardList.DIVINE_MEMORY.index ) {
+					PickDiChoice choice = new PickDiChoice(game, player);
+					choice.index = i;
+					choiceList.add(choice);
+				}
 			}
 		}
+	}
+
+	private byte[] getDiCardList() {
+		byte[] diCardList = game.visionDiCardList;
+		if( pickFromDiscard ) {
+			diCardList = game.discardedDiCardList;
+		}
+		return diCardList;
 	}
 
 	public class PickDiChoice extends PlayerChoice {
@@ -180,17 +194,17 @@ public class PickDiCardAction extends EndableAction {
 
 		@Override
 		public void choiceActivate() {
-			if (moveToDiscard) {
-				// cards have already been moved from selection
-				DiCardList.moveDiCard(availableDiCards, player.diCards, index, VISION_AVAILABLE_DI_CARDS,
-						player.name, "Picked card from selection", game);
-
-				DiCardList.moveAllDiCard(availableDiCards, game.availableDiCardList, VISION_AVAILABLE_DI_CARDS,
-						KemetGame.AVAILABLE_DI_CARDS, "DI card not picked", game);
-
-			} else {
+			if (pickFromDiscard) {
 				DiCardList.moveDiCard(game.discardedDiCardList, player.diCards, index, KemetGame.DISCARDED_DI_CARDS,
 						player.name, "Picked card from discard.", game);
+
+			} else {
+				// cards have already been moved from selection
+				DiCardList.moveDiCard(game.visionDiCardList, player.diCards, index, VISION_AVAILABLE_DI_CARDS,
+						player.name, "Picked card from selection", game);
+
+				DiCardList.moveAllDiCard(game.visionDiCardList, game.availableDiCardList, VISION_AVAILABLE_DI_CARDS,
+						KemetGame.AVAILABLE_DI_CARDS, "DI card not picked", game);
 			}
 
 			end();

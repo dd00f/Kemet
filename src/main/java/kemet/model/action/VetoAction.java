@@ -170,6 +170,9 @@ public class VetoAction extends EndableAction {
 				playerDoingVeto = player;
 			}
 			playerVetoDone[player.getIndex()] = true;
+			
+			// trigger next veto step
+			parent.getNextPlayerChoicePick();
 		}
 
 		@Override
@@ -211,6 +214,9 @@ public class VetoAction extends EndableAction {
 				useDiVetoCard(player);
 				isVetoed = false;
 			}
+			
+			// trigger DI card activation
+			parent.getNextPlayerChoicePick();
 
 			end();
 		}
@@ -272,6 +278,15 @@ public class VetoAction extends EndableAction {
 
 			if (playerVetoDone == null) {
 				playerVetoDone = new boolean[game.playerByInitiativeList.size()];
+				
+				for (Player currentPlayer : game.playerByInitiativeList) {
+					if (currentPlayer.getIndex() == diCardPlayer.getIndex()) {
+						playerVetoDone[currentPlayer.getIndex()] = true;
+					}
+					else if (currentPlayer.diCards[DiCardList.VETO.index] == 0 ) {
+						playerVetoDone[currentPlayer.getIndex()] = true;
+					}
+				}
 			}
 
 			for (Player currentPlayer : game.playerByInitiativeList) {

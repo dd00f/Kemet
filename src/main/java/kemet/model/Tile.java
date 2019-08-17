@@ -25,6 +25,7 @@ public class Tile implements Model {
 	private byte pyramidLevel = 0;
 	public Player owningPlayer = null;
 	private Army army = null;
+	private Army battleArmy = null;
 	public boolean hasTemple = false;
 	public byte templeBonusPrayer = 0;
 	public byte templeBonusPoints = 0;
@@ -58,6 +59,7 @@ public class Tile implements Model {
 		pyramidLevel = 0;
 		owningPlayer = null;
 		army = null;
+		battleArmy = null;
 		hasTemple = false;
 		isWalled = false;
 		templeBonusPrayer = 0;
@@ -83,6 +85,7 @@ public class Tile implements Model {
 		owningPlayer = game.getPlayerByCopy(owningPlayer);
 
 		army = game.getArmyByCopy(army);
+		battleArmy = game.getArmyByCopy(battleArmy);
 	}
 
 	@Override
@@ -111,6 +114,7 @@ public class Tile implements Model {
 		clone.currentScoringPlayer = currentScoringPlayer;
 		clone.owningPlayer = owningPlayer;
 		clone.army = army;
+		clone.battleArmy = battleArmy;
 
 		return clone;
 	}
@@ -123,6 +127,7 @@ public class Tile implements Model {
 		owningPlayer = null;
 
 		army = null;
+		battleArmy = null;
 		currentScoringPlayer = null;
 
 		CACHE.release(this);
@@ -182,6 +187,14 @@ public class Tile implements Model {
 		return null;
 	}
 
+	public void setBattleArmy(Army battleArmy) {
+		this.battleArmy = battleArmy;
+	}
+
+	public Army getBattleArmy() {
+		return battleArmy;
+	}
+
 	public void setArmy(Army army) {
 		this.army = army;
 		checkToUpdatePyramidScoringPlayer();
@@ -199,9 +212,10 @@ public class Tile implements Model {
 				army.owningPlayer.addTemplePermanentVictoryPoint("temple bonus point of " + name);
 			}
 
-			if (army.owningPlayer.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
-				army.owningPlayer.modifyPrayerPoints((byte) 1, PowerList.BLACK_4_DIVINE_STRENGTH.toString());
-			}
+			// temple activation not done during the day.
+//			if (army.owningPlayer.hasPower(PowerList.BLACK_4_DIVINE_STRENGTH)) {
+//				army.owningPlayer.modifyPrayerPoints((byte) 1, PowerList.BLACK_4_DIVINE_STRENGTH.toString());
+//			}
 
 			if (templeArmyCost > 0) {
 				army.bleedArmy(templeArmyCost, "army cost of " + name);
@@ -280,7 +294,7 @@ public class Tile implements Model {
 	public int getEscapeChoiceIndex(int playerIndex) {
 		return ChoiceInventory.ESCAPE_TILE_CHOICE + getTileCanonicalIndex(playerIndex);
 	}
-	
+
 	public void setSelected(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
 		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
 		cannonicalForm.set(BoardInventory.TILE_SELECTED + tileCanonicalIndex, value);
@@ -302,44 +316,48 @@ public class Tile implements Model {
 	}
 
 	public void fillCanonicalForm(ByteCanonicalForm canonicalForm, int playerIndex) {
-		
-		// the current player must always have its tiles at the same place for AI training
+
+		// the current player must always have its tiles at the same place for AI
+		// training
 		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
-		if( army != null ) {
-			int owningPlayerCanonicalIndex = army.owningPlayer.getCanonicalPlayerIndex(playerIndex);
-			
+
+		fillTileArmy(canonicalForm, playerIndex, tileCanonicalIndex, army);
+		fillTileArmy(canonicalForm, playerIndex, tileCanonicalIndex, battleArmy);
+
+		if (pyramidColor != Color.NONE) {
+			if (pyramidColor == Color.RED) {
+				canonicalForm.set(BoardInventory.TILE_RED_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel);
+			} else if (pyramidColor == Color.BLUE) {
+				canonicalForm.set(BoardInventory.TILE_BLUE_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel);
+			} else if (pyramidColor == Color.WHITE) {
+				canonicalForm.set(BoardInventory.TILE_WHITE_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel);
+			} else if (pyramidColor == Color.BLACK) {
+				canonicalForm.set(BoardInventory.TILE_BLACK_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel);
+			}
+		}
+
+	}
+
+	private void fillTileArmy(ByteCanonicalForm canonicalForm, int playerIndex, int tileCanonicalIndex, Army tileArmy) {
+		if (tileArmy != null) {
+			int owningPlayerCanonicalIndex = tileArmy.owningPlayer.getCanonicalPlayerIndex(playerIndex);
+
 			int startArmySizeOffset = BoardInventory.TILE_PLAYER_ARMY_SIZE;
 			int armySizePlayerOffset = owningPlayerCanonicalIndex * BoardInventory.TILE_COUNT;
 			int armySizePlayerTileOffset = startArmySizeOffset + armySizePlayerOffset + tileCanonicalIndex;
-			canonicalForm.set(armySizePlayerTileOffset, army.armySize);
+			canonicalForm.set(armySizePlayerTileOffset, tileArmy.armySize);
 
-			if( army.beast != null ) {
+			if (tileArmy.beast != null) {
 
 				int startOffset = BoardInventory.BEAST_POSITION;
-				int playerOffset =armySizePlayerOffset * BeastList.BEAST_INDEXER;
-				int beastOffset = army.beast.index * BoardInventory.TILE_COUNT;
+				int playerOffset = armySizePlayerOffset * BeastList.BEAST_INDEXER;
+				int beastOffset = tileArmy.beast.index * BoardInventory.TILE_COUNT;
 				int finalOffset = startOffset + playerOffset + beastOffset + index;
-				
+
 				canonicalForm.set(finalOffset, (byte) 1);
 			}
 
 		}
-		
-		if( pyramidColor != Color.NONE ) {
-			if( pyramidColor == Color.RED ) {
-				canonicalForm.set(BoardInventory.TILE_RED_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel );
-			}
-			else if( pyramidColor == Color.BLUE ) {
-				canonicalForm.set(BoardInventory.TILE_BLUE_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel );
-			}
-			else if( pyramidColor == Color.WHITE ) {
-				canonicalForm.set(BoardInventory.TILE_WHITE_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel );
-			}
-			else if( pyramidColor == Color.BLACK ) {
-				canonicalForm.set(BoardInventory.TILE_BLACK_PYRAMID_LEVEL + tileCanonicalIndex, pyramidLevel );
-			}
-		}
-		
 	}
 
 }

@@ -2,6 +2,9 @@ package kemet;
 
 public class Options {
 
+	// TODO set to false
+	public static final boolean COACH_VALIDATE_ALL_NNET_PREDICTION_USED = true;
+
 	public static boolean COACH_PRINT_GAME_AFTER_SELF_TRAINING = false;
 
 	// when set to false, epoch will be executed by the dl4j api without shuffling 

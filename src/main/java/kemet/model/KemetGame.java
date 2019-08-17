@@ -43,6 +43,7 @@ public class KemetGame implements Model, Game {
 	public List<Player> playerByInitiativeList = new ArrayList<>();
 	public byte[] availableDiCardList = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
 	public byte[] discardedDiCardList = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
+	public byte[] visionDiCardList = new byte[DiCardList.TOTAL_DI_CARD_TYPE_COUNT];
 	public List<Power> availablePowerList = new ArrayList<>();
 	public byte roundNumber = 0;
 	public boolean victoryConditionTriggered = false;
@@ -107,6 +108,7 @@ public class KemetGame implements Model, Game {
 		playerByInitiativeList.clear();
 		DiCardList.initializeGame(availableDiCardList);
 		DiCardList.fillArray(discardedDiCardList, (byte) 0);
+		DiCardList.fillArray(visionDiCardList, (byte) 0);
 		availablePowerList.clear();
 
 		PowerList.initializeGame(this);
@@ -138,6 +140,7 @@ public class KemetGame implements Model, Game {
 
 		DiCardList.copyArray(availableDiCardList, clone.availableDiCardList);
 		DiCardList.copyArray(discardedDiCardList, clone.discardedDiCardList);
+		DiCardList.copyArray(visionDiCardList, clone.visionDiCardList);
 
 		clone.availablePowerList.clear();
 		clone.availablePowerList.addAll(availablePowerList);
@@ -227,6 +230,7 @@ public class KemetGame implements Model, Game {
 
 		count += DiCardList.sumArray(availableDiCardList);
 		count += DiCardList.sumArray(discardedDiCardList);
+		count += DiCardList.sumArray(visionDiCardList);
 
 		for (Player player : playerByInitiativeList) {
 			count += DiCardList.sumArray(player.diCards);
@@ -489,7 +493,10 @@ public class KemetGame implements Model, Game {
 		for (Player player : playerByInitiativeList) {
 			List<Army> armyList = new ArrayList<>(player.armyList);
 			for (Army army : armyList) {
-				army.tile.activateTemple();
+				Tile tile = army.tile;
+				if (tile.hasTemple && tile.templeArmyCost <= 0) {
+					tile.activateTemple();
+				}
 			}
 		}
 	}
@@ -617,16 +624,16 @@ public class KemetGame implements Model, Game {
 
 	@Override
 	public void replayMultipleActions(int[] actions) {
-		
+
 		Map<ByteCanonicalForm, String> canonicalFormMap = new HashMap<ByteCanonicalForm, String>();
-		
+
 		for (int i = 0; i < actions.length; i++) {
 			int j = actions[i];
 			activateAction(getNextPlayer(), j);
-			
+
 			ByteCanonicalForm nextForm = getCanonicalForm(getNextPlayer());
-			if( canonicalFormMap.get(nextForm) != null ) {
-				throw new IllegalStateException("Game rotated to identical form");
+			if (canonicalFormMap.get(nextForm) != null) {
+//				throw new IllegalStateException("Game rotated to identical form");
 			}
 			canonicalFormMap.put(nextForm, "busy");
 		}
@@ -687,10 +694,10 @@ public class KemetGame implements Model, Game {
 				+ printChoiceList(currentPlayerChoicePick) + "\nPlayer :\n"
 				+ currentPlayerChoicePick.player.describePlayer();
 		LOGGER.error(message);
-		
+
 		this.canonicalForm = null;
 		getCanonicalForm(player);
-		
+
 		throw new IllegalStateException(message);
 	}
 

@@ -30,7 +30,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class Coach {
 
-	private static final int PLAY_PRINT_INTERVAL = 20;
+	private static int PLAY_PRINT_INTERVAL = 50;
 
 	/**
 	 * Number of iterations to coach. In each iteration, {@link #numEps} games are
@@ -375,6 +375,10 @@ public class Coach {
 					newPooler.printStats(prefix + " new  ");
 					previousPooler.printStats(prefix + " prev ");
 				}
+				
+				if( episodeStep > Options.GAME_TRACK_MAX_ACTION_COUNT  ) {
+					break;
+				}
 			}
 
 			long duration = System.currentTimeMillis() - start;
@@ -471,40 +475,9 @@ public class Coach {
 
 		List<TrainExample> trainExamples = new ArrayList<>();
 
-		for (int k = 0; k < numEps; k++) {
-			Game createGame = gameFactory.createGame();
-			createGame.setPrintActivations(Options.PRINT_COACH_SEARCH_ACTIONS);
-			StackingMCTS mcts = new StackingMCTS(createGame, pooler, cpuct);
-			// reset the search tree
-			gameList[k] = mcts;
-		}
+		createGames(pooler, gameList);
 
-		int remainingGameCount = numEps;
-
-		int episodeStep = 0;
-
-		while (remainingGameCount > 0) {
-
-			episodeStep++;
-
-			remainingGameCount = runPooledGameAction(pooler, gameList, trainExamples, remainingGameCount, episodeStep);
-
-			if (episodeStep % PLAY_PRINT_INTERVAL == 0) {
-				pooler.printStats("Self play " + episodeStep + " | ");
-
-				if (episodeStep > 1500) {
-					try {
-						throw new IllegalStateException("Reached 1500 steps in a game.");
-					} catch (Exception ex) {
-
-					}
-					break;
-				}
-			}
-
-		}
-
-		pooler.printStats("Self play finished " + episodeStep + " | ");
+		playPooledGames(pooler, gameList, trainExamples);
 
 		// bookkeeping + plot progress
 		long now = System.currentTimeMillis();
@@ -523,8 +496,65 @@ public class Coach {
 		trainExamplesHistory.addAll(trainExamples);
 	}
 
-	private int runPooledGameAction(SearchPooler pooler, StackingMCTS[] gameList, List<TrainExample> trainExamples,
-			int remainingGameCount, int episodeStep) {
+	private void playPooledGames(SearchPooler pooler, StackingMCTS[] gameList, List<TrainExample> trainExamples) {
+		int episodeStep = 0;
+
+		while (hasRemainingGame(gameList)) {
+
+			episodeStep++;
+
+			runPooledGameAction(pooler, gameList, trainExamples, episodeStep);
+
+			if (episodeStep % PLAY_PRINT_INTERVAL == 0) {
+				pooler.printStats("Self play " + episodeStep + " | ");
+			}
+
+			if (episodeStep > Options.GAME_TRACK_MAX_ACTION_COUNT) {
+
+				for (int i = 0; i < gameList.length; i++) {
+					StackingMCTS stackingMCTS = gameList[i];
+					if (stackingMCTS != null) {
+						stackingMCTS.game.setPrintActivations(true);
+						stackingMCTS.game.printDescribeGame();
+					}
+				}
+
+				try {
+					throw new IllegalStateException(
+							"Reached " + Options.GAME_TRACK_MAX_ACTION_COUNT + " steps in a game.");
+				} catch (Exception ex) {
+					log.error(ex);
+				}
+				break;
+			}
+
+		}
+
+		pooler.printStats("Self play finished " + episodeStep + " | ");
+	}
+
+	private boolean hasRemainingGame(StackingMCTS[] gameList) {
+		for (int i = 0; i < gameList.length; i++) {
+			StackingMCTS stackingMCTS = gameList[i];
+			if (stackingMCTS != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private void createGames(SearchPooler pooler, StackingMCTS[] gameList) {
+		for (int k = 0; k < numEps; k++) {
+			Game createGame = gameFactory.createGame();
+			createGame.setPrintActivations(Options.PRINT_COACH_SEARCH_ACTIONS);
+			StackingMCTS mcts = new StackingMCTS(createGame, pooler, cpuct);
+			// reset the search tree
+			gameList[k] = mcts;
+		}
+	}
+
+	private void runPooledGameAction(SearchPooler pooler, StackingMCTS[] gameList, List<TrainExample> trainExamples,
+			int episodeStep) {
 		// At temperature zero, do less exploration
 		int temperature = 0;
 		if (episodeStep < temperatureThreshold) {
@@ -547,12 +577,11 @@ public class Coach {
 					mcts.incrementCycle();
 
 					// purge ended games
-					remainingGameCount = checkIfGameEnded(gameList, remainingGameCount, j, mcts, trainExamples);
+					checkIfGameEnded(gameList, j, mcts, trainExamples);
 
 				} catch (Exception ex) {
 					// scrap games that generated errors
 					log.error("Unexpected error in Coach.runPooledGameAction", ex);
-					remainingGameCount--;
 					gameList[j] = null;
 				}
 			}
@@ -560,14 +589,11 @@ public class Coach {
 
 		pooler.cleanup();
 
-		return remainingGameCount;
 	}
 
-	private int checkIfGameEnded(StackingMCTS[] gameList, int remainingGameCount, int i, StackingMCTS mcts,
-			List<TrainExample> trainExamples) {
+	private void checkIfGameEnded(StackingMCTS[] gameList, int i, StackingMCTS mcts, List<TrainExample> trainExamples) {
 		if (mcts.game.isGameEnded()) {
 			gameList[i] = null;
-			remainingGameCount--;
 
 			int playerIndex = 0;
 			int playerZeroScore = mcts.game.getGameEnded(playerIndex);
@@ -583,7 +609,6 @@ public class Coach {
 						playerZeroScore);
 			}
 		}
-		return remainingGameCount;
 	}
 
 	private void activateActionOnGame(float temperature, StackingMCTS mcts) {
@@ -616,18 +641,19 @@ public class Coach {
 			game.activateAction(currentPlayer, actionIndex);
 		} catch (Exception ex) {
 			log.error("Activate action failed", ex);
-			
+
 			StringBuilder build = new StringBuilder();
 			game.describeGame(build);
-			
+
 			log.error(build.toString());
-			
+
 			// check MCTS for valid moves
 			MctsBoardInformation mctsBoardInformation = mcts.boardInformationMemory.get(canonicalForm);
-			log.error("Valid moves in the mcts board memory : " + ChoiceInventory.printValidMoves(mctsBoardInformation.validMoves));
-			
+			log.error("Valid moves in the mcts board memory : "
+					+ ChoiceInventory.printValidMoves(mctsBoardInformation.validMoves));
+
 			log.error(canonicalForm.printCanonicalForm());
-			
+
 			// activateFirstValidMoveOnError(game, currentPlayer, validMoves);
 			throw ex;
 		}
@@ -639,43 +665,66 @@ public class Coach {
 		pooler.fetchAllPendingPredictions();
 
 		finishSearch(gameList);
-		
-		// TODO remove this.
-		int TODOREMOVE;
+
+		if (Options.COACH_VALIDATE_ALL_NNET_PREDICTION_USED) {
+			validateAllPredictionsUsed(pooler);
+		}
+
+	}
+
+	private void validateAllPredictionsUsed(SearchPooler pooler) {
 		Collection<GameInformation> values = pooler.providedPredictions.values();
 		for (GameInformation gameInformation : values) {
-			if( gameInformation.usedCount == 0 ) {
-				gameInformation.game.printDescribeGame();
-				throw new IllegalStateException("Found a neural net prediction that wasn't used. " );
+			if (gameInformation.usedCount == 0) {
+				if (gameInformation.game != null) {
+					gameInformation.game.setPrintActivations(true);
+					gameInformation.game.printDescribeGame();
+				}
+				log.error("Found a neural net prediction that wasn't used. \n" + gameInformation.byteCanonicalForm);
+				gameInformation.usedCount++;
 			}
 		}
-		
 	}
 
 	private void finishSearch(StackingMCTS[] gameList) {
 		for (int j = 0; j < gameList.length; j++) {
 			StackingMCTS game = gameList[j];
 			if (game != null) {
-				try {
-					game.finishSearch();
-				} catch (Exception ex) {
-					// scrap games that generated errors
-					gameList[j] = null;
-				}
+				finishSearchOnGame(gameList, j, game);
 			}
+		}
+	}
+
+	private void finishSearchOnGame(StackingMCTS[] gameList, int j, StackingMCTS game) {
+		try {
+			game.finishSearch();
+		} catch (Exception ex) {
+			// scrap games that generated errors
+
+			gameList[j].game.setPrintActivations(true);
+			gameList[j].game.printDescribeGame();
+			log.error("Unexpected error in Coach.finishSearch", ex);
+			gameList[j] = null;
 		}
 	}
 
 	private void startSearch(StackingMCTS[] gameList) {
 		for (int j = 0; j < gameList.length; j++) {
 			StackingMCTS game = gameList[j];
-			if (game != null) {
-				try {
-					game.startSearch();
-				} catch (Exception ex) {
-					// scrap games that generated errors
-					gameList[j] = null;
-				}
+			startSearchOnGame(gameList, j, game);
+		}
+	}
+
+	private void startSearchOnGame(StackingMCTS[] gameList, int j, StackingMCTS game) {
+		if (game != null) {
+			try {
+				game.startSearch();
+			} catch (Exception ex) {
+				// scrap games that generated errors
+				gameList[j].game.setPrintActivations(true);
+				gameList[j].game.printDescribeGame();
+				log.error("Unexpected error in Coach.startSearch", ex);
+				gameList[j] = null;
 			}
 		}
 	}

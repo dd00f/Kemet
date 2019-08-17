@@ -32,6 +32,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 	private static final long serialVersionUID = -9034661106772891860L;
 
 	public ChainedAction nextAction;
+	public ChainedAction overridingAction;
 	private boolean donePicking = false;
 	private boolean firstPick = true;
 	private boolean mainTokenPicked = false;
@@ -79,8 +80,10 @@ public class PlayerActionTokenPick extends DiCardAction {
 		} else if (offset == 2) {
 			canonicalPendingActionIndex1 = actionIndex3;
 		} else {
-			throw new IllegalStateException(
-					"How can the offset be bigger than 2 when there can only be 3 actions ? Offset " + offset);
+			if (overridingAction == null || overridingAction.size() == 0) {
+				throw new IllegalStateException(
+						"How can the offset be bigger than 2 when there can only be 3 actions ? Offset " + offset);
+			}
 		}
 
 		if (canonicalPendingActionIndex1 >= 0) {
@@ -98,22 +101,38 @@ public class PlayerActionTokenPick extends DiCardAction {
 			cannonicalForm.set(offset3, player.getState(playerIndex));
 		}
 
-		if (donePicking) {
+		if (overridingAction != null && overridingAction.size() > 0) {
+			overridingAction.fillCanonicalForm(cannonicalForm, playerIndex);
+		} else if (donePicking) {
 			if (nextAction != null) {
 				nextAction.fillCanonicalForm(cannonicalForm, playerIndex);
 			}
 		}
 	}
 
+//	private boolean hasBattleActionLeft() {
+//		if (nextAction != null) {
+//			List<Action> actionChain = nextAction.getActionChain();
+//			if (actionChain.size() > 0) {
+//				Action remainingAction = actionChain.get(0);
+//				if (remainingAction instanceof BattleAction) {
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
+//	}
+
 	private int getPendingActionCount() {
 		int count = 0;
 		if (nextAction != null) {
-			List<Action> actionChain = nextAction.getActionChain();
-			for (Action action : actionChain) {
-				if (!(action instanceof BattleAction)) {
-					count++;
-				}
-			}
+			count = nextAction.size();
+//			List<Action> actionChain = nextAction.getActionChain();
+//			for (Action action : actionChain) {
+//				if (!(action instanceof BattleAction)) {
+//					count++;
+//				}
+//			}
 		}
 		return count;
 	}
@@ -137,6 +156,7 @@ public class PlayerActionTokenPick extends DiCardAction {
 		super.internalInitialize();
 
 		nextAction = null;
+		overridingAction = null;
 		donePicking = false;
 		firstPick = true;
 		mainTokenPicked = false;
@@ -185,6 +205,12 @@ public class PlayerActionTokenPick extends DiCardAction {
 			clone.nextAction = nextAction.deepCacheClone();
 			clone.nextAction.setParent(clone);
 		}
+		// deep clone all owned objects
+		clone.overridingAction = null;
+		if (overridingAction != null) {
+			clone.overridingAction = overridingAction.deepCacheClone();
+			clone.overridingAction.setParent(clone);
+		}
 	}
 
 	@Override
@@ -200,6 +226,14 @@ public class PlayerActionTokenPick extends DiCardAction {
 		// null all references
 		nextAction = null;
 
+		// release all owned objects
+		if (overridingAction != null) {
+			overridingAction.release();
+		}
+
+		// null all references
+		overridingAction = null;
+
 		CACHE.release(this);
 	}
 
@@ -211,6 +245,10 @@ public class PlayerActionTokenPick extends DiCardAction {
 		// release all owned objects
 		if (nextAction != null) {
 			nextAction.relink(clone);
+		}
+		// release all owned objects
+		if (overridingAction != null) {
+			overridingAction.relink(clone);
 		}
 	}
 
@@ -228,71 +266,109 @@ public class PlayerActionTokenPick extends DiCardAction {
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
 
-		PlayerChoicePick diPick = super.getNextPlayerChoicePick();
-		if (diPick != null) {
-			return diPick;
+		PlayerChoicePick nextPlayerChoicePick = super.getNextPlayerChoicePick();
+		if (nextPlayerChoicePick != null) {
+			return nextPlayerChoicePick.validate();
 		}
 
-		if (donePicking && nextAction != null) {
-			PlayerChoicePick nextPlayerChoicePick = nextAction.getNextPlayerChoicePick();
-			if (nextPlayerChoicePick == null) {
-				game.checkForWinningCondition();
+		// check for override first
+		if (overridingAction != null && overridingAction.size() > 0) {
+			nextPlayerChoicePick = overridingAction.getNextPlayerChoicePick();
+			if (nextPlayerChoicePick != null) {
+				return nextPlayerChoicePick.validate();
+			}
+		}
 
-				if (Options.VALIDATE_GAME_BETWEEN_PICKS) {
-					game.validate();
+		if (donePicking) {
+			if (nextAction != null) {
+				List<Action> actionChain = nextAction.getActionChain();
+
+				while (actionChain.size() != 0) {
+					Action nextAction = actionChain.get(0);
+					nextPlayerChoicePick = nextAction.getNextPlayerChoicePick();
+					if (nextPlayerChoicePick != null) {
+						return nextPlayerChoicePick.validate();
+					}
+					nextAction.release();
+					actionChain.remove(0);
+
+					// check for any overriding action that may have been created.
+					if (overridingAction != null && overridingAction.size() > 0) {
+						nextPlayerChoicePick = overridingAction.getNextPlayerChoicePick();
+						if (nextPlayerChoicePick != null) {
+							return nextPlayerChoicePick.validate();
+						}
+					}
+				}
+
+				// check for any overriding action one last time
+				if (overridingAction != null && overridingAction.size() > 0) {
+					nextPlayerChoicePick = overridingAction.getNextPlayerChoicePick();
+					if (nextPlayerChoicePick != null) {
+						return nextPlayerChoicePick.validate();
+					}
 				}
 			}
-			return nextPlayerChoicePick;
-		}
+		} else {
 
-		// player won at the beginning of his turn.
-		if (game.didPlayerWin(player)) {
-			return null;
-		}
+			// player won at the beginning of his turn.
+			if (game.didPlayerWin(player)) {
+				return null;
+			}
 
-		PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
+			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
-		List<Choice> choiceList = pick.choiceList;
+			List<Choice> choiceList = pick.choiceList;
 
-		if (!mainTokenPicked || player.canUseSilverToken()) {
-			if (getPlayerActionTokenLeft() == 1) {
-				if (!player.isRowOneUsed()) {
-					addRowOneActions(player, choiceList);
-				} else if (!player.isRowTwoUsed()) {
-					addRowTwoActions(player, choiceList);
-				} else if (!player.isRowThreeUsed()) {
-					addRowThreeActions(player, choiceList);
+			if (!mainTokenPicked || player.canUseSilverToken()) {
+				if (getPlayerActionTokenLeft() == 1) {
+					if (!player.isRowOneUsed()) {
+						addRowOneActions(player, choiceList);
+					} else if (!player.isRowTwoUsed()) {
+						addRowTwoActions(player, choiceList);
+					} else if (!player.isRowThreeUsed()) {
+						addRowThreeActions(player, choiceList);
+					} else {
+						addAllActions(player, choiceList);
+					}
+
+				} else if (getPlayerActionTokenLeft() == 2 && player.getUsedRowCount() == 1) {
+					if (!player.isRowOneUsed()) {
+						addRowOneActions(player, choiceList);
+					}
+					if (!player.isRowTwoUsed()) {
+						addRowTwoActions(player, choiceList);
+					}
+					if (!player.isRowThreeUsed()) {
+						addRowThreeActions(player, choiceList);
+					}
+
 				} else {
 					addAllActions(player, choiceList);
 				}
-
-			} else if (getPlayerActionTokenLeft() == 2 && player.getUsedRowCount() == 1) {
-				if (!player.isRowOneUsed()) {
-					addRowOneActions(player, choiceList);
-				}
-				if (!player.isRowTwoUsed()) {
-					addRowTwoActions(player, choiceList);
-				}
-				if (!player.isRowThreeUsed()) {
-					addRowThreeActions(player, choiceList);
-				}
-
-			} else {
-				addAllActions(player, choiceList);
 			}
+
+			addAllGoldTokenActions(player, choiceList);
+
+			addGenericDiCardChoice(choiceList);
+
+			addDiCardChoice(choiceList, DiCardList.ENLISTMENT.index);
+
+			if (mainTokenPicked) {
+				choiceList.add(new DonePickingChoice(game, player));
+			}
+
+			return pick.validate();
+
 		}
 
-		addAllGoldTokenActions(player, choiceList);
+		game.checkForWinningCondition();
 
-		addGenericDiCardChoice(choiceList);
-
-		addDiCardChoice(choiceList, DiCardList.ENLISTMENT.index);
-
-		if (mainTokenPicked) {
-			choiceList.add(new DonePickingChoice(game, player));
+		if (Options.VALIDATE_GAME_BETWEEN_PICKS) {
+			game.validate();
 		}
 
-		return pick.validate();
+		return null;
 
 	}
 
@@ -739,15 +815,21 @@ public class PlayerActionTokenPick extends DiCardAction {
 		if (nextAction != null) {
 			nextAction.enterSimulationMode(playerIndex);
 		}
+
+		// release all owned objects
+		if (overridingAction != null) {
+			overridingAction.enterSimulationMode(playerIndex);
+		}
 	}
 
 	@Override
 	public void stackPendingActionOnParent(Action pendingAction) {
-		if (nextAction == null) {
-			nextAction = ChainedAction.create(game, this);
+		if (overridingAction == null) {
+			overridingAction = ChainedAction.create(game, this);
 		}
 
-		nextAction.insertActionInSecondPlace(pendingAction);
+		pendingAction.setParent(overridingAction);
+		overridingAction.add(pendingAction);
 
 	}
 }

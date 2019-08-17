@@ -1,5 +1,6 @@
 package kemet.model.action;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -9,6 +10,7 @@ import kemet.model.DiCardList;
 import kemet.model.KemetGame;
 import kemet.model.Player;
 import kemet.model.PowerList;
+import kemet.model.Tile;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
 import kemet.util.ByteCanonicalForm;
@@ -117,6 +119,8 @@ public class GameAction implements Action {
 			}
 
 			chainedActions.add(NightAction.create(game, chainedActions));
+			
+			addIslandTempleSelectionAction();
 
 			addBlue4ReinforcementsAction();
 
@@ -136,6 +140,22 @@ public class GameAction implements Action {
 		}
 
 		return nextPlayerChoicePick;
+	}
+
+	private void addIslandTempleSelectionAction() {
+		KemetGame game = chainedActions.getGame();
+
+		List<Tile> tileList = game.tileList;
+		for (Tile tile : tileList) {
+			if( tile.hasTemple && tile.templeArmyCost > 0 && tile.getArmy() != null ) {
+				
+				Player actionPlayer = tile.getArmy().owningPlayer;
+				TempleDecisionAction templeAction = TempleDecisionAction.create(game, chainedActions, actionPlayer, tile);
+				
+				chainedActions.add(templeAction);
+			}
+		}
+		
 	}
 
 	private void addBlue4ReinforcementsAction() {
@@ -173,13 +193,18 @@ public class GameAction implements Action {
 			if (player.hasPower(PowerList.WHITE_3_VISION)) {
 				PickDiCardAction action = PickDiCardAction.create(game, player, chainedActions);
 
-				action.moveToDiscard = true;
+				action.pickFromDiscard = false;
+
 				for (int i = 0; i < 5; ++i) {
-					DiCardList.moveRandomDiCard(game.availableDiCardList, action.availableDiCards,
+					DiCardList.moveRandomDiCard(game.availableDiCardList, game.visionDiCardList,
 							KemetGame.AVAILABLE_DI_CARDS, PickDiCardAction.VISION_AVAILABLE_DI_CARDS,
 							"Night Vision Power", game, true);
 				}
 
+//				byte[] copyOf = Arrays.copyOf(action.availableDiCards, action.availableDiCards.length);
+//
+//				DiCardList.moveAllDiCard(copyOf, game.availableDiCardList, PickDiCardAction.VISION_AVAILABLE_DI_CARDS,
+//						KemetGame.AVAILABLE_DI_CARDS, "Night Vision Power", game);
 				chainedActions.add(action);
 			}
 		}

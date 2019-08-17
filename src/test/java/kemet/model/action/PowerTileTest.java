@@ -13,6 +13,7 @@ import kemet.data.TwoPlayerGame;
 import kemet.model.Army;
 import kemet.model.BattleCard;
 import kemet.model.BeastList;
+import kemet.model.BoardInventory;
 import kemet.model.Color;
 import kemet.model.DiCardList;
 import kemet.model.PowerList;
@@ -94,10 +95,10 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		assertEquals(4, bluePlayer.getPrayerPoints());
 	}
-	
+
 	@Test
 	public void test_WHITE_2_DIVINE_BOON() {
-		
+
 		// action 1
 		buyPowerTile(PowerList.RED_1_CHARGE_1);
 		assertEquals(9, bluePlayer.getPrayerPoints());
@@ -106,28 +107,30 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowThree();
 		prayRowThree();
-		
+
 		prayRowTwo();
 		prayRowTwo();
-		
+
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
-		assertEquals( 3, bluePlayer.getDiCardCount());
-		
+		assertEquals(3, bluePlayer.getDiCardCount());
+
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
 
+		activateTemple(true);
+
+		
 		// trigger night
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
-		
-		assertEquals( 5, bluePlayer.getDiCardCount());
+
+		assertEquals(5, bluePlayer.getDiCardCount());
 	}
-	
 
 	@Test
 	public void test_WHITE_3_VISION() {
-		
+
 		// action 1
 		buyPowerTile(PowerList.RED_1_CHARGE_1);
 		assertEquals(9, bluePlayer.getPrayerPoints());
@@ -136,34 +139,35 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowThree();
 		prayRowThree();
-		
+
 		prayRowTwo();
 		prayRowTwo();
-		
+
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
-		assertEquals( 3, redPlayer.getDiCardCount());
-		assertEquals( 3, bluePlayer.getDiCardCount());
-		assertEquals( DiCardList.TOTAL_DI_COUNT - 6, DiCardList.sumArray(game.availableDiCardList));
+		assertEquals(3, redPlayer.getDiCardCount());
+		assertEquals(3, bluePlayer.getDiCardCount());
+		assertEquals(DiCardList.TOTAL_DI_COUNT - 6, DiCardList.sumArray(game.availableDiCardList));
 		assertEquals(0, DiCardList.sumArray(game.discardedDiCardList));
-		
+
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
-		
+
+		activateTemple(true);
+
 		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
 		List<Choice> choiceList = nextPlayerChoicePick.choiceList;
-		assertEquals( 5, choiceList.size());
+		assertEquals(5, choiceList.size());
 		game.activateAction(choiceList.get(0));
-
 
 		// trigger night
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
-		
-		assertEquals( 4, redPlayer.getDiCardCount());
-		assertEquals( 5, bluePlayer.getDiCardCount());
 
-		assertEquals( DiCardList.TOTAL_DI_COUNT - 9, DiCardList.sumArray(game.availableDiCardList));
+		assertEquals(4, redPlayer.getDiCardCount());
+		assertEquals(5, bluePlayer.getDiCardCount());
+
+		assertEquals(DiCardList.TOTAL_DI_COUNT - 9, DiCardList.sumArray(game.availableDiCardList));
 		assertEquals(0, DiCardList.sumArray(game.discardedDiCardList));
 
 	}
@@ -191,6 +195,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		endRecruit();
 		startRecruit();
 		endRecruit();
+
+		activateTemple(true);
 
 		game.getNextPlayerChoicePick();
 
@@ -302,6 +308,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
 
+		activateTemple(true);
+
 		// night actions : upgrade pyramid from level 0 to 1 for free
 
 		game.getNextPlayerChoicePick();
@@ -313,6 +321,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + Color.BLACK.ordinal());
 		assertEquals(11, bluePlayer.getPrayerPoints());
 
+		
 		// battle for initiative
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
@@ -384,6 +393,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		startRecruit();
 		endRecruit();
+
+		activateTemple(true);
 
 		game.getNextPlayerChoicePick();
 
@@ -607,14 +618,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
-	public void test_RED_3_DIVINE_WOUND() {
+	public void test_RED_3_DIVINE_WOUND_attack_win() {
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
 		assertEquals(4, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
-		
+
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
 		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
@@ -625,21 +636,25 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
-		
+
+		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND));
+
 		// pick divine wound
 		useDiCardOnDivineWound(DiCardList.PRAYER);
+
+		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_RECALL));
 
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
-	public void test_RED_3_DIVINE_WOUND_lost() {
+	public void test_RED_3_DIVINE_WOUND_attack_lost() {
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
 		assertEquals(4, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
-		
+
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
 		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
@@ -650,7 +665,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
-		
+
 		// pick divine wound
 		endDivineWound();
 
@@ -663,7 +678,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
 		assertEquals(4, redPlayer.getPrayerPoints());
-		
+
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
 		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
@@ -672,23 +687,34 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
-		
+
 		// pick divine wound
+		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND));
+		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND));
 		useDiCardOnDivineWound(DiCardList.PRAYER);
+		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND));
 		useDiCardOnDivineWound(DiCardList.MANA_THEFT);
 
+		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND));
+		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND));
+		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_RECALL));
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+
+		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND));
+		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND));
+		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_RECALL));
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+
 		assertEquals(3, bluePlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_RED_3_DIVINE_WOUND_defense_lost() {
-		
-		
+
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
 		assertEquals(4, redPlayer.getPrayerPoints());
-		
+
 		game.resetDiCards();
 		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
 		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
@@ -697,13 +723,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
-		
+
 		// pick divine wound
 		endDivineWound();
 		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, bluePlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_RED_3_BLADES_OF_NEITH_defense() {
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -1002,6 +1028,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		prayRowTwo();
 		prayRowTwo();
 
+		activateTemple(true);
+
 		// night prayer bonus
 		assertEquals(11, bluePlayer.getPrayerPoints());
 
@@ -1012,6 +1040,61 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		// battle for initiative
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
+	}
+
+	@Test
+	public void test_BLUE_4_REINFORCEMENTS_night_battle() {
+
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+
+		game.movePowerToPlayer(redPlayer, PowerList.RED_2_OPEN_GATE);
+		game.movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
+
+		buyPowerTile(PowerList.RED_1_CHARGE_1);
+		assertEquals(9, bluePlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLUE_4_REINFORCEMENTS);
+		assertEquals(5, bluePlayer.getPrayerPoints());
+
+		prayRowThree();
+		prayRowThree();
+		assertEquals(7, bluePlayer.getPrayerPoints());
+
+		moveRowOneArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5);
+		moveNextTile(bluePlayer.cityFront, 5);
+		moveNextTile(bluePlayer.cityTiles.get(0), 5);
+		startRecruit();
+		endRecruit();
+
+		buyPowerTile(PowerList.BLUE_3_DEFENSIVE_VICTORY);
+		moveRowOneZeroArmy();
+
+		prayRowTwo();
+		prayRowTwo();
+
+		activateTemple(true);
+
+		
+		// night prayer bonus
+		assertEquals(11, bluePlayer.getPrayerPoints());
+
+		// no cost recruit of 4 at night time
+		recruitArmy(bluePlayer.cityTiles.get(0), 4);
+		assertEquals(11, bluePlayer.getPrayerPoints());
+
+		assertEquals(2, bluePlayer.victoryPoints);
+		// blue attack : 4 army + 4 card = 8
+		// red defense : 5 army + 2 card = 7
+		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
+				BattleCard.CAVALRY_BLITZ_CARD);
+
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+
+		assertEquals(4, bluePlayer.victoryPoints);
+
+		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.FERVENT_PURGE_CARD, BattleCard.DEFENSIVE_RETREAT_CARD,
+				BattleCard.FERVENT_PURGE_CARD);
 	}
 
 	@Test
@@ -1050,6 +1133,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowTwo();
 		prayRowTwo();
+
+		activateTemple(true);
 
 		// night prayer bonus
 		assertEquals(11, bluePlayer.getPrayerPoints());

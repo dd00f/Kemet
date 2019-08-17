@@ -1,5 +1,7 @@
 package kemet.model.action;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -143,6 +145,8 @@ public class TwoPlayerGameTest {
 
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
+		
+		activateTemple(true);
 
 		// turn two
 		battlePick(BattleCard.FERVENT_PURGE_CARD, BattleCard.MIXED_TACTICS_CARD, BattleCard.FERVENT_PURGE_CARD,
@@ -159,11 +163,22 @@ public class TwoPlayerGameTest {
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
 
+		activateTemple(true);
+
 		// turn three
 		battlePick(BattleCard.CHARIOT_RAID_CARD, BattleCard.SHIELD_PUSH_CARD, BattleCard.CHARIOT_RAID_CARD,
 				BattleCard.SHIELD_PUSH_CARD);
 		pickPlayerOrder(1);
 
+	}
+
+	public void activateTemple(boolean activated) {
+		if( activated ) {
+			activateActionOnGame(game.getNextPlayer(), ChoiceInventory.ACTIVATE_OPTIONAL_TEMPLE);
+		}
+		else {
+			activateActionOnGame(game.getNextPlayer(), ChoiceInventory.DONT_ACTIVATE_OPTIONAL_TEMPLE);
+		}
 	}
 
 	public void prayRowThree() {
@@ -337,10 +352,21 @@ public class TwoPlayerGameTest {
 			
 		}
 		game.activateAction(nextPlayer, pickIndex);
+		
+		PlayerChoicePick nextPlayerChoicePick2 = game.getNextPlayerChoicePick();
+		ByteCanonicalForm newForm1 =game.getCanonicalForm(game.getNextPlayer());
+		game.resetCachedChoices();
+		PlayerChoicePick nextPlayerChoicePick3 = game.getNextPlayerChoicePick();
+		ByteCanonicalForm newForm2 =game.getCanonicalForm(game.getNextPlayer());
+		
+		assertEquals( nextPlayerChoicePick2.player.getIndex(), nextPlayerChoicePick3.player.getIndex());
+		assertEquals( nextPlayerChoicePick2.choiceList.size(), nextPlayerChoicePick3.choiceList.size());
+		assertTrue( newForm1.equals(newForm2));
+		
 		game.validate();
 
 		if (CANNONICAL_ON_ALL_MOVES) {
-			validateCanonicalForm(game.getCanonicalForm(nextPlayer));
+			validateCanonicalForm(game.getCanonicalForm(game.getNextPlayer()));
 		}
 
 		if (CLONE_GAME_ON_ALL_MOVES) {
@@ -531,4 +557,12 @@ public class TwoPlayerGameTest {
 		
 	}
 
+	public byte getCanonicalValue(int canonicalIndex) {
+		// game.resetCachedChoices();
+		int nextPlayer = game.getNextPlayer();
+		ByteCanonicalForm canonicalForm = game.getCanonicalForm(nextPlayer);
+		byte[] canonicalForm2 = canonicalForm.getCanonicalForm();
+		byte returnValue = canonicalForm2[canonicalIndex ];
+		return returnValue;
+	}
 }

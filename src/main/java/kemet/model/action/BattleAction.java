@@ -375,9 +375,13 @@ public class BattleAction implements Action {
 
 	public void addRecruitBeastFromRemovedArmy(Army removedArmy) {
 		if (removedArmy.beast != null) {
-			createPendingActions();
-			pendingActions
-					.add(BeastRecruitAction.create(game, removedArmy.owningPlayer, pendingActions, removedArmy.beast));
+			// createPendingActions();
+			BeastRecruitAction recruitAction = BeastRecruitAction.create(game, removedArmy.owningPlayer, pendingActions,
+					removedArmy.beast);
+//			pendingActions.add(recruitAction);
+			
+			// delay recruit of beast until other battles are resolved.
+			parent.stackPendingActionOnParent(recruitAction);
 		}
 	}
 
@@ -599,11 +603,13 @@ public class BattleAction implements Action {
 					pickDefenderCardBasedOnNeuralNetworkIfSimulation();
 				} else {
 					if (game.isSimulation()) {
-						if (game.simulatedPlayerIndex != player.getIndex()) {
+						if (game.simulatedPlayerIndex != player.getIndex()
+								&& !defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
 							// skip discard card selection for other players during simulations
 							String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden ATTACK card which should be simulated by the MCTS.";
 							log.error(message);
 							attackingDiscardBattleCard = card;
+							throw new IllegalStateException(message);
 						}
 					}
 					attackingUsedBattleCard = card;
@@ -631,6 +637,8 @@ public class BattleAction implements Action {
 						if (!attackingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
 							String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.";
 							log.error(message);
+
+							throw new IllegalStateException(message);
 						}
 						defendingDiscardBattleCard = card;
 					}
@@ -647,6 +655,14 @@ public class BattleAction implements Action {
 						pickAttackerCardsBasedOnNeuralNetworkIfSimulation();
 					}
 				}
+			}
+
+			moveDiCardsIfAllCardsPicked();
+		}
+
+		private void moveDiCardsIfAllCardsPicked() {
+			if (areAllBattleCardsPicked()) {
+				checkToDiscardDiCards();
 			}
 		}
 
@@ -794,18 +810,18 @@ public class BattleAction implements Action {
 			if (simulatedPlayer.diCards[cardIndex] > diCardList[cardIndex]) {
 
 				boolean successDiCard = payForDiCard(DiCardList.CARDS[cardIndex], simulatedPlayer);
-				if( successDiCard ) {
+				if (successDiCard) {
 					byte cost = DiCardList.CARDS[cardIndex].powerCost;
 					cost = player.applyPriestOfRaBonus(cost);
 					if (cost > 0 && player.getPrayerPoints() >= cost) {
 						player.modifyPrayerPoints((byte) -cost, "Simulated DI card selection");
 					}
-	
+
 					if (game.printActivations) {
-						game.printEvent(
-								"Simulated DI card for " + simulatedPlayer.name + " : " + DiCardList.CARDS[cardIndex].name);
+						game.printEvent("Simulated DI card for " + simulatedPlayer.name + " : "
+								+ DiCardList.CARDS[cardIndex].name);
 					}
-	
+
 					diCardList[cardIndex] += 1;
 				}
 			}
@@ -1278,8 +1294,6 @@ public class BattleAction implements Action {
 			defenderTacticalChoicePicked = true;
 
 		}
-		
-		checkToDiscardDiCards();
 
 		if (attackerDivineWoundPicked == false) {
 			if (attackingPlayer.hasPower(PowerList.RED_3_DIVINE_WOUND)) {
@@ -1313,8 +1327,6 @@ public class BattleAction implements Action {
 				return nextPlayerChoicePick;
 			}
 		}
-
-		checkForForcedRecall();
 
 		if (!attackerRetreatPicked) {
 			return pickRecallOption(true).validate();
@@ -1353,13 +1365,13 @@ public class BattleAction implements Action {
 	}
 
 	private void checkToDiscardDiCards() {
-		if( ! diCardDiscarded ) {
-			
+		if (!diCardDiscarded) {
+
 			discardUsedDiCards();
-			
+
 			diCardDiscarded = true;
 		}
-		
+
 	}
 
 	private PlayerChoicePick addPickDivineWoundChoice(Player owningPlayer, boolean isAttacker) {
@@ -1551,6 +1563,8 @@ public class BattleAction implements Action {
 			addReinforcementsDiCardActions();
 
 			battleResolved = true;
+
+			checkForForcedRecall();
 		}
 	}
 
@@ -1655,7 +1669,8 @@ public class BattleAction implements Action {
 			pendingActions.enterSimulationMode(playerIndex);
 		}
 
-		if (!battleResolved) {
+		// only reset the battle if there are pending hidden actions.
+		if (!areAllBattleCardsPicked()) {
 			if (playerIndex == attackingArmy.owningPlayer.getIndex()) {
 				// reset the defender DI cards
 				byte[] source = defendingUsedDiCard;
@@ -1669,11 +1684,29 @@ public class BattleAction implements Action {
 
 				Player owningPlayer = attackingArmy.owningPlayer;
 
-				recoverAndRefundAllDiCards(attackingUsedDiCard, owningPlayer, 
+				recoverAndRefundAllDiCards(attackingUsedDiCard, owningPlayer,
 						"Enter Simulation from Defender perspective");
 
 			}
 		}
+	}
+
+	public boolean areAllBattleCardsPicked() {
+
+		if (attackingUsedBattleCard == null) {
+			return false;
+		}
+		if (attackingDiscardBattleCard == null) {
+			return false;
+		}
+		if (defendingUsedBattleCard == null) {
+			return false;
+		}
+		if (defendingDiscardBattleCard == null) {
+			return false;
+		}
+
+		return true;
 	}
 
 	private void recoverAndRefundAllDiCards(byte[] source, Player owningPlayer, String reason) {

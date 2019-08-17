@@ -332,6 +332,9 @@ public class BoardInventory {
 	public static final int STATE_PICK_DEFENDER_DIVINE_WOUND = INDEXER++;
 	public static final int STATE_PICK_ATTACKER_TACTICAL_CHOICE = INDEXER++;
 	public static final int STATE_PICK_DEFENDER_TACTICAL_CHOICE = INDEXER++;
+	public static final int STATE_PICK_ESCAPE = INDEXER++;
+	public static final int STATE_ESCAPE_SELECT_TILE = INDEXER++;
+	public static final int STATE_ACTIVATE_OPTIONAL_TEMPLE = INDEXER++;
 
 	public static final int TOTAL_STATE_COUNT = INDEXER;
 
@@ -452,6 +455,9 @@ public class BoardInventory {
 		registerNumber("STATE_PICK_DEFENDER_DIVINE_WOUND ", STATE_PICK_DEFENDER_DIVINE_WOUND);
 		registerNumber("STATE_PICK_ATTACKER_TACTICAL_CHOICE ", STATE_PICK_ATTACKER_TACTICAL_CHOICE);
 		registerNumber("STATE_PICK_DEFENDER_TACTICAL_CHOICE ", STATE_PICK_DEFENDER_TACTICAL_CHOICE);
+		registerNumber("STATE_PICK_ESCAPE ", STATE_PICK_ESCAPE);
+		registerNumber("STATE_ESCAPE_SELECT_TILE ", STATE_ESCAPE_SELECT_TILE);
+		registerNumber("STATE_ACTIVATE_OPTIONAL_TEMPLE ", STATE_ACTIVATE_OPTIONAL_TEMPLE);
 	}
 
 	public static String describeCanonicalFormat(ByteCanonicalForm canonicalForm) {
@@ -478,7 +484,7 @@ public class BoardInventory {
 			}
 
 		}
-		
+
 		return build.toString();
 	}
 
@@ -608,7 +614,11 @@ public class BoardInventory {
 		System.out.println("STATE_PICK_DEFENDER_DIVINE_WOUND " + STATE_PICK_DEFENDER_DIVINE_WOUND);
 		System.out.println("STATE_PICK_ATTACKER_TACTICAL_CHOICE " + STATE_PICK_ATTACKER_TACTICAL_CHOICE);
 		System.out.println("STATE_PICK_DEFENDER_TACTICAL_CHOICE " + STATE_PICK_DEFENDER_TACTICAL_CHOICE);
+		System.out.println("STATE_PICK_ESCAPE " + STATE_PICK_ESCAPE);
+		System.out.println("STATE_ESCAPE_SELECT_TILE " + STATE_ESCAPE_SELECT_TILE);
+		System.out.println("STATE_ACTIVATE_OPTIONAL_TEMPLE " + STATE_ACTIVATE_OPTIONAL_TEMPLE);
 
+		
 		System.out.println("TOTAL_STATE_COUNT " + TOTAL_STATE_COUNT);
 
 	}

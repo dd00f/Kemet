@@ -1,13 +1,4 @@
 
-	64 of 64 tiles done !
-	20 of 20 di card done !
-
-- TODO : 
-	- Lose unit on Temple at night for 5 PP is optional.
-
-- TODO : 
-	- Vision power : put unused cards back in draw pile
-
 
 - BUG : 
 	- Recruit on top of an existing army doesn't trigger attack start powers, night/day

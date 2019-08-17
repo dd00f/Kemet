@@ -33,7 +33,7 @@ public class RecruitAction extends DiCardAction {
 	public boolean allowPaidRecruit = true;
 	public boolean canRecruitOnAnyArmy = false;
 	public List<Tile> pickedTiles = new ArrayList<>();
-	// public ChainedAction battles;
+	public ChainedAction battles;
 	public byte freeRecruitLeft = -1;
 
 	public static Cache<RecruitAction> CACHE = new Cache<RecruitAction>(() -> new RecruitAction());
@@ -55,11 +55,11 @@ public class RecruitAction extends DiCardAction {
 
 		cannonicalForm.set(BoardInventory.FREE_RECRUIT_LEFT, freeRecruitLeft);
 
-//		if (isEnded()) {
-//			// trigger battle actions
-//			battles.fillCanonicalForm(cannonicalForm, playerIndex);
-//			return;
-//		}
+		if (isEnded()) {
+			// trigger battle actions
+			// battles.fillCanonicalForm(cannonicalForm, playerIndex);
+			throw new IllegalStateException("Should not be able to fill a canonical form on a recruit action that's ended");
+		}
 
 		for (Tile tile : pickedTiles) {
 			// reverse selection for tiles that were already picked
@@ -92,7 +92,7 @@ public class RecruitAction extends DiCardAction {
 		freeRecruitLeft = -1;
 		recruitSize = -1;
 		pickedTiles.clear();
-//		battles = null;
+		battles = null;
 		allowPaidRecruit = true;
 		canRecruitOnAnyArmy = false;
 	}
@@ -107,9 +107,9 @@ public class RecruitAction extends DiCardAction {
 			currentGame.validate(pickedTile);
 		}
 
-//		if (battles != null) {
-//			battles.validate(this, currentGame);
-//		}
+		if (battles != null) {
+			battles.validate(this, currentGame);
+		}
 
 		if (expectedParent != parent) {
 			Validation.validationFailed("Action parent isn't as expected.");
@@ -126,9 +126,9 @@ public class RecruitAction extends DiCardAction {
 			pickedTiles.set(i, game.getTileByCopy(pickedTiles.get(i)));
 		}
 
-//		if (battles != null) {
-//			battles.relink(clone);
-//		}
+		if (battles != null) {
+			battles.relink(clone);
+		}
 
 	}
 
@@ -156,8 +156,8 @@ public class RecruitAction extends DiCardAction {
 		clone.pickedTiles.clear();
 		clone.pickedTiles.addAll(pickedTiles);
 
-//		clone.battles = battles.deepCacheClone();
-//		clone.battles.setParent(clone);
+		clone.battles = battles.deepCacheClone();
+		clone.battles.setParent(clone);
 
 		super.copy(clone);
 	}
@@ -172,10 +172,10 @@ public class RecruitAction extends DiCardAction {
 	@Override
 	public void clear() {
 		super.clear();
-//		if (battles != null) {
-//			battles.release();
-//		}
-//		battles = null;
+		if (battles != null) {
+			battles.release();
+		}
+		battles = null;
 		tile = null;
 		beast = null;
 		pickedTiles.clear();
@@ -189,7 +189,7 @@ public class RecruitAction extends DiCardAction {
 		create.game = game;
 		create.player = player;
 		create.parent = parent;
-//		create.battles = ChainedAction.create(game, create);
+		create.battles = ChainedAction.create(game, create);
 
 		return create;
 	}
@@ -337,13 +337,16 @@ public class RecruitAction extends DiCardAction {
 		Army army = createArmy();
 
 		if (resultsInCombat()) {
-			BattleAction battle = BattleAction.create(game, this);
+			
+			army.moveToBattleTile(tile);
+			
+			BattleAction battle = BattleAction.create(game, battles);
 			battle.attackingArmy = army;
 			battle.defendingArmy = tile.getArmy();
 			battle.tile = tile;
 
-			parent.stackPendingActionOnParent(battle);
-//			battles.add(battle);
+			// parent.stackPendingActionOnParent(battle);
+			battles.add(battle);
 		} else {
 			army.moveToTile(tile);
 		}
@@ -381,6 +384,8 @@ public class RecruitAction extends DiCardAction {
 		if (isEnded()) {
 			// trigger battle actions
 //			return battles.getNextPlayerChoicePick();
+			
+			moveAllBattledToParent();
 			return null;
 		}
 
@@ -423,7 +428,7 @@ public class RecruitAction extends DiCardAction {
 
 				// no valid choices left
 				end();
-//				return battles.getNextPlayerChoicePick();
+				moveAllBattledToParent();
 				return null;
 
 			}
@@ -434,8 +439,20 @@ public class RecruitAction extends DiCardAction {
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 			return pick.validate();
 		}
+		
+		
+		moveAllBattledToParent();
 		return null;
 
+	}
+
+	private void moveAllBattledToParent() {
+		List<Action> actionChain = battles.getActionChain();
+		for (Action action : actionChain) {
+			parent.stackPendingActionOnParent(action);
+		}
+		
+		battles.clear();
 	}
 
 	private boolean playerHasBeastAvailable() {
@@ -515,7 +532,7 @@ public class RecruitAction extends DiCardAction {
 		if (allowPaidRecruit) {
 			max = (byte) Math.min(max, player.getPrayerPoints() + freeRecruitLeft);
 		} else {
-			max = (byte) Math.min(max, player.getPrayerPoints());
+			max = (byte) Math.min(max, freeRecruitLeft);
 		}
 
 		for (byte i = min; i <= max; ++i) {
@@ -617,9 +634,9 @@ public class RecruitAction extends DiCardAction {
 	public void enterSimulationMode(int playerIndex) {
 		super.enterSimulationMode(playerIndex);
 
-//		if (battles != null) {
-//			battles.enterSimulationMode(playerIndex);
-//		}
+		if (battles != null) {
+			battles.enterSimulationMode(playerIndex);
+		}
 
 	}
 

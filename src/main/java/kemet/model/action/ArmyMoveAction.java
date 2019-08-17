@@ -32,7 +32,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 	public byte movementLeft = 1;
 	public Army army;
 	public BattleAction overridingAction;
-	public Action temporaryAction;
+//	public ChainedAction temporaryAction;
 	public boolean isTeleport = false;
 	public boolean freeTeleport = false;
 	public boolean freeBreachWalls = false;
@@ -55,7 +55,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		movementLeft = 1;
 		army = null;
 		overridingAction = null;
-		temporaryAction = null;
+//		temporaryAction = null;
 		isTeleport = false;
 		freeTeleport = false;
 		freeBreachWalls = false;
@@ -73,9 +73,9 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		if (overridingAction != null) {
 			overridingAction.validate(this, currentGame);
 		}
-		if (temporaryAction != null) {
-			temporaryAction.validate(this, currentGame);
-		}
+//		if (temporaryAction != null) {
+//			temporaryAction.validate(this, currentGame);
+//		}
 	}
 
 	@Override
@@ -86,9 +86,9 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		if (overridingAction != null) {
 			overridingAction.relink(clone);
 		}
-		if (temporaryAction != null) {
-			temporaryAction.relink(clone);
-		}
+//		if (temporaryAction != null) {
+//			temporaryAction.relink(clone);
+//		}
 		super.relink(clone);
 
 	}
@@ -115,11 +115,11 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 			clone.overridingAction.setParent(clone);
 		}
 
-		clone.temporaryAction = temporaryAction;
-		if (temporaryAction != null) {
-			clone.temporaryAction = temporaryAction.deepCacheClone();
-			clone.temporaryAction.setParent(clone);
-		}
+//		clone.temporaryAction = temporaryAction;
+//		if (temporaryAction != null) {
+//			clone.temporaryAction = temporaryAction.deepCacheClone();
+//			clone.temporaryAction.setParent(clone);
+//		}
 
 		clone.isTeleport = isTeleport;
 		clone.powerCost = powerCost;
@@ -137,9 +137,9 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 			overridingAction.release();
 		}
 
-		if (temporaryAction != null) {
-			temporaryAction.release();
-		}
+//		if (temporaryAction != null) {
+//			temporaryAction.release();
+//		}
 
 		super.release();
 
@@ -151,7 +151,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		destinationTile = null;
 		army = null;
 		overridingAction = null;
-		temporaryAction = null;
+//		temporaryAction = null;
 
 		super.clear();
 	}
@@ -255,7 +255,6 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		}
 
 	}
-	
 
 	public class EscapeTileMoveChoice extends PlayerChoice {
 
@@ -284,6 +283,8 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		public void choiceActivate() {
 			overridingAction.defendingArmy.moveToTile(pickDestinationTile);
 			overridingAction.attackingArmy.moveToTile(overridingAction.tile);
+			escapeTilePicked = true;
+			overridingAction = null;
 			end();
 		}
 
@@ -361,6 +362,11 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 				if (tile.hasObelisk) {
 
 					if (isTargetTileFriendlyAndFull(player, tile, army)) {
+						continue;
+					}
+
+					if (tile.index == army.tile.index) {
+						// already there.
 						continue;
 					}
 
@@ -469,13 +475,20 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 
 		@Override
 		public int getIndex() {
-			return armyPick.tile.getPickChoiceIndex(player.getIndex());
+			Tile tile = armyPick.tile;
+			int index = player.getIndex();
+			int pickChoiceIndex = tile.getPickChoiceIndex(index);
+			return pickChoiceIndex;
 		}
 
 	}
 
 	public void addArmyPickMoveChoice(List<Choice> choiceList) {
 		for (Army army : player.armyList) {
+			if (army.tile == null) {
+				throw new IllegalStateException("Army " + army + " has empty tile during army picking time.");
+			}
+
 			ArmyPickMoveChoice subChoice = new ArmyPickMoveChoice(game, player);
 			subChoice.armyPick = army;
 			choiceList.add(subChoice);
@@ -490,19 +503,6 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 			return nextPlayerChoicePick;
 		}
 
-		if (temporaryAction != null) {
-			PlayerChoicePick tempNextChoice = temporaryAction.getNextPlayerChoicePick();
-			if (tempNextChoice == null) {
-				temporaryAction = null;
-			} else {
-				return tempNextChoice;
-			}
-		}
-
-		if (isEnded()) {
-			return null;
-		}
-
 		if (overridingAction != null) {
 
 			if (!escapeTilePicked) {
@@ -511,7 +511,6 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 				if (!escapePicked) {
 					// offer escape choice
 					if (defenderCanEscapeBattle()) {
-
 
 						PlayerChoicePick pick = new PlayerChoicePick(game, defender, this);
 						pick.choiceList.add(new EscapeChoice(game, defender, true));
@@ -524,7 +523,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 					escapePicked = true;
 				} else {
 					// ask for a tile
-					
+
 					PlayerChoicePick pick = new PlayerChoicePick(game, defender, this);
 
 					List<Tile> battleEscapeTileChoice = getBattleEscapeTileChoice();
@@ -533,16 +532,35 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 						escape.pickDestinationTile = tile;
 						pick.choiceList.add(escape);
 					}
-					
-					if( pick.choiceList.size() == 1 ) {
+
+					if (pick.choiceList.size() == 1) {
 						pick.choiceList.get(0).activate();
-						return null;
+					} else {
+						return pick;
 					}
-					return pick;
 				}
 			}
 
-			return overridingAction.getNextPlayerChoicePick();
+//			if (overridingAction != null) {
+//				nextPlayerChoicePick = overridingAction.getNextPlayerChoicePick();
+//				if (nextPlayerChoicePick != null) {
+//					return nextPlayerChoicePick;
+//				}
+//			}
+		}
+
+//		if (temporaryAction != null) {
+//			nextPlayerChoicePick = temporaryAction.getNextPlayerChoicePick();
+//			if (nextPlayerChoicePick == null) {
+//				temporaryAction = null;
+//			} else {
+//				return nextPlayerChoicePick;
+//			}
+//		}
+
+		if (isEnded()) {
+			moveBattleToParent();
+			return null;
 		}
 
 		if (army == null) {
@@ -568,6 +586,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 
 				if (pick.choiceList.size() == 0) {
 					// no possible destination tile (usually because move landed on a island )
+					moveBattleToParent();
 					return null;
 				}
 
@@ -590,8 +609,16 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 
 		}
 
+		moveBattleToParent();
 		return null;
 
+	}
+
+	private void moveBattleToParent() {
+		if (overridingAction != null) {
+			parent.stackPendingActionOnParent(overridingAction);
+			overridingAction = null;
+		}
 	}
 
 	private boolean defenderCanEscapeBattle() {
@@ -623,57 +650,76 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		if (isEnded()) {
-			return;
-		}
-
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
 
-		cannonicalForm.set(BoardInventory.STATE_MOVE, player.getState(playerIndex));
-		cannonicalForm.set(BoardInventory.MOVES_LEFT, movementLeft);
-		cannonicalForm.set(BoardInventory.IS_FIRST_MOVE, (byte) (firstMove ? 1 : 0));
+		if (!isEnded()) {
+			cannonicalForm.set(BoardInventory.STATE_MOVE, player.getState(playerIndex));
+			cannonicalForm.set(BoardInventory.MOVES_LEFT, movementLeft);
+			cannonicalForm.set(BoardInventory.IS_FIRST_MOVE, (byte) (firstMove ? 1 : 0));
 
-		if (escapePicked) {
-			cannonicalForm.set(BoardInventory.ESCAPE_PICKED, (byte) 1);
-		}
+			if (escapePicked) {
+				cannonicalForm.set(BoardInventory.ESCAPE_PICKED, (byte) 1);
+			}
 
-		if (escapeTilePicked) {
-			cannonicalForm.set(BoardInventory.ESCAPE_TILE_PICKED, (byte) 1);
-		}
+			if (escapeTilePicked) {
+				cannonicalForm.set(BoardInventory.ESCAPE_TILE_PICKED, (byte) 1);
+			}
 
-		if (freeBreachWalls) {
-			cannonicalForm.set(BoardInventory.MOVE_FREE_BREACH_WALL, (byte) 1);
-		}
-		if (freeTeleport) {
-			cannonicalForm.set(BoardInventory.MOVE_FREE_TELEPORT, (byte) 1);
-		}
-
-		if (temporaryAction != null) {
-			temporaryAction.fillCanonicalForm(cannonicalForm, playerIndex);
+			if (freeBreachWalls) {
+				cannonicalForm.set(BoardInventory.MOVE_FREE_BREACH_WALL, (byte) 1);
+			}
+			if (freeTeleport) {
+				cannonicalForm.set(BoardInventory.MOVE_FREE_TELEPORT, (byte) 1);
+			}
+		} else {
+//			throw new IllegalStateException(
+//					"Should not be able to fill canonical state on ArmyMoveAction if isEnded() is true ");
 		}
 
 		if (overridingAction != null) {
-			overridingAction.fillCanonicalForm(cannonicalForm, playerIndex);
-		}
-		else if (army == null) {
-			// pick army source tile
-			cannonicalForm.set(BoardInventory.STATE_PICK_SOURCE_TILE, player.getState(playerIndex));
-		} else if (movementLeft > 0) {
-			Tile currentArmyTile = army.tile;
-			if (currentArmyTile != null) {
-				currentArmyTile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+
+			if (!escapeTilePicked) {
+				Player defender = overridingAction.defendingArmy.owningPlayer;
+
+				if (!escapePicked) {
+					// offer escape choice
+					if (defenderCanEscapeBattle()) {
+
+						cannonicalForm.set(BoardInventory.STATE_PICK_ESCAPE, defender.getState(playerIndex));
+						return;
+					}
+				} else {
+					// ask for a tile
+					cannonicalForm.set(BoardInventory.STATE_ESCAPE_SELECT_TILE, defender.getState(playerIndex));
+					return;
+				}
 			}
 
-			// pick tile until move capacity is done
-			if (destinationTile == null) {
-				// pick destination tile
-				cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
-			}
+//			overridingAction.fillCanonicalForm(cannonicalForm, playerIndex);
+//		} else if (temporaryAction != null && temporaryAction.size() > 0) {
+//			temporaryAction.fillCanonicalForm(cannonicalForm, playerIndex);
+		} else if (!isEnded()) {
 
-			else {
-				// pick army size to move
-				cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
-				destinationTile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+			if (army == null) {
+				// pick army source tile
+				cannonicalForm.set(BoardInventory.STATE_PICK_SOURCE_TILE, player.getState(playerIndex));
+			} else if (movementLeft > 0) {
+				Tile currentArmyTile = army.tile;
+				if (currentArmyTile != null) {
+					currentArmyTile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+				}
+
+				// pick tile until move capacity is done
+				if (destinationTile == null) {
+					// pick destination tile
+					cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
+				}
+
+				else {
+					// pick army size to move
+					cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
+					destinationTile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+				}
 			}
 		}
 	}
@@ -761,6 +807,8 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 					// battle about to begin
 					Tile previousTile = army.tile;
 					army.moveToTile(null);
+					army.moveToBattleTile(destinationTile);
+					
 					createArmyLeftBehind(previousTile);
 					boolean battleContinues = true;
 					boolean battleCancelledAttackerDestroyed = false;
@@ -810,6 +858,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 						battleAction.defendingArmy = destinationArmy;
 						battleAction.tile = destinationTile;
 						overridingAction = battleAction;
+						end();
 					} else if (!battleCancelledAttackerDestroyed) {
 						army.moveToTile(destinationTile);
 						armyThatKeepsMoving = army;
@@ -938,12 +987,23 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 
 	public void addRecruitBeastFromRemovedArmy(Army removedArmy) {
 		if (removedArmy.beast != null) {
-			if (temporaryAction == null) {
-				temporaryAction = BeastRecruitAction.create(game, removedArmy.owningPlayer, this, removedArmy.beast);
-			} else {
-				log.error("temporaryAction was expected to be empty, but was {}", temporaryAction);
-			}
+
+			BeastRecruitAction createBeastRecruitAction = BeastRecruitAction.create(game, removedArmy.owningPlayer,
+					this, removedArmy.beast);
+
+			addTemporaryAction(createBeastRecruitAction);
 		}
+	}
+
+	private void addTemporaryAction(Action temporaryActionToAdd) {
+//		if (temporaryAction == null) {
+//			temporaryAction = ChainedAction.create(game, this);
+//		}
+//		temporaryActionToAdd.setParent(temporaryAction);
+//
+//		temporaryAction.add(temporaryActionToAdd);
+
+		parent.stackPendingActionOnParent(temporaryActionToAdd);
 	}
 
 	@Override
@@ -960,24 +1020,24 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 		} else {
 			super.applyDiCard(index);
 		}
-
 	}
 
 	@Override
 	public void enterSimulationMode(int playerIndex) {
-		
+
 		if (overridingAction != null) {
 			overridingAction.enterSimulationMode(playerIndex);
 		}
-		if (temporaryAction != null) {
-			temporaryAction.enterSimulationMode(playerIndex);
-		}
-		super.enterSimulationMode(playerIndex);		
+//		if (temporaryAction != null) {
+//			temporaryAction.enterSimulationMode(playerIndex);
+//		}
+		super.enterSimulationMode(playerIndex);
 
 	}
 
 	@Override
 	public void stackPendingActionOnParent(Action pendingAction) {
+//		addTemporaryAction(pendingAction);
 		parent.stackPendingActionOnParent(pendingAction);
 	}
 }
