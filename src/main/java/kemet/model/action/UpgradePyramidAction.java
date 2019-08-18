@@ -34,16 +34,36 @@ public class UpgradePyramidAction extends DiCardAction {
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
 		
-		cannonicalForm.set(BoardInventory.STATE_UPGRADE_PYRAMID, player.getState(playerIndex));
+		// cannonicalForm.set(BoardInventory.STATE_UPGRADE_PYRAMID, player.getState(playerIndex));
+		
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_UPGRADE_PYRAMID, playerIndex);
+		
 		if (tile == null) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
+			//cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
+			
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_TILE, playerIndex);
+			
+			
 		} else if (endLevel == -1) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_LEVEL, player.getState(playerIndex));
-			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
-			cannonicalForm.set(BoardInventory.PICKED_LEVEL, player.getState(playerIndex));
+			//cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_LEVEL, player.getState(playerIndex));
+			
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_PYRAMID_LEVEL, playerIndex);
+			
+			
+			// tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+			
+			tile.setCanonicalSelected(cannonicalForm, player, playerIndex);
+			
+			
 		} else if (color == Color.NONE) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_COLOR, player.getState(playerIndex));
-			tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_PYRAMID_COLOR, playerIndex);
+			
+			cannonicalForm.set(BoardInventory.PICKED_LEVEL, endLevel);
+
+			// cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_COLOR, player.getState(playerIndex));
+			
+			tile.setCanonicalSelected(cannonicalForm, player, playerIndex);
+			// tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
 		}
 	}
 

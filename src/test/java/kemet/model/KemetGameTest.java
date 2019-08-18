@@ -112,8 +112,8 @@ class KemetGameTest {
 		assertNotEquals(initForm02, initForm01);
 		assertNotEquals(initForm02, initForm0);
 
-		int usedCardIndexFromP1 = Player.getCardStatusIndex(1, BattleCard.CAVALRY_BLITZ_CARD);
-		int discardCardIndexFromP1 = Player.getCardStatusIndex(1, BattleCard.CHARIOT_RAID_CARD);
+		int usedCardIndexFromP1 = Player.getCardVisibleIndex(1, BattleCard.CAVALRY_BLITZ_CARD);
+		int discardCardIndexFromP1 = Player.getCardVisibleIndex(1, BattleCard.CHARIOT_RAID_CARD);
 
 		assertEquals(1, initForm1.getCanonicalForm()[usedCardIndexFromP1]);
 		assertEquals(1, initForm1.getCanonicalForm()[discardCardIndexFromP1]);

@@ -41,7 +41,9 @@ public class BuyPowerAction extends DiCardAction {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.STATE_BUY_POWER_COLOR + color.ordinal(), player.getState(playerIndex));
+
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_BUY_POWER_COLOR, playerIndex);
+//		cannonicalForm.set(BoardInventory.STATE_BUY_POWER_COLOR + color.ordinal(), player.getState(playerIndex));
 
 		if (nextAction != null) {
 			nextAction.fillCanonicalForm(cannonicalForm, playerIndex);

@@ -160,7 +160,10 @@ public class RemoveBattleCardAction implements Action {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.STATE_PICK_BATTLECARD_TO_REMOVE, player.getState(playerIndex));
+		//cannonicalForm.set(BoardInventory.STATE_PICK_BATTLECARD_TO_REMOVE, player.getState(playerIndex));
+		
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_BATTLECARD_TO_REMOVE, playerIndex);
+		
 
 	}
 

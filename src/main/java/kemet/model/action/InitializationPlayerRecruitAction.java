@@ -136,10 +136,12 @@ public class InitializationPlayerRecruitAction implements Action {
 			return;
 		}
 
-		cannonicalForm.set(BoardInventory.STATE_INITIAL_ARMY, player.getState(playerIndex));
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_INITIAL_ARMY, playerIndex);
+//		cannonicalForm.set(BoardInventory.STATE_INITIAL_ARMY, player.getState(playerIndex));
 
 		Tile tile = player.cityTiles.get(tileIndex);
-		tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+//		tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+		tile.setCanonicalSelected(cannonicalForm, player, playerIndex);
 
 	}
 

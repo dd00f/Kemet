@@ -38,7 +38,9 @@ public class PickDiCardAction extends EndableAction {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.PICK_DI_STATE, player.getState(playerIndex));
+		player.setCanonicalState(cannonicalForm, BoardInventory.PICK_DI_STATE, playerIndex);
+		
+//		cannonicalForm.set(BoardInventory.PICK_DI_STATE, player.getState(playerIndex));
 		if (pickFromDiscard) {
 
 			cannonicalForm.set(BoardInventory.PICK_DI_MOVE_REST_TO_DISCARD, (byte) 1);

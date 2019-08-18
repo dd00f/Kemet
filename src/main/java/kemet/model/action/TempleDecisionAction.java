@@ -167,7 +167,9 @@ public class TempleDecisionAction implements Action {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.STATE_ACTIVATE_OPTIONAL_TEMPLE, player.getState(playerIndex));
+		// cannonicalForm.set(BoardInventory.STATE_ACTIVATE_OPTIONAL_TEMPLE, player.getState(playerIndex));
+		
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_ACTIVATE_OPTIONAL_TEMPLE, playerIndex);
 
 	}
 

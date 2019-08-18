@@ -53,10 +53,13 @@ public class PlayerActionTokenPick extends DiCardAction {
 
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
 
-		cannonicalForm.set(BoardInventory.STATE_PICK_ACTION_TOKEN, player.getState(playerIndex));
+//		cannonicalForm.set(BoardInventory.STATE_PICK_ACTION_TOKEN, player.getState(playerIndex));
+
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_ACTION_TOKEN, playerIndex);
 
 		if (mainTokenPicked) {
-			cannonicalForm.set(BoardInventory.MAIN_TOKEN_PICKED, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.MAIN_TOKEN_PICKED, (byte) 1);
+			player.setCanonicalState(cannonicalForm, BoardInventory.MAIN_TOKEN_PICKED, playerIndex);
 		}
 
 		// Picked & pending actions aren't reflected in the game canonical state.
@@ -86,19 +89,20 @@ public class PlayerActionTokenPick extends DiCardAction {
 			}
 		}
 
+		int baseOffset = BoardInventory.PICKED_ACTION_IN_ORDER
+				+ ActionList.TOTAL_ACTION_COUNT * BoardInventory.MAX_ACTION_PER_TURN * player.getCanonicalPlayerIndex(playerIndex);
+
 		if (canonicalPendingActionIndex1 >= 0) {
-			int offset1 = BoardInventory.PICKED_ACTION_IN_ORDER + canonicalPendingActionIndex1;
-			cannonicalForm.set(offset1, player.getState(playerIndex));
+			int offset1 = baseOffset + canonicalPendingActionIndex1;
+			cannonicalForm.set(offset1, (byte) 1);
 		}
 		if (canonicalPendingActionIndex2 >= 0) {
-			int offset2 = BoardInventory.PICKED_ACTION_IN_ORDER + ActionList.TOTAL_ACTION_COUNT
-					+ canonicalPendingActionIndex2;
-			cannonicalForm.set(offset2, player.getState(playerIndex));
+			int offset2 = baseOffset + ActionList.TOTAL_ACTION_COUNT + canonicalPendingActionIndex2;
+			cannonicalForm.set(offset2, (byte) 1);
 		}
 		if (canonicalPendingActionIndex3 >= 0) {
-			int offset3 = BoardInventory.PICKED_ACTION_IN_ORDER + (ActionList.TOTAL_ACTION_COUNT * 2)
-					+ canonicalPendingActionIndex3;
-			cannonicalForm.set(offset3, player.getState(playerIndex));
+			int offset3 = baseOffset + (ActionList.TOTAL_ACTION_COUNT * 2) + canonicalPendingActionIndex3;
+			cannonicalForm.set(offset3, (byte) 1);
 		}
 
 		if (overridingAction != null && overridingAction.size() > 0) {

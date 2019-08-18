@@ -228,17 +228,24 @@ public class InitializationPlayerPyramidAction implements Action {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		
-		cannonicalForm.set(BoardInventory.STATE_INITIAL_PYRAMID, player.getState(playerIndex));
+		// cannonicalForm.set(BoardInventory.STATE_INITIAL_PYRAMID, player.getState(playerIndex));
+		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_INITIAL_PYRAMID, playerIndex);
+
 		
 		Tile district1 = player.cityTiles.get(currentDistrictIndex);
-		district1.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+		// district1.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
+		district1.setCanonicalSelected(cannonicalForm, player, playerIndex);
 
 		if( targetLevel == -1 ) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_LEVEL, player.getState(playerIndex));
-			
+//			cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_LEVEL, player.getState(playerIndex));
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_PYRAMID_LEVEL, playerIndex);
+
 		}
 		else {
-			cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_COLOR, player.getState(playerIndex));
+//			cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_COLOR, player.getState(playerIndex));
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_PYRAMID_COLOR, playerIndex);
+
+			
 			cannonicalForm.set(BoardInventory.PICKED_LEVEL, targetLevel);
 			
 		}

@@ -48,9 +48,16 @@ public class RecruitAction extends DiCardAction {
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
 
 		if (allowPaidRecruit) {
-			cannonicalForm.set(BoardInventory.STATE_RECRUIT, player.getState(playerIndex));
+			//cannonicalForm.set(BoardInventory.STATE_RECRUIT, player.getState(playerIndex));
+			
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_RECRUIT, playerIndex);
+
+			
 		} else {
-			cannonicalForm.set(BoardInventory.STATE_FREE_RECRUIT, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.STATE_FREE_RECRUIT, player.getState(playerIndex));
+			
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_FREE_RECRUIT, playerIndex);
+			
 		}
 
 		cannonicalForm.set(BoardInventory.FREE_RECRUIT_LEFT, freeRecruitLeft);
@@ -63,21 +70,31 @@ public class RecruitAction extends DiCardAction {
 
 		for (Tile tile : pickedTiles) {
 			// reverse selection for tiles that were already picked
-			tile.setSelectedSource(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
+			// tile.setSelectedSource(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
+			
+			tile.setCanonicalSelectedSource(cannonicalForm, player, playerIndex);
 		}
 
 		if (tile == null) {
 			// pick tile
-			cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
+			
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_TILE, playerIndex);
+			
 		} else if (recruitSize < 0) {
 			// pick size
-			cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
-			tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_ARMY_SIZE, playerIndex);
+			
+			// tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			tile.setCanonicalSelectedSource(cannonicalForm, player, playerIndex);
 
 		} else if (playerHasBeastAvailable()) {
-			cannonicalForm.set(BoardInventory.STATE_PICK_BEAST, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.STATE_PICK_BEAST, player.getState(playerIndex));
+			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_BEAST, playerIndex);
 			cannonicalForm.set(BoardInventory.PICKED_SIZE, recruitSize);
-			tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			// tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			tile.setCanonicalSelectedSource(cannonicalForm, player, playerIndex);
 		}
 
 	}

@@ -408,6 +408,10 @@ public class TwoPlayerGameTest {
 			if (f < -1) {
 				fail("Float canonical value smaller than -1 : " + f + " at index " + i);
 			}
+			
+			if (f < 0) {
+				fail("Float canonical value smaller than -1 : " + f + " at index " + i);
+			}
 		}
 	}
 

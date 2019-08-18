@@ -331,7 +331,7 @@ public class Player implements Model {
 			prayerPoints = MAXIMUM_PRAYER_POINTS;
 		}
 		if (prayerPoints < 0) {
-			throw new IllegalStateException("Player " + name + " managed to reach "+prayerPoints+" prayer points.");
+			throw new IllegalStateException("Player " + name + " managed to reach " + prayerPoints + " prayer points.");
 		}
 		if (game.printActivations) {
 			game.printEvent("Player " + name + " modified prayer points by " + modification + " due to " + reason
@@ -765,12 +765,16 @@ public class Player implements Model {
 		return null;
 	}
 
-	public byte getState(int playerIndex) {
-		if (playerIndex == getIndex()) {
-			return 1;
-		}
-		return -1;
+	static {
+		int todoDeleteMe;
 	}
+//	@Deprecated
+//	public byte getState(int playerIndex) {
+//		if (playerIndex == getIndex()) {
+//			return 1;
+//		}
+//		return -1;
+//	}
 
 	/**
 	 * 
@@ -859,13 +863,27 @@ public class Player implements Model {
 					(byte) (goldTokenUsed ? 0 : 1));
 		}
 
-		for (BattleCard card : availableBattleCards) {
-			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) 1);
+		if (index == playerIndex) {
+			for (BattleCard card : availableBattleCards) {
+				canonicalForm.set(getCardAvailableIndex(card), (byte) 1);
+			}
+			
+			// Fill DI cards only if we are the current player, hide for other players
+			DiCardList.fillCanonicalForm(diCards, canonicalForm, BoardInventory.CURRENT_PLAYER_DI);
 		}
 
-		for (BattleCard card : usedBattleCards) {
-			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
+		for (BattleCard card : availableBattleCards) {
+			canonicalForm.set(getCardVisibleIndex(canonicalPlayerIndex, card), (byte) 1);
 		}
+		
+		
+		for (BattleCard card : discardedBattleCards) {
+			canonicalForm.set(getCardVisibleIndex(canonicalPlayerIndex, card), (byte) 1);
+		}
+		
+//		for (BattleCard card : usedBattleCards) {
+//			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
+//		}
 
 		for (Beast beast : availableBeasts) {
 			int beastAvailableIndex = BoardInventory.BEAST_AVAILABLE + BeastList.BEAST_INDEXER * canonicalPlayerIndex
@@ -873,19 +891,19 @@ public class Player implements Model {
 			canonicalForm.set(beastAvailableIndex, (byte) 1);
 		}
 
-		byte discardCardStatus = -1;
+//		byte discardCardStatus = -1;
 
 		if (playerIndex != getIndex()) {
 			// make discarded cards appear available only for other players.
-			discardCardStatus = 1;
+//			discardCardStatus = 1;
 		} else {
 			// Fill DI cards only if we are the current player, hide for other players
-			DiCardList.fillCanonicalForm(diCards, canonicalForm, BoardInventory.CURRENT_PLAYER_DI);
+			
 		}
 
-		for (BattleCard card : discardedBattleCards) {
-			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), discardCardStatus);
-		}
+//		for (BattleCard card : discardedBattleCards) {
+//			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), discardCardStatus);
+//		}
 
 		for (Power power : powerList) {
 			int powerIndex = (BoardInventory.PLAYER_POWERS + power.index * BoardInventory.PLAYER_COUNT
@@ -898,8 +916,16 @@ public class Player implements Model {
 
 	}
 
-	public static int getCardStatusIndex(int canonicalPlayerIndex, BattleCard card) {
-		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index;
+//	public static int getCardStatusIndex(int canonicalPlayerIndex, BattleCard card) {
+//		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index;
+//	}
+
+	public static int getCardAvailableIndex( BattleCard card) {
+		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + card.index;
+	}
+
+	public static int getCardVisibleIndex(int canonicalPlayerIndex, BattleCard card) {
+		return BoardInventory.PLAYER_BATTLE_CARD_VISIBLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index;
 	}
 
 	public void enterSimulationMode(int playerIndex) {
@@ -1033,7 +1059,12 @@ public class Player implements Model {
 	}
 
 	public void setCanonicalState(ByteCanonicalForm cannonicalForm, int stateOffset, int fromPlayerIndex) {
-		cannonicalForm.set(stateOffset + getCanonicalPlayerIndex(fromPlayerIndex), (byte) 1);
+		int canonicalStateOffset = getCanonicalStateOffset(stateOffset, fromPlayerIndex);
+		cannonicalForm.set(canonicalStateOffset, (byte) 1);
+	}
+
+	public int getCanonicalStateOffset(int stateOffset, int fromPlayerIndex) {
+		return stateOffset + getCanonicalPlayerIndex(fromPlayerIndex);
 	}
 
 	public byte getPrayActionPowerIncrease() {

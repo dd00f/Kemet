@@ -295,14 +295,42 @@ public class Tile implements Model {
 		return ChoiceInventory.ESCAPE_TILE_CHOICE + getTileCanonicalIndex(playerIndex);
 	}
 
-	public void setSelected(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
-		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
-		cannonicalForm.set(BoardInventory.TILE_SELECTED + tileCanonicalIndex, value);
+	static {
+		int todoDeleteMe;
 	}
 
-	public void setSelectedSource(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
-		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
-		cannonicalForm.set(BoardInventory.TILE_SOURCE_SELECTED + tileCanonicalIndex, value);
+//	@Deprecated
+//	public void setSelected(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
+//		int todoDeleteMe;
+//		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
+//		cannonicalForm.set(BoardInventory.TILE_SELECTED + tileCanonicalIndex, value);
+//	}
+//
+//	@Deprecated
+//	public void setSelectedSource(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
+//		int todoDeleteMe;
+//		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
+//		cannonicalForm.set(BoardInventory.TILE_SOURCE_SELECTED + tileCanonicalIndex, value);
+//	}
+
+	public void setCanonicalSelected(ByteCanonicalForm cannonicalForm, Player selectedByPlayer,
+			int canonicalPlayerIndex) {
+
+		int tileCanonicalIndex = getTileCanonicalIndex(canonicalPlayerIndex);
+		int selectedPlayerIndex = selectedByPlayer.getCanonicalPlayerIndex(canonicalPlayerIndex);
+		int offset = selectedPlayerIndex * BoardInventory.TILE_COUNT + tileCanonicalIndex;
+
+		cannonicalForm.set(BoardInventory.TILE_SELECTED + offset, (byte) 1);
+	}
+
+	public void setCanonicalSelectedSource(ByteCanonicalForm cannonicalForm, Player selectedByPlayer,
+			int canonicalPlayerIndex) {
+
+		int tileCanonicalIndex = getTileCanonicalIndex(canonicalPlayerIndex);
+		int selectedPlayerIndex = selectedByPlayer.getCanonicalPlayerIndex(canonicalPlayerIndex);
+		int offset = selectedPlayerIndex * BoardInventory.TILE_COUNT + tileCanonicalIndex;
+
+		cannonicalForm.set(BoardInventory.TILE_SOURCE_SELECTED + offset, (byte) 1);
 	}
 
 	public int getTileCanonicalIndex(int targetPlayerIndex) {

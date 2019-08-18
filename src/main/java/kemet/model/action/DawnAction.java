@@ -51,21 +51,27 @@ public class DawnAction implements Action {
 			// pick battle card
 			if (selectedCardByCurrentPlayerIndex[playerIndexByInitiative] == null) {
 
-				cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_BATTLE_CARD, player.getState(playerIndex));
+				player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_INITIATIVE_BATTLE_CARD, playerIndex);
+
+//				cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_BATTLE_CARD, player.getState(playerIndex));
 				stepSet = true;
 				break;
 			}
 
 			// pick discard card
 			if (discardedCardByCurrentPlayerIndex[playerIndexByInitiative] == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_DISCARD, player.getState(playerIndex));
+				player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_INITIATIVE_DISCARD, playerIndex);
+
+//				cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_DISCARD, player.getState(playerIndex));
 				stepSet = true;
 				break;
 			}
 
 			// pick dawn token
 			if (dawnTokenByCurrentPlayerIndex[playerIndexByInitiative] == -1) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_DAWN_TOKEN, player.getState(playerIndex));
+				player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_INITIATIVE_DAWN_TOKEN, playerIndex);
+
+//				cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_DAWN_TOKEN, player.getState(playerIndex));
 				stepSet = true;
 				break;
 			}
@@ -79,7 +85,9 @@ public class DawnAction implements Action {
 				int currentSelectingPlayerIndex = initiativeSelectionOrderPlayerIndex[i];
 				Player player = game.getPlayerByIndex(currentSelectingPlayerIndex);
 				if (selectedPlayerOrderByCurrentPlayerIndex[currentSelectingPlayerIndex] == -1) {
-					cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_ORDER, player.getState(playerIndex));
+					player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_INITIATIVE_ORDER, playerIndex);
+
+//					cannonicalForm.set(BoardInventory.STATE_PICK_INITIATIVE_ORDER, player.getState(playerIndex));
 					stepSet = true;
 					break;
 				}

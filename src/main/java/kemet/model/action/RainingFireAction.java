@@ -39,7 +39,9 @@ public class RainingFireAction extends EndableAction {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.RAINING_FIRE_STATE, player.getState(playerIndex));
+		//cannonicalForm.set(BoardInventory.RAINING_FIRE_STATE, player.getState(playerIndex));
+		
+		player.setCanonicalState(cannonicalForm, BoardInventory.RAINING_FIRE_STATE, playerIndex);
 
 	}
 

@@ -379,7 +379,7 @@ public class BattleAction implements Action {
 			BeastRecruitAction recruitAction = BeastRecruitAction.create(game, removedArmy.owningPlayer, pendingActions,
 					removedArmy.beast);
 //			pendingActions.add(recruitAction);
-			
+
 			// delay recruit of beast until other battles are resolved.
 			parent.stackPendingActionOnParent(recruitAction);
 		}
@@ -842,26 +842,39 @@ public class BattleAction implements Action {
 			String message = "available battle card {} not showing up in canonical form {}";
 			if (defender.getIndex() == defendingArmy.owningPlayer.getIndex()) {
 				// pick defender card
-				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD] != defender
-						.getState(defender.getIndex())) {
+//				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD] != defender
+//						.getState(defender.getIndex())) {
+//					log.error(message, card.index, canonicalForm);
+//				}
+
+				int canonicalStateOffset = defender
+						.getCanonicalStateOffset(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD, canonicalPlayerIndex);
+				if (canonicalForm.getCanonicalForm()[canonicalStateOffset] != 1) {
 					log.error(message, card.index, canonicalForm);
 				}
+
 			} else {
 				// pick attacker card
-				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD] != defender
-						.getState(defender.getIndex())) {
+//				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD] != defender
+//						.getState(defender.getIndex())) {
+//					log.error(message, card.index, canonicalForm);
+//				}
+
+				int canonicalStateOffset = defender
+						.getCanonicalStateOffset(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD, canonicalPlayerIndex);
+				if (canonicalForm.getCanonicalForm()[canonicalStateOffset] != 1) {
 					log.error(message, card.index, canonicalForm);
 				}
 			}
 
 			for (BattleCard card : defender.availableBattleCards) {
-				if (canonicalForm.getCanonicalForm()[Player.getCardStatusIndex(canonicalPlayerIndex, card)] != 1) {
+				if (canonicalForm.getCanonicalForm()[Player.getCardVisibleIndex(canonicalPlayerIndex, card)] != 1) {
 					log.error(message, card.index, canonicalForm);
 				}
 			}
 
 			for (BattleCard card : defender.usedBattleCards) {
-				if (canonicalForm.getCanonicalForm()[Player.getCardStatusIndex(canonicalPlayerIndex, card)] != -1) {
+				if (canonicalForm.getCanonicalForm()[Player.getCardVisibleIndex(canonicalPlayerIndex, card)] != 0) {
 					log.error(message, card.index, canonicalForm);
 				}
 			}
@@ -1427,8 +1440,10 @@ public class BattleAction implements Action {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.STATE_BATTLE, attackingArmy.owningPlayer.getState(playerIndex));
-		tile.setSelected(cannonicalForm, playerIndex, attackingArmy.owningPlayer.getState(playerIndex));
+		attackingArmy.owningPlayer.setCanonicalState(cannonicalForm, BoardInventory.STATE_BATTLE, playerIndex);
+		// cannonicalForm.set(BoardInventory.STATE_BATTLE,
+		// attackingArmy.owningPlayer.getState(playerIndex));
+		tile.setCanonicalSelected(cannonicalForm, attackingArmy.owningPlayer, playerIndex);
 
 		boolean isAttackerBeastIgnored = isAttackerBeastIgnored();
 		boolean isDefenderBeastIgnored = isDefenderBeastIgnored();
@@ -1455,47 +1470,89 @@ public class BattleAction implements Action {
 		}
 
 		if (battleResolved) {
-			cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) (attackerWins ? 1 : -1));
+			if (attackerWins) {
+				cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) 1);
+			} else {
+				cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_WON, (byte) 1);
+			}
 		}
 
 		boolean stateSimulationOverride = false;
 		if (isDefenderFirstToPick()) {
 			if (defendingUsedBattleCard == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
-						defendingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
+//						defendingArmy.owningPlayer.getState(playerIndex));
+
+				defendingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD, playerIndex);
+
 				stateSimulationOverride = true;
 			} else if (defendingDiscardBattleCard == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
-						defendingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+//						defendingArmy.owningPlayer.getState(playerIndex));
+
+				defendingArmy.owningPlayer.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+						playerIndex);
+
 				stateSimulationOverride = true;
 			}
 		}
 
 		if (!stateSimulationOverride) {
 			if (attackingUsedBattleCard == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD,
-						attackingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD,
+//						attackingArmy.owningPlayer.getState(playerIndex));
+
+				attackingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD, playerIndex);
+
 			} else if (attackingDiscardBattleCard == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_DISCARD,
-						attackingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACK_DISCARD,
+//						attackingArmy.owningPlayer.getState(playerIndex));
+				attackingArmy.owningPlayer.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_ATTACK_DISCARD,
+						playerIndex);
+
 			} else if (defendingUsedBattleCard == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
-						defendingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD,
+//						defendingArmy.owningPlayer.getState(playerIndex));
+				defendingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD, playerIndex);
+
 			} else if (defendingDiscardBattleCard == null) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
-						defendingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+//						defendingArmy.owningPlayer.getState(playerIndex));
+
+				defendingArmy.owningPlayer.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_DEFENSE_DISCARD,
+						playerIndex);
+
 			} else if (attackerTacticalChoicePicked == false) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE,
-						attackingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE,
+//						attackingArmy.owningPlayer.getState(playerIndex));
+
+				attackingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE, playerIndex);
+
 			} else if (defenderTacticalChoicePicked == false) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE,
-						defendingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE,
+//						defendingArmy.owningPlayer.getState(playerIndex));
+
+				defendingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE, playerIndex);
+
 			} else if (attackerDivineWoundPicked == false) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND,
-						attackingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND,
+//						attackingArmy.owningPlayer.getState(playerIndex));
+
+				attackingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND, playerIndex);
+
 			} else if (defenderDivineWoundPicked == false) {
-				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND,
-						defendingArmy.owningPlayer.getState(playerIndex));
+//				cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND,
+//						defendingArmy.owningPlayer.getState(playerIndex));
+
+				defendingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+						BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND, playerIndex);
+
 			} else {
 
 				if (pendingActions != null && pendingActions.size() > 0) {
@@ -1503,23 +1560,39 @@ public class BattleAction implements Action {
 				}
 
 				else if (!attackerRetreatPicked) {
-					cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
-							attackingArmy.owningPlayer.getState(playerIndex));
+//					cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RECALL,
+//							attackingArmy.owningPlayer.getState(playerIndex));
+
+					attackingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+							BoardInventory.STATE_PICK_ATTACKER_RECALL, playerIndex);
+
 				}
 
 				else if (!attackerRetreatTilePicked) {
-					cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
-							defendingArmy.owningPlayer.getState(playerIndex));
+//					cannonicalForm.set(BoardInventory.STATE_PICK_ATTACKER_RETREAT,
+//							defendingArmy.owningPlayer.getState(playerIndex));
+
+					defendingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+							BoardInventory.STATE_PICK_ATTACKER_RETREAT, playerIndex);
+
 				}
 
 				else if (!defenderRetreatPicked) {
-					cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
-							defendingArmy.owningPlayer.getState(playerIndex));
+//					cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RECALL,
+//							defendingArmy.owningPlayer.getState(playerIndex));
+
+					defendingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+							BoardInventory.STATE_PICK_DEFENDER_RECALL, playerIndex);
+
 				}
 
 				else if (!defenderRetreatTilePicked) {
-					cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
-							attackingArmy.owningPlayer.getState(playerIndex));
+//					cannonicalForm.set(BoardInventory.STATE_PICK_DEFENDER_RETREAT,
+//							attackingArmy.owningPlayer.getState(playerIndex));
+
+					attackingArmy.owningPlayer.setCanonicalState(cannonicalForm,
+							BoardInventory.STATE_PICK_DEFENDER_RETREAT, playerIndex);
+
 				}
 
 			}

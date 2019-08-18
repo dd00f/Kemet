@@ -35,7 +35,9 @@ public class VetoAction extends EndableAction {
 
 		diCardPlayer.setCanonicalState(cannonicalForm, BoardInventory.STATE_VETO_PLAYER, playerIndex);
 
-		cannonicalForm.set(DiCardList.CARDS[cardToVetoIndex].getVetoIndex(), diCardPlayer.getState(playerIndex));
+		cannonicalForm.set(DiCardList.CARDS[cardToVetoIndex].getVetoIndex(), (byte) 1);
+		// cannonicalForm.set(DiCardList.CARDS[cardToVetoIndex].getVetoIndex(),
+		// diCardPlayer.getState(playerIndex));
 
 		for (int i = 0; i < playerVetoDone.length; i++) {
 			if (playerVetoDone[i]) {
@@ -170,7 +172,7 @@ public class VetoAction extends EndableAction {
 				playerDoingVeto = player;
 			}
 			playerVetoDone[player.getIndex()] = true;
-			
+
 			// trigger next veto step
 			parent.getNextPlayerChoicePick();
 		}
@@ -214,7 +216,7 @@ public class VetoAction extends EndableAction {
 				useDiVetoCard(player);
 				isVetoed = false;
 			}
-			
+
 			// trigger DI card activation
 			parent.getNextPlayerChoicePick();
 
@@ -239,14 +241,13 @@ public class VetoAction extends EndableAction {
 
 	public void applyDiCard(DiCardExecutor action) {
 		getNextPlayerChoicePick();
-		
+
 		if (isEnded()) {
 			if (!isVetoed) {
 				action.applyDiCard(cardToVetoIndex);
 			}
 		}
 	}
-	
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
@@ -278,12 +279,11 @@ public class VetoAction extends EndableAction {
 
 			if (playerVetoDone == null) {
 				playerVetoDone = new boolean[game.playerByInitiativeList.size()];
-				
+
 				for (Player currentPlayer : game.playerByInitiativeList) {
 					if (currentPlayer.getIndex() == diCardPlayer.getIndex()) {
 						playerVetoDone[currentPlayer.getIndex()] = true;
-					}
-					else if (currentPlayer.diCards[DiCardList.VETO.index] == 0 ) {
+					} else if (currentPlayer.diCards[DiCardList.VETO.index] == 0) {
 						playerVetoDone[currentPlayer.getIndex()] = true;
 					}
 				}
@@ -308,7 +308,7 @@ public class VetoAction extends EndableAction {
 				}
 			}
 		}
-		
+
 		end();
 
 		return null;

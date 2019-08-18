@@ -1,24 +1,23 @@
 
+DEVELOPMENT
+	- BUG : 
+		- Recruit on top of an existing army doesn't trigger attack start powers, night/day
+	
+	
+	
+	- Battle : current player should always be in the same place ( flag to switch between attack & defense )
+	
+	- enable DI card reinforcements at the end of turns
+	
+	
+	- Disable canonical form locking + checks on set for speeeeed
+	
+	- Scan for TODO, unused variables
 
-- BUG : 
-	- Recruit on top of an existing army doesn't trigger attack start powers, night/day
 
 
-
-- State goes negative based on player - change to individual state fields
-
-- Battle : current player should always be in the same place ( flag to switch between attack & defense )
-
-- enable DI card reinforcements at the end of turns
-
-- Player fillCannonical uses negative values for used battle cards
-		for (BattleCard card : usedBattleCards) {
-			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
-		}
-
-- Disable canonical form locking + checks on set for speeeeed
-
-- Funny questions for game designers
+QUESTIONS
+  Funny questions for game designers
 	
 	- Does BLUE_1_RECRUITING_SCRIBE influence the ENLISTMENT DI card to give extra free recruits ?
 		Assumption : yes, because it triggers a special recruit action.

@@ -40,7 +40,8 @@ public class BeastRecruitAction extends EndableAction {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
-		cannonicalForm.set(BoardInventory.RECRUIT_BEAST + beast.index, player.getState(playerIndex));
+		player.setCanonicalState(cannonicalForm, BoardInventory.RECRUIT_BEAST, playerIndex);
+//		cannonicalForm.set(BoardInventory.RECRUIT_BEAST + beast.index, player.getState(playerIndex));
 
 	}
 
