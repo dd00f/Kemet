@@ -19,7 +19,9 @@ import org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction;
 
 import kemet.model.BoardInventory;
 import kemet.model.action.choice.ChoiceInventory;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class KemetNeuralNetBuilder {
 
 	public static LossFunction POLICY_LOSS_FUNCTION = LossFunctions.LossFunction.XENT;
@@ -31,24 +33,24 @@ public class KemetNeuralNetBuilder {
 	public static double NESTEROV_LEARN_RATE = 0.006;
 	public static int INPUT_SIZE = BoardInventory.TOTAL_STATE_COUNT;
 	public static int OUTPUT_SIZE = ChoiceInventory.TOTAL_CHOICE;
-	public static int LAYER_SIZE = INPUT_SIZE * 5;
+	public static int LAYER_SIZE = INPUT_SIZE * 2;
 	public static boolean VALUE_OUTPUT = true;
 
-	// TODO default was true
-	public static boolean NEURAL_NET_RESIDUAL_ACTIVATED = false;
+	public static boolean NEURAL_NET_RESIDUAL_ACTIVATED = true;
 
 	// Keep this at false, true destabilizes the network.
 	public static boolean NEURAL_NET_TRAIN_WITH_MASK = true;
 
-	// TODO default was true
 	public static boolean NEURAL_NET_RELU_INTERNAL_LAYERS = true;
 
 	// TODO reset back to 10 or 20
 	// Number of residual blocks in the neural network.
-	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;
-	
-	
+	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 3;
+
 	private ComputationGraph apply(int blocks) {
+
+		log.info("Building Neural Network : {} inputs, {} outputs, {} residual blocks of size {}", INPUT_SIZE,
+				OUTPUT_SIZE, blocks, LAYER_SIZE);
 
 		NeuralNetConfiguration.Builder builder = new NeuralNetConfiguration.Builder();
 
@@ -100,9 +102,9 @@ public class KemetNeuralNetBuilder {
 				Builder residualDenseBuilder = new DenseLayer.Builder().nIn(LAYER_SIZE).nOut(LAYER_SIZE)
 						.weightInit(weightInit);
 
-				//if (false) {
-				//	residualDenseBuilder.activation(Activation.RELU);
-				//}
+				// if (false) {
+				residualDenseBuilder.activation(Activation.RELU);
+				// }
 
 				conf2.layer(denseLayerNameR, residualDenseBuilder.build(), policyInput);
 
@@ -115,6 +117,19 @@ public class KemetNeuralNetBuilder {
 			}
 
 		}
+
+//	    val firstBlock = "residual_1_" + blockNumber
+//	    	    val firstOut = "relu_residual_1_" + blockNumber
+//	    	    val secondBlock = "residual_2_" + blockNumber
+//	    	    val mergeBlock = "add_" + blockNumber
+//	    	    val actBlock = "relu_" + blockNumber
+//
+//	    	    val firstBnOut =
+//	    	      addConvBatchNormBlock(firstBlock, inName, 256, useActivation = true, kernelSize, strides, convolutionMode)
+//	    	    val secondBnOut =
+//	    	      addConvBatchNormBlock(secondBlock, firstOut, 256, useActivation = false, kernelSize, strides, convolutionMode)
+//	    	    conf.addVertex(mergeBlock, new ElementWiseVertex(Op.Add), firstBnOut, secondBnOut)
+//	    	    conf.addLayer(actBlock, new ActivationLayer.Builder().activation(Activation.RELU).build(), mergeBlock)
 
 		String policyOutputLayer = "policyOutput";
 

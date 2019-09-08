@@ -113,7 +113,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
-		assertEquals(3, bluePlayer.getDiCardCount());
+		assertEquals(0, bluePlayer.getDiCardCount());
 
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
@@ -125,7 +125,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		assertEquals(5, bluePlayer.getDiCardCount());
+		assertEquals(2, bluePlayer.getDiCardCount());
 	}
 
 	@Test
@@ -145,32 +145,36 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
-		assertEquals(3, redPlayer.getDiCardCount());
-		assertEquals(3, bluePlayer.getDiCardCount());
-		assertEquals(DiCardList.TOTAL_DI_COUNT - 6, DiCardList.sumArray(game.availableDiCardList));
-		assertEquals(0, DiCardList.sumArray(game.discardedDiCardList));
+		assertEquals(0, redPlayer.getDiCardCount());
+		assertEquals(0, bluePlayer.getDiCardCount());
+		assertEquals(0, DiCardList.sumArray(getDiscardedDiCardList()));
 
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
 
 		activateTemple(true);
 
-		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
+		PlayerChoicePick nextPlayerChoicePick = getNextPlayerChoicePick();
 		List<Choice> choiceList = nextPlayerChoicePick.choiceList;
-		assertEquals(5, choiceList.size());
-		game.activateAction(choiceList.get(0));
+		assertTrue(choiceList.size() > 1);
+		assertEquals( 5, DiCardList.sumArray(getVisionDiCardList()));
+		activateActionOnGame(nextPlayerChoicePick.player.getIndex(), choiceList.get(0).getIndex());
 
 		// trigger night
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		assertEquals(4, redPlayer.getDiCardCount());
-		assertEquals(5, bluePlayer.getDiCardCount());
+		assertEquals(1, redPlayer.getDiCardCount());
+		assertEquals(2, bluePlayer.getDiCardCount());
 
-		assertEquals(DiCardList.TOTAL_DI_COUNT - 9, DiCardList.sumArray(game.availableDiCardList));
-		assertEquals(0, DiCardList.sumArray(game.discardedDiCardList));
+		assertEquals(DiCardList.TOTAL_DI_COUNT - 3, DiCardList.sumArray(getAvailableDiCardList()));
+		assertEquals(0, DiCardList.sumArray(getDiscardedDiCardList()));
 
 	}
+	
+
+
+
 
 	@Test
 	public void test_WHITE_2_GREAT_PRIEST() {
@@ -198,7 +202,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		activateTemple(true);
 
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 
 		// night + temple + remaining
 		assertEquals(1 + 4 + 5, bluePlayer.getPrayerPoints());
@@ -213,7 +217,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
 		prayRowThree();
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		// moved by teleport
 		assertEquals(5, bluePlayer.getPrayerPoints());
@@ -222,8 +226,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 				BattleCard.PHALANX_DEFENSE_CARD);
 		// one damage applied
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
@@ -237,7 +241,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, bluePlayer.getPrayerPoints());
 
 		prayRowThree();
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		// moved by teleport
 		assertEquals(4, bluePlayer.getPrayerPoints());
@@ -246,8 +250,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 				BattleCard.PHALANX_DEFENSE_CARD);
 		// one damage applied
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		assertEquals(4, bluePlayer.getPrayerPoints());
 		assertEquals(3, bluePlayer.victoryPoints);
@@ -261,7 +265,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, bluePlayer.getPrayerPoints());
 
 		prayRowThree();
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		// moved by teleport
 		assertEquals(4, bluePlayer.getPrayerPoints());
@@ -269,8 +273,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		assertEquals(8, bluePlayer.getPrayerPoints());
 		assertEquals(5, bluePlayer.victoryPoints);
@@ -312,13 +316,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		// night actions : upgrade pyramid from level 0 to 1 for free
 
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 		assertEquals(11, bluePlayer.getPrayerPoints());
 		Tile blueDistrict3 = bluePlayer.cityTiles.get(2);
 		assertEquals(0, blueDistrict3.getPyramidLevel());
-		game.activateAction(game.getNextPlayer(), blueDistrict3.getPickChoiceIndex(game.getNextPlayer()));
+		activateActionOnGame(getNextPlayer(), blueDistrict3.getPickChoiceIndex(getNextPlayer()));
 		assertEquals(11, bluePlayer.getPrayerPoints());
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + Color.BLACK.ordinal());
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PICK_COLOR_CHOICE + Color.BLACK.ordinal());
 		assertEquals(11, bluePlayer.getPrayerPoints());
 
 		
@@ -352,7 +356,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(4, bluePlayer.getPrayerPoints());
 
 		prayRowThree();
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, bluePlayer.getPrayerPoints());
@@ -360,8 +364,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		assertEquals(5, bluePlayer.victoryPoints);
 
@@ -396,7 +400,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		activateTemple(true);
 
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 
 		// night + temple + remaining
 		assertEquals(0 + 7 + 4, bluePlayer.getPrayerPoints());
@@ -405,14 +409,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	@Test
 	public void test_RED_1_CHARGE_1_lost() {
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, redPlayer.victoryPoints);
 
 	}
@@ -426,14 +430,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 
 	}
@@ -447,14 +451,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 	}
 
@@ -465,7 +469,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 		assertEquals(5, redPlayer.getPrayerPoints());
 
 		// moved by teleport, only 1 cost
@@ -473,7 +477,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 	}
 
@@ -487,7 +491,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), redPlayer.cityFront, 5);
-		moveNextTile(game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE), 5);
+		moveNextTile(getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE), 5);
 	}
 
 	@Test
@@ -499,7 +503,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(1, redPlayer.damageBonus);
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), tileByName, 2);
@@ -507,7 +511,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		// did 2 damage instead of 1
 		assertEquals(1, tileByName.getArmy().armySize);
@@ -522,7 +526,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(2, redPlayer.moveCapacity);
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
 		moveNextTile(bluePlayer.cityFront, 5);
 		try {
 			moveNextTile(bluePlayer.cityTiles.get(2), 5);
@@ -536,7 +540,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	@Test
 	public void test_RED_2_OPEN_GATE() {
 		// give RED_1_GOD_SPEED for free
-		game.movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
+		movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
 
 		assertEquals(2, redPlayer.moveCapacity);
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -544,7 +548,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
 		moveNextTile(bluePlayer.cityFront, 5);
 		moveNextTile(bluePlayer.cityTiles.get(2), 5);
 	}
@@ -557,9 +561,9 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
 		assertEquals(3, redPlayer.getPrayerPoints());
-		moveNextTile(game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+		moveNextTile(getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 		assertEquals(1, redPlayer.getPrayerPoints());
 	}
 
@@ -573,7 +577,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertTrue(redPlayer.usedBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
 
 		buyPowerTile(PowerList.RED_2_OFFENSIVE_STRATEGY);
-		game.activateAction(game.getNextPlayer(), BattleCard.FERVENT_PURGE_CARD.getPickChoiceIndex());
+		activateActionOnGame(getNextPlayer(), BattleCard.FERVENT_PURGE_CARD.getPickChoiceIndex());
 
 		assertTrue(redPlayer.availableBattleCards.contains(BattleCard.OFFENSIVE_STRATEGY_CARD));
 		assertFalse(redPlayer.availableBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
@@ -589,10 +593,10 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	@Test
 	public void test_RED_2_TELEPORT_missing() {
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.SMALL_TEMPLE), 5);
 		assertEquals(5, redPlayer.getPrayerPoints());
 		try {
-			moveNextTile(game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+			moveNextTile(getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 			fail("Should not be able to move to island temple from small temple.");
 		} catch (Exception ex) {
 
@@ -608,14 +612,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(4, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 	}
 
@@ -626,11 +630,11 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(4, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
@@ -644,7 +648,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_RECALL));
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 	}
 
@@ -655,11 +659,11 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(4, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
@@ -669,21 +673,25 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		// pick divine wound
 		endDivineWound();
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, redPlayer.victoryPoints);
 	}
 
+
+
 	@Test
 	public void test_RED_3_DIVINE_WOUND_Defense_win() {
+
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
 		assertEquals(4, redPlayer.getPrayerPoints());
+		endTurnSkipDiCard();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
-
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
@@ -698,12 +706,12 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND));
 		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND));
 		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_RECALL));
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
 
 		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_DIVINE_WOUND));
 		assertEquals(0, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_DIVINE_WOUND));
 		assertEquals(1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_RECALL));
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		assertEquals(3, bluePlayer.victoryPoints);
 	}
@@ -711,24 +719,30 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	@Test
 	public void test_RED_3_DIVINE_WOUND_defense_lost() {
 
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+
+		
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_3_DIVINE_WOUND);
 		assertEquals(4, redPlayer.getPrayerPoints());
+		endTurnSkipDiCard();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
 
 		// pick divine wound
 		endDivineWound();
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, bluePlayer.victoryPoints);
 	}
+
+
 
 	@Test
 	public void test_RED_3_BLADES_OF_NEITH_defense() {
@@ -738,14 +752,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(1, redPlayer.strengthBonus);
 		assertEquals(4, redPlayer.getPrayerPoints());
 
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		assertEquals(3, bluePlayer.victoryPoints);
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.DEFENSIVE_RETREAT_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, bluePlayer.victoryPoints);
 		assertEquals(3, redPlayer.victoryPoints);
 	}
@@ -771,13 +785,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		// enemy army size 3, reduced to 1 after initiative. Send 2 army to win with
 		// equal cards.
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 2);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 2);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		prayRowThree();
 		assertEquals(5, redPlayer.victoryPoints);
@@ -832,13 +846,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(1, bluePlayer.defenseBonus);
 
 		// should be equal army of 3v3, charge vs defense
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, redPlayer.victoryPoints);
 
 	}
@@ -858,13 +872,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(1, bluePlayer.defenseBonus);
 
 		// should be equal army of 3v3, charge vs defense
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, redPlayer.victoryPoints);
 
 	}
@@ -881,13 +895,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.BLUE_2_LEGION);
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(9, bluePlayer.getPrayerPoints());
 
@@ -910,7 +924,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertTrue(bluePlayer.usedBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
 
 		buyPowerTile(PowerList.BLUE_2_DEFENSIVE_STRATEGY);
-		game.activateAction(game.getNextPlayer(), BattleCard.FERVENT_PURGE_CARD.getPickChoiceIndex());
+		activateActionOnGame(getNextPlayer(), BattleCard.FERVENT_PURGE_CARD.getPickChoiceIndex());
 
 		assertTrue(bluePlayer.availableBattleCards.contains(BattleCard.DEFENSIVE_STRATEGY_CARD));
 		assertFalse(bluePlayer.availableBattleCards.contains(BattleCard.FERVENT_PURGE_CARD));
@@ -935,13 +949,13 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, bluePlayer.getPrayerPoints());
 		assertEquals(1, bluePlayer.shieldBonus);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 		// gain 1 extra prayer point due to shield
 		assertEquals(9, bluePlayer.getPrayerPoints());
@@ -957,25 +971,25 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowThree();
 
-		moveRowTwoArmy(bluePlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(bluePlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 
 		assertEquals(3, bluePlayer.victoryPoints);
 
 		// ensure the red defender goes first, unlike the normal flow.
-		game.activateAction(game.getNextPlayer(), BattleCard.CAVALRY_BLITZ_CARD.getPickChoiceIndex());
-		game.activateAction(game.getNextPlayer(), BattleCard.PHALANX_DEFENSE_CARD.getPickChoiceIndex());
+		activateActionOnGame(getNextPlayer(), BattleCard.CAVALRY_BLITZ_CARD.getPickChoiceIndex());
+		activateActionOnGame(getNextPlayer(), BattleCard.PHALANX_DEFENSE_CARD.getPickChoiceIndex());
 
 		assertTrue(redPlayer.discardedBattleCards.contains(BattleCard.PHALANX_DEFENSE_CARD));
 		assertTrue(redPlayer.usedBattleCards.contains(BattleCard.CAVALRY_BLITZ_CARD));
 
-		game.activateAction(game.getNextPlayer(), BattleCard.CAVALRY_BLITZ_CARD.getPickChoiceIndex());
-		game.activateAction(game.getNextPlayer(), BattleCard.PHALANX_DEFENSE_CARD.getPickChoiceIndex());
+		activateActionOnGame(getNextPlayer(), BattleCard.CAVALRY_BLITZ_CARD.getPickChoiceIndex());
+		activateActionOnGame(getNextPlayer(), BattleCard.PHALANX_DEFENSE_CARD.getPickChoiceIndex());
 
 		assertTrue(bluePlayer.discardedBattleCards.contains(BattleCard.PHALANX_DEFENSE_CARD));
 		assertTrue(bluePlayer.usedBattleCards.contains(BattleCard.CAVALRY_BLITZ_CARD));
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, bluePlayer.victoryPoints);
 	}
 
@@ -992,14 +1006,14 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(6, bluePlayer.getPrayerPoints());
 
 		// 2+1 vs 3
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 2);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 2);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		assertEquals(3, bluePlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, redPlayer.victoryPoints);
 		// gain 1 VP due to defensive victory
 		assertEquals(4, bluePlayer.victoryPoints);
@@ -1045,11 +1059,10 @@ public class PowerTileTest extends TwoPlayerGameTest {
 	@Test
 	public void test_BLUE_4_REINFORCEMENTS_night_battle() {
 
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.movePowerToPlayer(redPlayer, PowerList.RED_2_OPEN_GATE);
-		game.movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
+		movePowerToPlayer(redPlayer, PowerList.RED_2_OPEN_GATE);
+		movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
 
 		buyPowerTile(PowerList.RED_1_CHARGE_1);
 		assertEquals(9, bluePlayer.getPrayerPoints());
@@ -1060,7 +1073,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		prayRowThree();
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
-		moveRowOneArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5);
+		moveRowOneArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5);
 		moveNextTile(bluePlayer.cityFront, 5);
 		moveNextTile(bluePlayer.cityTiles.get(0), 5);
 		startRecruit();
@@ -1088,14 +1101,16 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.PHALANX_DEFENSE_CARD,
 				BattleCard.CAVALRY_BLITZ_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
 
 		assertEquals(4, bluePlayer.victoryPoints);
 
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.FERVENT_PURGE_CARD, BattleCard.DEFENSIVE_RETREAT_CARD,
 				BattleCard.FERVENT_PURGE_CARD);
 	}
+
+
 
 	@Test
 	public void test_BLUE_4_SPHINX_vp() {
@@ -1209,7 +1224,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 3);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
@@ -1217,7 +1232,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(3, redPlayer.victoryPoints);
 		// 1 extra prayer point from destroyed troop.
 		assertEquals(6, redPlayer.getPrayerPoints());
@@ -1230,7 +1245,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(5, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
@@ -1238,7 +1253,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		assertEquals(5, redPlayer.getPrayerPoints());
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
 	}
@@ -1261,7 +1276,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		assertEquals(9, bluePlayer.getPrayerPoints());
 		Tile blueCity1 = bluePlayer.cityTiles.get(1);
 		Army army = blueCity1.getArmy();
-		moveRowTwoArmy(blueCity1, game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+		moveRowTwoArmy(blueCity1, getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 		assertEquals(4, army.armySize);
 
 		assertEquals(7, bluePlayer.getPrayerPoints());
@@ -1271,8 +1286,8 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		startRecruit();
 		endRecruit();
@@ -1307,19 +1322,19 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		prayRowThree();
 		prayRowThree();
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
 
 	@Test
 	public void test_BLACK_4_DIVINE_STRENGTH_and_BLACK_2_DEDICATION_TO_BATTLE() {
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_DIVINE_STRENGTH);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_4_DIVINE_STRENGTH);
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_2_DEDICATION_TO_BATTLE);
 		assertEquals(5, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
@@ -1327,7 +1342,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		assertEquals(6, redPlayer.getPrayerPoints());
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
@@ -1415,7 +1430,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 		recruitArmy(tile, 2);
 		endRecruit();
 
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 
 		// recruit for two, pray for two
 		assertEquals(5, bluePlayer.getPrayerPoints());
@@ -1443,7 +1458,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		moveFirstTile(bluePlayer.cityTiles.get(1), bluePlayer.cityFront, 5);
 
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 
 		// recruit for two, pray for two
 		assertEquals(7, bluePlayer.getPrayerPoints());
@@ -1480,7 +1495,7 @@ public class PowerTileTest extends TwoPlayerGameTest {
 
 		moveFirstTile(redPlayer.cityTiles.get(1), redPlayer.cityFront, 5);
 
-		game.getNextPlayerChoicePick();
+		getNextPlayerChoicePick();
 		assertEquals(6, redPlayer.getPrayerPoints());
 
 	}

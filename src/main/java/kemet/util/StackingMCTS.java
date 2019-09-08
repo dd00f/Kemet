@@ -374,29 +374,29 @@ public class StackingMCTS {
 		}
 	}
 
-	private void activateActionOnGame(Game currentGame, final int currentPlayerIndex, ByteCanonicalForm canonicalForm,
-			int actionIndexOfNextSimulationA) {
-		try {
-			currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
-
-		} catch (Exception ex) {
-
-			ex.printStackTrace();
-
-			GameInformation gameInformation = pooler.providedPredictions.get(canonicalForm);
-			checkForValidMoveMatch(gameInformation, currentGame);
-
-			currentGame.setPrintActivations(true);
-			currentGame.printDescribeGame();
-			currentGame.printChoiceList();
-
-			// patch the valid moves and redo another action
-			gameInformation.validMoves = currentGame.getValidMoves();
-			actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(canonicalForm, currentGame,
-					gameInformation.validMoves);
-			currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
-		}
-	}
+//	private void activateActionOnGame(Game currentGame, final int currentPlayerIndex, ByteCanonicalForm canonicalForm,
+//			int actionIndexOfNextSimulationA) {
+//		try {
+//			currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
+//
+//		} catch (Exception ex) {
+//
+//			ex.printStackTrace();
+//
+//			GameInformation gameInformation = pooler.providedPredictions.get(canonicalForm);
+//			checkForValidMoveMatch(gameInformation, currentGame);
+//
+//			currentGame.setPrintActivations(true);
+//			currentGame.printDescribeGame();
+//			currentGame.printChoiceList();
+//
+//			// patch the valid moves and redo another action
+//			gameInformation.validMoves = currentGame.getValidMoves();
+//			actionIndexOfNextSimulationA = findBestActionIndexFromPreviousSimulations(canonicalForm, currentGame,
+//					gameInformation.validMoves);
+//			currentGame.activateAction(currentPlayerIndex, actionIndexOfNextSimulationA);
+//		}
+//	}
 
 	public void checkForValidMoveMatch(GameInformation gameInformation, Game currentGame) {
 
@@ -445,25 +445,25 @@ public class StackingMCTS {
 						bestActionValue = currentActionValueU;
 						bestActionIndex = actionIndexA;
 					} else {
-						// flag action index as loop inducing.
-						MctsBoardInformation boardInformation = getBoardInformation(boardS);
-
-						// lower the value of actions that leads to loops.
-						Float currentValue = boardInformation.valueAtBoardActionQsa.get(actionIndexA);
-						float newValue = -1;
-						if (currentValue != null) {
-							newValue = (currentValue - 0.1f);
-							if (currentValue > 0) {
-								newValue = newValue / 2;
-							} else {
-								newValue *= 2;
-							}
-
-							if (newValue < -1) {
-								newValue = -1;
-							}
-						}
-						boardInformation.valueAtBoardActionQsa.put(actionIndexA, newValue);
+//						// flag action index as loop inducing.
+//						MctsBoardInformation boardInformation = getBoardInformation(boardS);
+//
+//						// lower the value of actions that leads to loops.
+//						Float currentValue = boardInformation.valueAtBoardActionQsa.get(actionIndexA);
+//						float newValue = -1;
+//						if (currentValue != null) {
+//							newValue = (currentValue - 0.1f);
+//							if (currentValue > 0) {
+//								newValue = newValue / 2;
+//							} else {
+//								newValue *= 2;
+//							}
+//
+//							if (newValue < -1) {
+//								newValue = -1;
+//							}
+//						}
+//						boardInformation.valueAtBoardActionQsa.put(actionIndexA, newValue);
 					}
 				}
 			}

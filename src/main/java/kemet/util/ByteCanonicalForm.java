@@ -28,14 +28,14 @@ public class ByteCanonicalForm implements Serializable {
 	}
 
 	public void set(int index, byte value) {
-		if (finalized) {
-			throw new IllegalStateException("ByteCanonicalForm is finalized");
-		}
-
-		if (canonicalForm[index] != 0) {
-			throw new IllegalStateException("ByteCanonicalForm at index " + index + " already has value "
-					+ canonicalForm[index] + " can't set new value " + value);
-		}
+//		if (finalized) {
+//			throw new IllegalStateException("ByteCanonicalForm is finalized");
+//		}
+//
+//		if (canonicalForm[index] != 0) {
+//			throw new IllegalStateException("ByteCanonicalForm at index " + index + " already has value "
+//					+ canonicalForm[index] + " can't set new value " + value);
+//		}
 
 		canonicalForm[index] = value;
 	}
@@ -88,6 +88,10 @@ public class ByteCanonicalForm implements Serializable {
 	public String printCanonicalForm() {
 		
 		StringBuilder build = new StringBuilder("Canonical Form : \n");
+		return printCanonicalForm(build);
+	}
+
+	public String printCanonicalForm(StringBuilder build) {
 		for (int i = 0; i < canonicalForm.length; i++) {
 			if(  canonicalForm[i] != 0 ) {
 				build.append(i);

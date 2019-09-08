@@ -17,6 +17,7 @@ import org.apache.commons.lang3.SerializationUtils;
 import kemet.Options;
 import kemet.ai.TrialPlayerAI;
 import kemet.model.KemetGame;
+import kemet.model.Player;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.SearchPooler.GameInformation;
 import kemet.util.StackingMCTS.MctsBoardInformation;
@@ -30,7 +31,9 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 public class Coach {
 
-	private static int PLAY_PRINT_INTERVAL = 50;
+	public static final String TEMPORARY_NNET_SAVE_POINT_NAME = "temp.pth.tar";
+
+	public static int PLAY_PRINT_INTERVAL = 200;
 
 	/**
 	 * Number of iterations to coach. In each iteration, {@link #numEps} games are
@@ -82,6 +85,10 @@ public class Coach {
 	public ArrayList<TrainExample> trainExamplesHistory = new ArrayList<>();
 	public GameFactory gameFactory;
 
+	public int ignoredGameCount = 0;
+
+	public StackedArena arena;
+
 	public Coach(GameFactory gameFactory, NeuralNet nnet) {
 		super();
 		this.gameFactory = gameFactory;
@@ -94,10 +101,12 @@ public class Coach {
 		for (TrainExample trainExample : trainExamples) {
 
 			int currentPlayerMod = 1;
-			if (trainExample.currentPlayer != currentPlayer) {
+			int playerInExample = trainExample.currentPlayer;
+			if (playerInExample != currentPlayer) {
 				currentPlayerMod = -1;
 			}
-			trainExample.valueV = isCurrentPlayerWinner * currentPlayerMod;
+			int trainExampleValue = isCurrentPlayerWinner * currentPlayerMod;
+			trainExample.valueV = trainExampleValue;
 		}
 	}
 
@@ -141,11 +150,21 @@ public class Coach {
 			long average = totalTime / j;
 			long timeLeft = average * (numIters - j);
 
-			log.info(j + "/" + numIters + " | coach learn time " + duration + "ms | total " + totalTime + "ms | ETA "
-					+ timeLeft + "ms");
+			String durationStr = formatDuration(duration);
+			String totalTimeStr = formatDuration(totalTime);
+			String timeLeftStr = formatDuration(timeLeft);
+
+			log.info(j + "/" + numIters + " | coach learn time " + durationStr + " | total " + totalTimeStr + " | ETA "
+					+ timeLeftStr);
 
 			start = now;
 		}
+
+	}
+
+	public void pitBestVsBasic() {
+
+		pickArenaWinnerStacking(0);
 
 	}
 
@@ -168,20 +187,25 @@ public class Coach {
 		// NB! the examples were collected using the model from the previous iteration,
 		// so (i-1)
 		saveTrainExamples(j - 1);
+		deleteTrainExamples(j - 5);
 
 		// shuffle examples before training
 		List<TrainExample> trainExamples = new ArrayList<>(trainExamplesHistory);
 		Collections.shuffle(trainExamples);
 
 		// training new network, keeping a copy of the old one
-		nnet.saveCheckpoint(this.checkpoint, "temp.pth.tar");
-		pnet.loadCheckpoint(this.checkpoint, "temp.pth.tar");
+		nnet.saveCheckpoint(this.checkpoint, TEMPORARY_NNET_SAVE_POINT_NAME);
+		pnet.loadCheckpoint(this.checkpoint, TEMPORARY_NNET_SAVE_POINT_NAME);
 
-		this.nnet.train(trainExamples);
+		nnet.train(trainExamples);
 
 		if (Options.COACH_USE_STACKING_MCTS) {
 
-			pickArenaWinnerStacking(pnet, nnet, j);
+			if (Options.COACH_BLIND_LEARN) {
+				blindLearn(j);
+			} else {
+				pickArenaWinnerStacking(j);
+			}
 
 		} else {
 
@@ -195,7 +219,15 @@ public class Coach {
 		}
 	}
 
-	private void pickArenaWinnerStacking(NeuralNet pnet2, NeuralNet nnet2, int iteration) {
+	private void blindLearn(int iteration) {
+
+		StackedArena arena = new StackedArena();
+		arena.createSearchPooler();
+
+		arena.acceptNewModel(iteration);
+	}
+
+	private void pickArenaWinnerStacking(int iteration) {
 
 		long totalTime = 0;
 		long end = System.currentTimeMillis();
@@ -203,13 +235,15 @@ public class Coach {
 
 		int matchCount = Options.COACH_ARENA_COMPARE_MATCH_COUNT;
 
-		StackedArena arena = new StackedArena();
-		arena.createSearchPooler(pnet2, nnet2);
-		arena.createGames(matchCount);
+		log.info("Starting arena comparison with previous neural network. Using {} games with {} simulation per move.",
+				matchCount, Options.COACH_MCTS_SIMULATION_COUNT_PER_MOVE);
 
+		initiateArena(matchCount);
+
+//		int TODO_GET_BACK_TO_NORMAL;
 		arena.runGames();
-
 		arena.pickArenaWinner(iteration);
+//		arena.acceptNewModel(iteration);
 
 		// bookkeeping + plot progress
 		long now = System.currentTimeMillis();
@@ -220,9 +254,18 @@ public class Coach {
 		totalTime += duration;
 
 		if (numEps > 0) {
-			log.info("total {} ms to run {} games in parallel. Avg time per game : {} ms", totalTime, matchCount,
-					totalTime / matchCount);
+			String durationStr = formatDuration(totalTime);
+
+			String avgTime = formatDuration(totalTime / matchCount);
+			log.info("total {} to run {} games in parallel. Avg time per game : {} ms", durationStr, matchCount,
+					avgTime);
 		}
+	}
+
+	public void initiateArena(int matchCount) {
+		arena = new StackedArena();
+		arena.createSearchPooler();
+		arena.createGames(matchCount);
 	}
 
 	public class StackedArena {
@@ -235,22 +278,29 @@ public class Coach {
 
 		public int previousVictory;
 		public int newVictory;
+		public int firstPlayerWin;
+		public int secondPlayerWin;
 
-		private void pickArenaWinner(int iteration) {
+		public void pickArenaWinner(int iteration) {
 			float newWinCountfloat = newVictory;
 			float previousWinCountfloat = previousVictory;
-			log.info("NEW/PREV WINS : {} / {} ; DRAWS : {}", newVictory, previousVictory, 0);
+			log.info("NEW/PREV WINS : {} / {} ; DRAWS : {}, First player win : {}, Second player win : {}", newVictory,
+					previousVictory, 0, firstPlayerWin, secondPlayerWin);
 			if (newWinCountfloat + previousWinCountfloat > 0
 					&& newWinCountfloat / (newWinCountfloat + previousWinCountfloat) < updateThreshold) {
 				log.info("REJECTING NEW MODEL");
-				newPooler.neuralNet.loadCheckpoint(checkpoint, "temp.pth.tar");
+				newPooler.neuralNet.loadCheckpoint(checkpoint, TEMPORARY_NNET_SAVE_POINT_NAME);
 			} else {
-				log.info("ACCEPTING NEW MODEL");
-				newPooler.neuralNet.saveCheckpoint(checkpoint, getCheckpointFile(iteration));
-				newPooler.neuralNet.saveCheckpoint(checkpoint, "best.pth.tar");
-
-				saveTrainExamples(getBestExampleFileName());
+				acceptNewModel(iteration);
 			}
+		}
+
+		public void acceptNewModel(int iteration) {
+			log.info("ACCEPTING NEW MODEL");
+			newPooler.neuralNet.saveCheckpoint(checkpoint, getCheckpointFile(iteration));
+			newPooler.neuralNet.saveCheckpoint(checkpoint, "best.pth.tar");
+
+			saveTrainExamples(getBestExampleFileName());
 		}
 
 		private int runPooledArenaAction() {
@@ -273,36 +323,20 @@ public class Coach {
 
 				if (previousMcts != null) {
 
+					previousMcts.game.setPrintActivations(Options.PRINT_ARENA_GAME_EVENTS);
 					int nextPlayer = previousMcts.game.getNextPlayer();
 
 					StackingMCTS nextPlayerMcts = null;
 					boolean swapped = j % 2 == 1;
 					nextPlayerMcts = getNextMcts(previousMcts, newMcts, nextPlayer, swapped);
 
-					activateActionOnGame(temperature, nextPlayerMcts);
-
-					previousMcts.cleanupOldCycles();
-					newMcts.cleanupOldCycles();
-
-					previousMcts.incrementCycle();
-					newMcts.incrementCycle();
-
-					if (nextPlayerMcts.game.isGameEnded()) {
-						previousMCTSList[j] = null;
+					try {
+						activateActionOnGameCheckForEnd(temperature, j, previousMcts, newMcts, nextPlayerMcts, swapped);
+					} catch (Exception ex) {
+						log.error("Unexpected error in Coach.StackedArena.activateActionOnGameCheckForEnd"
+								+ newMcts.game.toString(), ex);
 						newMCTSList[j] = null;
-						remainingGameCount--;
-
-						int playerZeroScore = nextPlayerMcts.game.getGameEnded(0);
-
-						incrementVictoryCount(swapped, playerZeroScore);
-
-						// newMcts.printStats();
-						// previousMcts.printStats();
-
-						if (Options.PRINT_ARENA_GAME_END) {
-							nextPlayerMcts.game.setPrintActivations(true);
-							nextPlayerMcts.game.printDescribeGame();
-						}
+						previousMCTSList[j] = null;
 					}
 				}
 			}
@@ -311,6 +345,35 @@ public class Coach {
 			newPooler.cleanup();
 
 			return remainingGameCount;
+		}
+
+		public void activateActionOnGameCheckForEnd(float temperature, int j, StackingMCTS previousMcts,
+				StackingMCTS newMcts, StackingMCTS nextPlayerMcts, boolean swapped) {
+			activateActionOnGame(temperature, nextPlayerMcts);
+
+			previousMcts.cleanupOldCycles();
+			newMcts.cleanupOldCycles();
+
+			previousMcts.incrementCycle();
+			newMcts.incrementCycle();
+
+			if (nextPlayerMcts.game.isGameEnded()) {
+				previousMCTSList[j] = null;
+				newMCTSList[j] = null;
+				remainingGameCount--;
+
+				int playerZeroScore = nextPlayerMcts.game.getGameEnded(0);
+
+				incrementVictoryCount(swapped, playerZeroScore);
+
+				// newMcts.printStats();
+				// previousMcts.printStats();
+
+				if (Options.PRINT_ARENA_GAME_END) {
+					nextPlayerMcts.game.setPrintActivations(true);
+					nextPlayerMcts.game.printDescribeGame();
+				}
+			}
 		}
 
 		private void runPooledArenaSimulation() {
@@ -336,7 +399,13 @@ public class Coach {
 					boolean swapped = j % 2 == 1;
 					nextPlayerMcts = getNextMcts(previousMcts, newMcts, nextPlayer, swapped);
 
-					nextPlayerMcts.finishSearch();
+					try {
+						nextPlayerMcts.finishSearch();
+					} catch (Exception ex) {
+						log.error("Unexpected error in Coach.StackedArena.finishSearch" + newMcts.game.toString(), ex);
+						newMCTSList[j] = null;
+						previousMCTSList[j] = null;
+					}
 				}
 			}
 		}
@@ -354,7 +423,14 @@ public class Coach {
 					boolean swapped = j % 2 == 1;
 					nextPlayerMcts = getNextMcts(previousMcts, newMcts, nextPlayer, swapped);
 
-					nextPlayerMcts.startSearch();
+					try {
+						previousMcts.game.setPrintActivations(Options.PRINT_ARENA_GAME_SIMULATIONS);
+						nextPlayerMcts.startSearch();
+					} catch (Exception ex) {
+						log.error("Unexpected error in Coach.StackedArena.startSearch " + newMcts.game.toString(), ex);
+						newMCTSList[j] = null;
+						previousMCTSList[j] = null;
+					}
 				}
 			}
 		}
@@ -371,18 +447,20 @@ public class Coach {
 
 				if (episodeStep % PLAY_PRINT_INTERVAL == 0) {
 					long duration = System.currentTimeMillis() - start;
-					String prefix = "Arena play " + episodeStep + " steps | took " + duration + "ms | ";
+					String durationStr = formatDuration(duration);
+					String prefix = "Arena play " + episodeStep + " steps | took " + durationStr + " | ";
 					newPooler.printStats(prefix + " new  ");
 					previousPooler.printStats(prefix + " prev ");
 				}
-				
-				if( episodeStep > Options.GAME_TRACK_MAX_ACTION_COUNT  ) {
+
+				if (episodeStep > Options.GAME_TRACK_MAX_ACTION_COUNT) {
 					break;
 				}
 			}
 
 			long duration = System.currentTimeMillis() - start;
-			String prefix = "Arena finished " + episodeStep + " steps | took " + duration + "ms | ";
+			String durationStr = formatDuration(duration);
+			String prefix = "Arena finished " + episodeStep + " steps | took " + durationStr + " | ";
 			newPooler.printStats(prefix + " new  ");
 			previousPooler.printStats(prefix + " prev ");
 
@@ -397,6 +475,21 @@ public class Coach {
 
 			for (int k = 0; k < matchCount; k++) {
 				Game createGame = gameFactory.createGame();
+
+				if (createGame instanceof KemetGame) {
+					KemetGame kg = (KemetGame) createGame;
+					if (k % 2 == 1) {
+						// swapped, new goes first
+						kg.getPlayerByIndex(0).name = "new";
+						kg.getPlayerByIndex(1).name = "old";
+
+					} else {
+						// old goes first
+						kg.getPlayerByIndex(0).name = "old";
+						kg.getPlayerByIndex(1).name = "new";
+					}
+				}
+
 				createGame.setPrintActivations(Options.PRINT_ARENA_GAME_EVENTS);
 				StackingMCTS newMcts = new StackingMCTS(createGame, newPooler, cpuct);
 				StackingMCTS previousMcts = new StackingMCTS(createGame, previousPooler, cpuct);
@@ -406,13 +499,20 @@ public class Coach {
 			}
 		}
 
-		public void createSearchPooler(NeuralNet pnet2, NeuralNet nnet2) {
-			previousPooler = new SearchPooler(pnet2);
+		public void createSearchPooler() {
+			previousPooler = new SearchPooler(pnet);
 
-			newPooler = new SearchPooler(nnet2);
+			newPooler = new SearchPooler(nnet);
 		}
 
 		private void incrementVictoryCount(boolean swapped, int playerZeroScore) {
+
+			if (playerZeroScore > 0) {
+				firstPlayerWin++;
+			} else {
+				secondPlayerWin++;
+			}
+
 			if (!swapped) {
 				// swapped
 				if (playerZeroScore > 0) {
@@ -467,7 +567,8 @@ public class Coach {
 		long end = System.currentTimeMillis();
 		long start = end;
 
-		log.info("START : Self Training Stacking of {} games", numEps);
+		log.info("START : Self Training Stacking of {} games with {} simulations per move", numEps,
+				Options.COACH_MCTS_SIMULATION_COUNT_PER_MOVE);
 
 		SearchPooler pooler = new SearchPooler(nnet);
 
@@ -488,12 +589,44 @@ public class Coach {
 		totalTime += duration;
 
 		if (numEps > 0) {
-			log.info("END   total {} ms to run {} games in parallel. Avg time per game : {} ms", totalTime, numEps,
-					totalTime / numEps);
+			String durationStr = formatDuration(totalTime);
+			String gameStr = formatDuration(totalTime / numEps);
+			log.info("END   total {} to run {} games in parallel. Avg time per game : {}", durationStr, numEps,
+					gameStr);
 		}
 
 		// save the iteration examples to the history
 		trainExamplesHistory.addAll(trainExamples);
+	}
+
+	public static String formatDuration(long duration) {
+		long milliseconds = duration % 1000;
+		long seconds = (duration / 1000) % 60;
+		long minutes = (duration / (1000 * 60)) % 60;
+		long hours = (duration / (1000 * 60 * 60)) % 24;
+		long days = (duration / (1000 * 60 * 60 * 24));
+		String format = "";
+//		if (days > 0) {
+//			format = String.format("%1$02dd%2$02dh", days, hours);
+//		} else if (hours > 0) {
+//			format = String.format("%1$02dh%2$02dm", hours, minutes);
+//		} else if (minutes > 0) {
+//			format = String.format("%1$02dm%2$02ds", minutes, seconds);
+//		} else {
+//			format = String.format("%1$02ds%2$04dms", seconds, milliseconds);
+//		}
+
+		if (days > 0) {
+			format = String.format("%1$01dd %2$02dh", days, hours);
+		} else if (hours > 0) {
+			format = String.format("%1$01dh %2$02dm", hours, minutes);
+		} else if (minutes > 0) {
+			format = String.format("%1$01dm %2$02ds", minutes, seconds);
+		} else {
+			format = String.format("%1$01ds %2$04dms", seconds, milliseconds);
+		}
+
+		return format;
 	}
 
 	private void playPooledGames(SearchPooler pooler, StackingMCTS[] gameList, List<TrainExample> trainExamples) {
@@ -511,17 +644,21 @@ public class Coach {
 
 			if (episodeStep > Options.GAME_TRACK_MAX_ACTION_COUNT) {
 
+				int count = 0;
 				for (int i = 0; i < gameList.length; i++) {
 					StackingMCTS stackingMCTS = gameList[i];
 					if (stackingMCTS != null) {
-						stackingMCTS.game.setPrintActivations(true);
-						stackingMCTS.game.printDescribeGame();
+						count++;
+//						stackingMCTS.game.setPrintActivations(true);
+//						stackingMCTS.game.printDescribeGame();
 					}
 				}
 
 				try {
-					throw new IllegalStateException(
-							"Reached " + Options.GAME_TRACK_MAX_ACTION_COUNT + " steps in a game.");
+					String message = "Reached " + Options.GAME_TRACK_MAX_ACTION_COUNT + " steps in " + count + " game.";
+					log.error(message);
+//					throw new IllegalStateException(
+//							message);
 				} catch (Exception ex) {
 					log.error(ex);
 				}
@@ -530,7 +667,8 @@ public class Coach {
 
 		}
 
-		pooler.printStats("Self play finished " + episodeStep + " | ");
+		pooler.printStats("Self play finished " + episodeStep + " | ignored game count : " + ignoredGameCount + " | ");
+		ignoredGameCount = 0;
 	}
 
 	private boolean hasRemainingGame(StackingMCTS[] gameList) {
@@ -570,20 +708,7 @@ public class Coach {
 		for (int j = 0; j < gameList.length; j++) {
 			StackingMCTS mcts = gameList[j];
 			if (mcts != null) {
-				try {
-					activateActionOnGame(temperature, mcts);
-
-					mcts.cleanupOldCycles();
-					mcts.incrementCycle();
-
-					// purge ended games
-					checkIfGameEnded(gameList, j, mcts, trainExamples);
-
-				} catch (Exception ex) {
-					// scrap games that generated errors
-					log.error("Unexpected error in Coach.runPooledGameAction", ex);
-					gameList[j] = null;
-				}
+				activateActionCheckForEnd(gameList, trainExamples, temperature, j, mcts);
 			}
 		}
 
@@ -591,24 +716,65 @@ public class Coach {
 
 	}
 
+	public void activateActionCheckForEnd(StackingMCTS[] gameList, List<TrainExample> trainExamples, int temperature,
+			int j, StackingMCTS mcts) {
+		try {
+			activateActionOnGame(temperature, mcts);
+
+			mcts.cleanupOldCycles();
+			mcts.incrementCycle();
+
+			// purge ended games
+			checkIfGameEnded(gameList, j, mcts, trainExamples);
+
+		} catch (Exception ex) {
+			// scrap games that generated errors
+			log.error("Unexpected error in Coach.runPooledGameAction" + mcts.game.toString(), ex);
+			gameList[j] = null;
+		}
+	}
+
 	private void checkIfGameEnded(StackingMCTS[] gameList, int i, StackingMCTS mcts, List<TrainExample> trainExamples) {
-		if (mcts.game.isGameEnded()) {
+		Game game = mcts.game;
+		if (game.isGameEnded()) {
+
 			gameList[i] = null;
 
-			int playerIndex = 0;
-			int playerZeroScore = mcts.game.getGameEnded(playerIndex);
+			if (gameHasHighScoreWinner(game)) {
 
-			adjustAllTrainingExampleValue(mcts.trainExamples, playerIndex, playerZeroScore);
+				int playerIndex = 0;
+				int playerZeroScore = game.getGameEnded(playerIndex);
 
-			trainExamples.addAll(mcts.trainExamples);
+				if (Options.COACH_PRINT_GAME_AFTER_SELF_TRAINING) {
+					game.setPrintActivations(true);
+					game.printDescribeGame();
+					log.info("Adjusted Train examples with player index {} and with score {}", playerIndex,
+							playerZeroScore);
+				}
 
-			if (Options.COACH_PRINT_GAME_AFTER_SELF_TRAINING) {
-				mcts.game.setPrintActivations(true);
-				mcts.game.printDescribeGame();
-				log.info("Adjusted Train examples with player index {} and with score {}", playerIndex,
-						playerZeroScore);
+				adjustAllTrainingExampleValue(mcts.trainExamples, playerIndex, playerZeroScore);
+
+				trainExamples.addAll(mcts.trainExamples);
+
+			} else {
+				log.debug("ignored game {} because it had a low winning score", i);
+				ignoredGameCount++;
 			}
 		}
+	}
+
+	private boolean gameHasHighScoreWinner(Game game) {
+		if (game instanceof KemetGame) {
+			KemetGame kg = (KemetGame) game;
+			List<Player> playerByInitiativeList = kg.playerByInitiativeList;
+			for (Player player : playerByInitiativeList) {
+				if (player.victoryPoints >= 7) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return true;
 	}
 
 	private void activateActionOnGame(float temperature, StackingMCTS mcts) {
@@ -703,7 +869,7 @@ public class Coach {
 
 			gameList[j].game.setPrintActivations(true);
 			gameList[j].game.printDescribeGame();
-			log.error("Unexpected error in Coach.finishSearch", ex);
+			log.error("Unexpected error in Coach.finishSearch" + game.game.toString(), ex);
 			gameList[j] = null;
 		}
 	}
@@ -723,7 +889,7 @@ public class Coach {
 				// scrap games that generated errors
 				gameList[j].game.setPrintActivations(true);
 				gameList[j].game.printDescribeGame();
-				log.error("Unexpected error in Coach.startSearch", ex);
+				log.error("Unexpected error in Coach.startSearch" + game.game.toString(), ex);
 				gameList[j] = null;
 			}
 		}
@@ -734,18 +900,29 @@ public class Coach {
 			log.info("len(trainExamplesHistory) =" + trainExamplesHistory.size() + " bigger than " + maxlenOfQueue
 					+ " => remove the oldest trainExamples");
 			int toIndex = trainExamplesHistory.size() - 1;
-			int fromIndex = trainExamplesHistory.size() - maxlenOfQueue;
+			int fromIndex = trainExamplesHistory.size() - maxlenOfQueue - 1;
 			trainExamplesHistory = new ArrayList<>(trainExamplesHistory.subList(fromIndex, toIndex));
 
 		}
 	}
 
-	private String getBestExampleFileName() {
+	public String getBestExampleFileName() {
 		return this.checkpoint + "best.pth.tar" + ".examples";
 	}
 
 	public String getCheckpointFile(int iteration) {
-		return "checkpoint_" + iteration + "pth.tar";
+		return "checkpoint_" + padNumberToString(iteration, 5) + "pth.tar";
+	}
+
+	public static String padNumberToString(int number, int paddingCharacterCount) {
+
+		String string = Integer.toString(number);
+		int padLeft = paddingCharacterCount - string.length();
+
+		for (int i = 0; i < padLeft; ++i) {
+			string = "0" + string;
+		}
+		return string;
 	}
 
 	public void saveTrainExamples(int iteration) {
@@ -758,7 +935,24 @@ public class Coach {
 		saveTrainExamples(filePath);
 	}
 
-	private void saveTrainExamples(String filePath) {
+	public void deleteTrainExamples(int iteration) {
+		File folder = new File(checkpoint);
+		if (!folder.exists()) {
+			folder.mkdir();
+		}
+
+		String filePath = folder + "/" + getCheckpointFile(iteration) + ".examples";
+		File inputFile = new File(filePath);
+		if (inputFile.exists()) {
+			try {
+				inputFile.delete();
+			} catch (Exception ex) {
+				log.error(ex);
+			}
+		}
+	}
+
+	public void saveTrainExamples(String filePath) {
 		File inputFile = new File(filePath);
 		FileOutputStream fos;
 		try {

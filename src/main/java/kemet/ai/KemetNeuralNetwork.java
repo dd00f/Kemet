@@ -19,6 +19,7 @@ import org.nd4j.linalg.dataset.api.iterator.TestMultiDataSetIterator;
 
 import kemet.Options;
 import kemet.util.ByteCanonicalForm;
+import kemet.util.Coach;
 import kemet.util.NeuralNet;
 import kemet.util.PolicyVector;
 import kemet.util.TrainExample;
@@ -30,8 +31,7 @@ public class KemetNeuralNetwork implements NeuralNet {
 
 	public ComputationGraph model;
 
-	public static int epochs = Options.NEURAL_NET_TRAIN_EPOCH;
-	public static int batchSize = 10;
+	public static boolean listenerDone = false;
 
 	public KemetNeuralNetwork() {
 		if (Options.USE_RECURRENT_NEURAL_NET) {
@@ -48,15 +48,20 @@ public class KemetNeuralNetwork implements NeuralNet {
 	}
 
 	public void addListeners() {
-		model.addListeners(new PerformanceListener(50, true));
-		model.addListeners(new CollectScoresListener(50, true));
-		// model.addListeners(new TimeIterationListener(50));
+		if (!listenerDone) {
+			model.addListeners(new PerformanceListener(50, true));
+			model.addListeners(new CollectScoresListener(50, true));
+			// model.addListeners(new TimeIterationListener(50));
+			listenerDone = true;
+		}
 	}
 
 	@Override
 	public void train(List<TrainExample> examples) {
 
 		List<MultiDataSet> setList = new ArrayList<>();
+
+		int epochs = Options.NEURAL_NET_TRAIN_EPOCH;
 
 		for (TrainExample trainExample : examples) {
 			setList.add(trainExample.convertToMultiDataSet());
@@ -86,11 +91,16 @@ public class KemetNeuralNetwork implements NeuralNet {
 
 				float setListSizeFloat = setListSize;
 				float durationPerData = durationFloat / setListSizeFloat;
-				log.info(i + "/" + epochs + " | train eps time " + duration + "ms | total " + totalTime + "ms | ETA "
+
+				String durationStr = Coach.formatDuration(duration);
+				String totalTimeStr = Coach.formatDuration(totalTime);
+				String timeLeftStr = Coach.formatDuration(timeLeft);
+
+				log.info(i + "/" + epochs + " | train eps time " + durationStr + " | total " + totalTimeStr + " | ETA "
 						+ timeLeft + "ms, train list size : " + setListSize + " time per input ms = "
 						+ durationPerData);
-				String message = "{} / {}  | train eps time {}ms | total {}ms | ETA {}ms, train list size : {} time per input ms = {}";
-				log.info(message, i, epochs, duration, totalTime, timeLeft, setListSize, durationPerData);
+				String message = "{} / {}  | train eps time {} | total {} | ETA {}, train list size : {} time per input ms = {}";
+				log.info(message, i, epochs, durationStr, totalTimeStr, timeLeftStr, setListSize, durationPerData);
 
 				start = now;
 			}
@@ -114,13 +124,17 @@ public class KemetNeuralNetwork implements NeuralNet {
 			float setListSizeFloat = setListSize;
 			float durationPerData = durationFloat / epochs / setListSizeFloat;
 			float timePerEpoch = durationFloat / epochs;
-			String message = "END   trained {} epoch | total {} ms | train list size : {} | time per epoch ms = {}ms | time per input ms = {}";
-			log.info(message, epochs, totalTime, setListSize, timePerEpoch, durationPerData);
+
+			String timePerEpochStr = Coach.formatDuration((long) timePerEpoch);
+			String totalTimeStr = Coach.formatDuration(totalTime);
+
+			String message = "END   trained {} epoch | total {} | train list size : {} | time per epoch = {} | time per input ms = {}";
+			log.info(message, epochs, totalTimeStr, setListSize, timePerEpochStr, durationPerData);
 
 		}
 	}
 
-	private void trainEpoch( List<MultiDataSet> setList) {
+	private void trainEpoch(List<MultiDataSet> setList) {
 
 		Collections.shuffle(setList);
 

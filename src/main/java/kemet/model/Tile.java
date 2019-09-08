@@ -295,24 +295,6 @@ public class Tile implements Model {
 		return ChoiceInventory.ESCAPE_TILE_CHOICE + getTileCanonicalIndex(playerIndex);
 	}
 
-	static {
-		int todoDeleteMe;
-	}
-
-//	@Deprecated
-//	public void setSelected(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
-//		int todoDeleteMe;
-//		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
-//		cannonicalForm.set(BoardInventory.TILE_SELECTED + tileCanonicalIndex, value);
-//	}
-//
-//	@Deprecated
-//	public void setSelectedSource(ByteCanonicalForm cannonicalForm, int playerIndex, byte value) {
-//		int todoDeleteMe;
-//		int tileCanonicalIndex = getTileCanonicalIndex(playerIndex);
-//		cannonicalForm.set(BoardInventory.TILE_SOURCE_SELECTED + tileCanonicalIndex, value);
-//	}
-
 	public void setCanonicalSelected(ByteCanonicalForm cannonicalForm, Player selectedByPlayer,
 			int canonicalPlayerIndex) {
 
@@ -380,7 +362,7 @@ public class Tile implements Model {
 				int startOffset = BoardInventory.BEAST_POSITION;
 				int playerOffset = armySizePlayerOffset * BeastList.BEAST_INDEXER;
 				int beastOffset = tileArmy.beast.index * BoardInventory.TILE_COUNT;
-				int finalOffset = startOffset + playerOffset + beastOffset + index;
+				int finalOffset = startOffset + playerOffset + beastOffset + tileCanonicalIndex;
 
 				canonicalForm.set(finalOffset, (byte) 1);
 			}

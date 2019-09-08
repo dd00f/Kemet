@@ -164,6 +164,12 @@ public class DiCardList {
 		}
 	}
 
+	public static void copyArray(boolean[] source, boolean[] destination) {
+		for (int i = 0; i < source.length; ++i) {
+			destination[i] = source[i];
+		}
+	}
+	
 	public static void moveAllDiCard(byte[] source, byte[] destination, String sourceName, String destinationName,
 			String reason, KemetGame game) {
 		for (int i = 0; i < source.length; i++) {
@@ -275,6 +281,12 @@ public class DiCardList {
 		availableDiCardList[17] = 1;
 		availableDiCardList[18] = 2;
 		availableDiCardList[19] = 1;
+	}
+
+	public static void fillArray(boolean[] destination, boolean value) {
+		for (int i = 0; i < destination.length; ++i) {
+			destination[i] = value;
+		}
 	}
 
 }

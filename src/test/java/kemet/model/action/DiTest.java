@@ -10,7 +10,6 @@ import kemet.model.BattleCard;
 import kemet.model.BeastList;
 import kemet.model.BoardInventory;
 import kemet.model.DiCardList;
-import kemet.model.KemetGame;
 import kemet.model.PowerList;
 import kemet.model.Tile;
 import kemet.model.action.choice.ChoiceInventory;
@@ -20,11 +19,11 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void WAR_RAGE() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.WAR_RAGE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.WAR_RAGE, redPlayer);
 
 		Tile from = redPlayer.cityTiles.get(1);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(from, tileByName, 3);
 
 		// moved by teleport, only 1 cost
@@ -37,7 +36,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
 		// 3 recall - 1 damage = 2 prayer bonus
@@ -48,10 +47,10 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void WAR_FURY() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.WAR_FURY, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.WAR_FURY, redPlayer);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 2);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 2);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
@@ -64,7 +63,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 1 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(4, redPlayer.getPrayerPoints());
@@ -76,10 +75,10 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void BLOOD_BATTLE() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.BLOOD_BATTLE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.BLOOD_BATTLE, redPlayer);
 
-		moveRowTwoArmy(redPlayer.cityTiles.get(1), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4);
+		moveRowTwoArmy(redPlayer.cityTiles.get(1), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4);
 
 		// moved by teleport, only 1 cost
 		assertEquals(3, redPlayer.victoryPoints);
@@ -92,7 +91,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -104,10 +103,10 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void BLOOD_BATH() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.BLOOD_BATH, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.BLOOD_BATH, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -121,7 +120,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 1 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(4, redPlayer.getPrayerPoints());
@@ -135,13 +134,12 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void BRONZE_WALL() {
 
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.BRONZE_WALL, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.BRONZE_WALL, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -155,7 +153,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CHARIOT_RAID_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -169,13 +167,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void IRON_WALL() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.IRON_WALL, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.IRON_WALL, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -189,7 +186,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CHARIOT_RAID_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		moveRowOneZeroArmy();
 		// 0 power cost
@@ -207,13 +204,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void DIVINE_PROTECTION_attack_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -227,7 +223,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CHARIOT_RAID_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -243,13 +239,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void DIVINE_PROTECTION_attack_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 3);
 
 		// moved by teleport, only 1 cost
@@ -263,7 +258,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(3, redPlayer.victoryPoints);
 
@@ -278,13 +273,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void DIVINE_PROTECTION_defense_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -298,7 +292,7 @@ public class DiTest extends TwoPlayerGameTest {
 		pickBattleCard(BattleCard.CHARIOT_RAID_CARD);
 		pickBattleCard(BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -314,13 +308,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void DIVINE_PROTECTION_defense_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.DIVINE_PROTECTION, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -336,7 +329,7 @@ public class DiTest extends TwoPlayerGameTest {
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 4 card = 7
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(3, redPlayer.victoryPoints);
 
@@ -354,13 +347,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void TACTICAL_CHOICE_attack_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -377,8 +369,8 @@ public class DiTest extends TwoPlayerGameTest {
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 4 card = 7
 		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE));
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_SWAP);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_SWAP);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 
@@ -386,13 +378,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void TACTICAL_CHOICE_attack_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -410,8 +401,8 @@ public class DiTest extends TwoPlayerGameTest {
 		// blue : 3 army + 0 DI + 4 card = 7
 		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ATTACKER_TACTICAL_CHOICE));
 		
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_KEEP);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_KEEP);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(3, redPlayer.victoryPoints);
 
@@ -419,13 +410,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void TACTICAL_CHOICE_defense_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -442,8 +432,8 @@ public class DiTest extends TwoPlayerGameTest {
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 1 card = 4
 		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE));
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_SWAP);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_SWAP);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(3, redPlayer.victoryPoints);
 
@@ -451,13 +441,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void TACTICAL_CHOICE_defense_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.TACTICAL_CHOICE, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -474,8 +463,8 @@ public class DiTest extends TwoPlayerGameTest {
 		// red : 5 army + 0 DI + 1 card = 6
 		// blue : 3 army + 0 DI + 1 card = 4
 		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_DEFENDER_TACTICAL_CHOICE));
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_KEEP);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.TACTICAL_CHOICE_KEEP);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 
@@ -483,13 +472,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void GLORY_attack_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.GLORY, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.GLORY, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -503,7 +491,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CHARIOT_RAID_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(9, redPlayer.getPrayerPoints());
@@ -516,13 +504,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void GLORY_attack_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.GLORY, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.GLORY, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 3);
 
 		// moved by teleport, only 1 cost
@@ -536,7 +523,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(3, redPlayer.victoryPoints);
 
@@ -551,13 +538,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void GLORY_defense_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.GLORY, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.GLORY, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -571,7 +557,7 @@ public class DiTest extends TwoPlayerGameTest {
 		pickBattleCard(BattleCard.CHARIOT_RAID_CARD);
 		pickBattleCard(BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -587,13 +573,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void GLORY_defense_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.GLORY, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.GLORY, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -624,13 +609,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void REINFORCEMENTS_attack_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.REINFORCEMENTS, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.REINFORCEMENTS, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -646,7 +630,7 @@ public class DiTest extends TwoPlayerGameTest {
 
 		recruitArmy(islandTile, 3);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -659,13 +643,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void REINFORCEMENTS_attack_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.REINFORCEMENTS, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.REINFORCEMENTS, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 3);
 
 		// moved by teleport, only 1 cost
@@ -679,7 +662,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(3, redPlayer.victoryPoints);
 
@@ -694,13 +677,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void REINFORCEMENTS_defense_lose() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.REINFORCEMENTS, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.REINFORCEMENTS, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 4);
 
 		// moved by teleport, only 1 cost
@@ -714,7 +696,7 @@ public class DiTest extends TwoPlayerGameTest {
 		pickBattleCard(BattleCard.CHARIOT_RAID_CARD);
 		pickBattleCard(BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		// 0 power cost
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(5, redPlayer.getPrayerPoints());
@@ -730,13 +712,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void REINFORCEMENTS_defense_win() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.REINFORCEMENTS, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.REINFORCEMENTS, bluePlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), islandTile, 5);
 
 		// moved by teleport, only 1 cost
@@ -769,11 +750,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void SWIFTNESS() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
 
 		startRowTwoMove();
 		moveSelectTile(redPlayer.cityTiles.get(1));
@@ -788,12 +768,11 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void SWIFTNESS_VETO() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 
 		startRowTwoMove();
 		moveSelectTile(redPlayer.cityTiles.get(1));
@@ -813,12 +792,11 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void SWIFTNESS_VETO_SKIP() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 
 		startRowTwoMove();
 		moveSelectTile(redPlayer.cityTiles.get(1));
@@ -838,13 +816,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void SWIFTNESS_VETO_THE_VETO() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 
 		startRowTwoMove();
 		moveSelectTile(redPlayer.cityTiles.get(1));
@@ -864,13 +841,12 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void SWIFTNESS_SKIP_VETO_THE_VETO() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.SWIFTNESS, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 
 		startRowTwoMove();
 		moveSelectTile(redPlayer.cityTiles.get(1));
@@ -890,11 +866,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void PRAYER_during_build() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 
@@ -909,11 +884,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void PRAYER_during_recruit() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 
@@ -927,11 +901,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void PRAYER_during_choicePick() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 
@@ -945,11 +918,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void PRAYER_during_upgradePyramid() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 
@@ -964,11 +936,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void MANA_THEFT() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		assertEquals(9, bluePlayer.getPrayerPoints());
@@ -982,14 +953,13 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void TELEPORTATION() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
-		game.giveDiCardToPlayer(DiCardList.TELEPORTATION, redPlayer);
+		resetDiCards();
+		movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
+		giveDiCardToPlayer(DiCardList.TELEPORTATION, redPlayer);
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), redPlayer.cityFront, 4);
 
@@ -1005,14 +975,13 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void OPEN_GATES() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
-		game.giveDiCardToPlayer(DiCardList.OPEN_GATES, redPlayer);
+		resetDiCards();
+		movePowerToPlayer(redPlayer, PowerList.RED_1_GOD_SPEED);
+		giveDiCardToPlayer(DiCardList.OPEN_GATES, redPlayer);
 
-		Tile obeliskTile = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile obeliskTile = getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
 
 		moveRowTwoArmy(redPlayer.cityTiles.get(1), obeliskTile, 4);
 
@@ -1028,11 +997,10 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void ENLISTMENT() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.ENLISTMENT, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.ENLISTMENT, redPlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 		activateDiCard(DiCardList.ENLISTMENT);
 
@@ -1043,13 +1011,13 @@ public class DiTest extends TwoPlayerGameTest {
 		assertEquals(7, redPlayer.getPrayerPoints());
 	}
 
+
 	@Test
 	public void ENLISTMENT_duringRecruit() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.ENLISTMENT, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.ENLISTMENT, redPlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
 		startRecruit();
@@ -1064,38 +1032,40 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void DIVINE_MEMORY() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.DIVINE_MEMORY, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.DIVINE_MEMORY, redPlayer);
+		giveDiCardToPlayer(DiCardList.PRAYER, redPlayer);
+		giveDiCardToPlayer(DiCardList.MANA_THEFT, redPlayer);
+		activateDiCard(DiCardList.PRAYER);
+		activateDiCard(DiCardList.MANA_THEFT);
 
-		DiCardList.moveDiCard(game.availableDiCardList, game.discardedDiCardList, 0, KemetGame.AVAILABLE_DI_CARDS,
-				KemetGame.DISCARDED_DI_CARDS, "seeding test", game);
-		DiCardList.moveDiCard(game.availableDiCardList, game.discardedDiCardList, 1, KemetGame.AVAILABLE_DI_CARDS,
-				KemetGame.DISCARDED_DI_CARDS, "seeding test", game);
-		assertEquals(7, redPlayer.getPrayerPoints());
+//		DiCardList.moveDiCard(game.availableDiCardList, game.discardedDiCardList, 0, KemetGame.AVAILABLE_DI_CARDS,
+//				KemetGame.DISCARDED_DI_CARDS, "seeding test", game);
+//		DiCardList.moveDiCard(game.availableDiCardList, game.discardedDiCardList, 1, KemetGame.AVAILABLE_DI_CARDS,
+//				KemetGame.DISCARDED_DI_CARDS, "seeding test", game);
+		assertEquals(10, redPlayer.getPrayerPoints());
 		activateDiCard(DiCardList.DIVINE_MEMORY);
-		assertEquals(1, game.discardedDiCardList[0]);
-		assertEquals(0, redPlayer.diCards[0]);
+		// assertEquals(1, game.discardedDiCardList[0]);
+		assertEquals(0, redPlayer.diCards[DiCardList.PRAYER.index]);
 
-		pickDiCard(DiCardList.GLORY);
+		pickDiCard(DiCardList.PRAYER);
 
-		assertEquals(0, game.discardedDiCardList[0]);
-		assertEquals(1, redPlayer.diCards[0]);
+		// assertEquals(0, game.discardedDiCardList[0]);
+		assertEquals(1, redPlayer.diCards[DiCardList.PRAYER.index]);
 
 		moveRowOneZeroArmy();
 
-		assertEquals(6, redPlayer.getPrayerPoints());
+		assertEquals(9, redPlayer.getPrayerPoints());
 	}
 
 	@Test
 	public void DIVINE_MEMORY_EMPTY() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.DIVINE_MEMORY, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.DIVINE_MEMORY, redPlayer);
 		assertEquals(1, redPlayer.diCards[DiCardList.DIVINE_MEMORY.index]);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
@@ -1116,14 +1086,13 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void RAINING_FIRE() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		activateDiCard(DiCardList.RAINING_FIRE);
@@ -1139,16 +1108,15 @@ public class DiTest extends TwoPlayerGameTest {
 	
 	@Test
 	public void RAINING_FIRE_midTurn() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 		
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		
@@ -1160,24 +1128,23 @@ public class DiTest extends TwoPlayerGameTest {
 
 		assertEquals(2, tileByName.getArmy().armySize);
 
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
 
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
 	
 	@Test
 	public void RAINING_FIRE_midTurn_noVeto() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 		
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		
@@ -1191,7 +1158,7 @@ public class DiTest extends TwoPlayerGameTest {
 
 		assertEquals(2, tileByName.getArmy().armySize);
 
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
 
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
@@ -1199,17 +1166,16 @@ public class DiTest extends TwoPlayerGameTest {
 
 	@Test
 	public void RAINING_FIRE_midTurn_recruit_noVeto() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 		
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_4_ACT_OF_GOD);
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		
@@ -1217,7 +1183,7 @@ public class DiTest extends TwoPlayerGameTest {
 		
 		activateDiCard(DiCardList.RAINING_FIRE);
 		
-		game.enterSimulationMode(1, null, 224479744080311l);
+		enterSimulationMode(1, null, 224479744080311l);
 		
 		skipVeto();
 
@@ -1225,22 +1191,21 @@ public class DiTest extends TwoPlayerGameTest {
 
 		assertEquals(2, tileByName.getArmy().armySize);
 
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_TOKEN_PICK);
 
 		assertEquals(6, redPlayer.getPrayerPoints());
 	}
 	
 	@Test
 	public void RAINING_FIRE_midrecruit_noVeto() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
 		
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
-		game.giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
+		giveDiCardToPlayer(DiCardList.VETO, bluePlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		
@@ -1254,8 +1219,8 @@ public class DiTest extends TwoPlayerGameTest {
 
 		assertEquals(2, tileByName.getArmy().armySize);
 		
-		game.resetCachedChoices();
-		game.getNextPlayerChoicePick();
+		resetCachedChoices();
+		getNextPlayerChoicePick();
 
 		endRecruit();
 
@@ -1263,19 +1228,19 @@ public class DiTest extends TwoPlayerGameTest {
 	}
 
 
+
 	@Test
 	public void RAINING_FIRE_skip_devourer() {
-		bluePlayer.recuperateAllBattleCards();
-		redPlayer.recuperateAllBattleCards();
+		
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.RAINING_FIRE, bluePlayer);
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.RAINING_FIRE, redPlayer);
 		assertEquals(7, redPlayer.getPrayerPoints());
+		buyPowerTile(PowerList.BLACK_4_DEVOURER);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		recruitBeastToTile(tileByName);
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
-		tileByName.getArmy().beast = BeastList.BLACK_4_DEVOURER;
-
-		assertEquals(3, tileByName.getArmy().armySize);
 		activateDiCard(DiCardList.RAINING_FIRE);
 
 		try {
@@ -1289,15 +1254,15 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void ESCAPE_one_choice() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
 
 		prayRowThree();
 
 		// blue attacks middle temple
 		Tile from = bluePlayer.cityTiles.get(1);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
-		Tile entrance = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile entrance = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
 		moveRowTwoArmy(from, tileByName, 3);
 
 		assertEquals(null, entrance.getArmy());
@@ -1312,12 +1277,12 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void ESCAPE_multi_choice() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
 
 		Tile from = bluePlayer.cityTiles.get(1);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
-		Tile entrance = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile entrance = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
 
 		// teleport to middle obelisk
 		moveRowOneArmy(redPlayer.cityTiles.get(1), tileByName, 5);
@@ -1343,12 +1308,12 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void ESCAPE_skip() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.ESCAPE, redPlayer);
 
 		Tile from = bluePlayer.cityTiles.get(1);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
-		Tile entrance = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile entrance = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE_ENTRANCE);
 
 		// teleport to middle obelisk
 		moveRowOneArmy(redPlayer.cityTiles.get(1), tileByName, 5);
@@ -1360,7 +1325,7 @@ public class DiTest extends TwoPlayerGameTest {
 		assertEquals(null, entrance.getArmy());
 
 		assertEquals( 1, getCanonicalValue(BoardInventory.STATE_PICK_ESCAPE));
-		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.SKIP_ESCAPE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.SKIP_ESCAPE);
 
 		assertEquals( 0, getCanonicalValue(BoardInventory.STATE_PICK_ESCAPE));
 		
@@ -1372,11 +1337,11 @@ public class DiTest extends TwoPlayerGameTest {
 	@Test
 	public void ESCAPE_no_choice() {
 
-		game.resetDiCards();
-		game.giveDiCardToPlayer(DiCardList.ESCAPE, bluePlayer);
+		resetDiCards();
+		giveDiCardToPlayer(DiCardList.ESCAPE, bluePlayer);
 
 		Tile from = redPlayer.cityTiles.get(1);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		moveRowTwoArmy(from, tileByName, 3);
 
 		// moved by teleport, only 1 cost
@@ -1389,7 +1354,7 @@ public class DiTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 	}
 
 }

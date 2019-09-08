@@ -486,7 +486,7 @@ public class ArmyMoveAction extends DiCardAction implements DiCardExecutor {
 	public void addArmyPickMoveChoice(List<Choice> choiceList) {
 		for (Army army : player.armyList) {
 			if (army.tile == null) {
-				throw new IllegalStateException("Army " + army + " has empty tile during army picking time.");
+				throw new IllegalStateException("Army " + army + " has empty tile during army picking time." + game.toString());
 			}
 
 			ArmyPickMoveChoice subChoice = new ArmyPickMoveChoice(game, player);

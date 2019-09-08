@@ -1,5 +1,6 @@
 package kemet.util;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +45,9 @@ public class SearchPooler {
 
 		if (Options.PRINT_MCTS_STATS) {
 			long totalDepth = getActionProbabilityTotalDepth + 1;
+			
+			DecimalFormat df = new DecimalFormat("#.#####");
+			String averageDepth = df.format(((float)totalDepth / (float)getActionProbabilityTotalCount));
 
 			String infoMessage = "{} nnet call count = {} | " + "nnet prediction count = {} | "
 					+ "avg nnet prediction per call = {} | " + "avg time per call us {} | "
@@ -52,7 +56,7 @@ public class SearchPooler {
 			log.info(infoMessage, prefix, neuralNetCallCount, neuralNetPredictionCount,
 					neuralNetPredictionCount / neuralNetCallCount, neuralNetTotalTimeNano / neuralNetCallCount / 1000,
 					neuralNetTotalTimeNano / neuralNetPredictionCount / 1000, allMovesMaskedCount,
-					totalDepth / getActionProbabilityTotalCount);
+					averageDepth);
 		}
 	}
 

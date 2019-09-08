@@ -48,7 +48,7 @@ public class Army implements Model {
 		clone.armySize = armySize;
 		clone.owningPlayer = owningPlayer;
 		clone.tile = tile;
-		clone.battleTile  =battleTile;
+		clone.battleTile = battleTile;
 
 		return clone;
 	}
@@ -205,21 +205,25 @@ public class Army implements Model {
 
 	public void moveToBattleTile(Tile newTile) {
 
-		if( newTile != null && newTile.getArmy() == null ) {
+		if (newTile != null && newTile.getArmy() == null) {
 			throw new IllegalStateException("moveToBattleTile can't be done on a tile without an opposing army");
 		}
 
-		if( battleTile != null ) {
+		if (battleTile != null) {
 			battleTile.setBattleArmy(null);
 		}
 
 		battleTile = newTile;
-		
-		if( battleTile != null ) {
+
+		if (battleTile != null) {
 			battleTile.setBattleArmy(this);
 		}
+
+		if (battleTile != null && isPrintEnabled()) {
+			printEvent("Army " + name + " starting battle on tile : " + battleTile);
+		}
 	}
-	
+
 	public void moveToTile(Tile newTile) {
 
 		if (newTile != null && newTile.getArmy() == this) {
@@ -231,18 +235,22 @@ public class Army implements Model {
 			return;
 		}
 		if (newTile != null) {
-		
-			// reset battle tile 
-			moveToBattleTile( null );
+
+			// reset battle tile
+			moveToBattleTile(null);
 
 			newTile.setArmy(this);
 		}
 		if (tile != null) {
 			// remove the old army association
 			tile.setArmy(null);
-			
+
 		}
 		tile = newTile;
+
+		if (tile != null && isPrintEnabled()) {
+			printEvent("Army " + name + " moved to : " + tile);
+		}
 	}
 
 	public boolean isArmySizeFull() {
@@ -308,12 +316,12 @@ public class Army implements Model {
 			builder.append(" on tile : ");
 			tile.describe(builder);
 		}
-		
+
 		if (battleTile != null) {
 			builder.append(" battling on tile : ");
 			battleTile.describe(builder);
 		}
-		
+
 		// builder.append("\n");
 	}
 

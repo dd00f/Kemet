@@ -606,7 +606,8 @@ public class BattleAction implements Action {
 						if (game.simulatedPlayerIndex != player.getIndex()
 								&& !defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
 							// skip discard card selection for other players during simulations
-							String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden ATTACK card which should be simulated by the MCTS.";
+							String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden ATTACK card which should be simulated by the MCTS.\n"
+									+ game.toString();
 							log.error(message);
 							attackingDiscardBattleCard = card;
 							throw new IllegalStateException(message);
@@ -635,7 +636,8 @@ public class BattleAction implements Action {
 					if (game.isSimulation() && game.simulatedPlayerIndex != player.getIndex()) {
 						// skip discard card selection for other players during simulations
 						if (!attackingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
-							String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.";
+							String message = "Reached a battle simulation state where the next action is for the opponent DEFENDER to pick a hidden ATTACK card which should be simulated by the MCTS.\n"
+									+ game.toString();
 							log.error(message);
 
 							throw new IllegalStateException(message);
@@ -740,8 +742,11 @@ public class BattleAction implements Action {
 					defendingDiscardBattleCard = found;
 					defendingUsedBattleCard = found;
 				} else {
-					String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden DISCARD card which should be simulated by the MCTS.";
-					log.error(message);
+					if (!defendingArmy.owningPlayer.hasPower(PowerList.BLUE_3_PRESCIENCE)) {
+						String message = "Reached a battle simulation state where the next action is for the opponent ATTACKER to pick a hidden DISCARD card which should be simulated by the MCTS."
+								+ game.toString();
+						log.error(message);
+					}
 				}
 			}
 		}
@@ -836,44 +841,33 @@ public class BattleAction implements Action {
 			return false;
 		}
 
-		private void validateCanonicalFormForSimulatedMove(Player defender, ByteCanonicalForm canonicalForm) {
-			int canonicalPlayerIndex = defender.getCanonicalPlayerIndex(defender.getIndex());
+		private void validateCanonicalFormForSimulatedMove(Player playerToValidate, ByteCanonicalForm canonicalForm) {
+			int canonicalPlayerIndex = playerToValidate.getCanonicalPlayerIndex(playerToValidate.getIndex());
 
 			String message = "available battle card {} not showing up in canonical form {}";
-			if (defender.getIndex() == defendingArmy.owningPlayer.getIndex()) {
-				// pick defender card
-//				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD] != defender
-//						.getState(defender.getIndex())) {
-//					log.error(message, card.index, canonicalForm);
-//				}
+			if (playerToValidate.getIndex() == defendingArmy.owningPlayer.getIndex()) {
+				int canonicalStateOffset = playerToValidate.getCanonicalStateOffset(
+						BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD, playerToValidate.getIndex());
 
-				int canonicalStateOffset = defender
-						.getCanonicalStateOffset(BoardInventory.STATE_PICK_DEFENSE_BATTLE_CARD, canonicalPlayerIndex);
 				if (canonicalForm.getCanonicalForm()[canonicalStateOffset] != 1) {
 					log.error(message, card.index, canonicalForm);
 				}
 
 			} else {
-				// pick attacker card
-//				if (canonicalForm.getCanonicalForm()[BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD] != defender
-//						.getState(defender.getIndex())) {
-//					log.error(message, card.index, canonicalForm);
-//				}
-
-				int canonicalStateOffset = defender
-						.getCanonicalStateOffset(BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD, canonicalPlayerIndex);
+				int canonicalStateOffset = playerToValidate.getCanonicalStateOffset(
+						BoardInventory.STATE_PICK_ATTACK_BATTLE_CARD, playerToValidate.getIndex());
 				if (canonicalForm.getCanonicalForm()[canonicalStateOffset] != 1) {
 					log.error(message, card.index, canonicalForm);
 				}
 			}
 
-			for (BattleCard card : defender.availableBattleCards) {
+			for (BattleCard card : playerToValidate.availableBattleCards) {
 				if (canonicalForm.getCanonicalForm()[Player.getCardVisibleIndex(canonicalPlayerIndex, card)] != 1) {
 					log.error(message, card.index, canonicalForm);
 				}
 			}
 
-			for (BattleCard card : defender.usedBattleCards) {
+			for (BattleCard card : playerToValidate.usedBattleCards) {
 				if (canonicalForm.getCanonicalForm()[Player.getCardVisibleIndex(canonicalPlayerIndex, card)] != 0) {
 					log.error(message, card.index, canonicalForm);
 				}
@@ -1200,20 +1194,17 @@ public class BattleAction implements Action {
 		Army army = getArmy(attacker);
 		PlayerChoicePick pick = new PlayerChoicePick(game, army.owningPlayer, this);
 
-		{
-			RecallArmyChoice recallChoice = new RecallArmyChoice(game, army.owningPlayer);
-			recallChoice.isAttacker = attacker;
-			recallChoice.recall = true;
+		RecallArmyChoice recallChoice = new RecallArmyChoice(game, army.owningPlayer);
+		recallChoice.isAttacker = attacker;
+		recallChoice.recall = true;
 
-			pick.choiceList.add(recallChoice);
-		}
-		{
-			RecallArmyChoice recallChoice = new RecallArmyChoice(game, army.owningPlayer);
-			recallChoice.isAttacker = attacker;
-			recallChoice.recall = false;
+		pick.choiceList.add(recallChoice);
 
-			pick.choiceList.add(recallChoice);
-		}
+		RecallArmyChoice dontRecallChoice = new RecallArmyChoice(game, army.owningPlayer);
+		dontRecallChoice.isAttacker = attacker;
+		dontRecallChoice.recall = false;
+
+		pick.choiceList.add(dontRecallChoice);
 
 		return pick;
 	}
@@ -1222,40 +1213,46 @@ public class BattleAction implements Action {
 
 		Army army = getArmy(attacker);
 		Player actionPlayer = null;
+		Player retreatingPlayer = null;
 
 		if (attacker) {
 			actionPlayer = defendingArmy.owningPlayer;
-
+			retreatingPlayer = attackingArmy.owningPlayer;
 		} else {
 			actionPlayer = attackingArmy.owningPlayer;
-
+			retreatingPlayer = defendingArmy.owningPlayer;
 		}
 
 		PlayerChoicePick pick = new PlayerChoicePick(game, actionPlayer, this);
 
+		boolean retreatingPlayerCanBreachWalls = retreatingPlayer.hasPower(PowerList.RED_2_OPEN_GATE)
+				|| army.beast == BeastList.RED_4_PHOENIX;
+
 		for (Tile tile : sourceTile.connectedTiles) {
 
-			if (tile.getArmy() != null) {
-				// can't retreat on occupied tile, even friendly
-				continue;
-			}
-
-			ArmyRetreatTileMoveChoice subChoice = new ArmyRetreatTileMoveChoice(game, pick.player);
-			subChoice.army = army;
-			subChoice.destinationTile = tile;
-			subChoice.attacker = attacker;
-
-			if (tile.isWalledByEnemy(pick.player)) {
-				// moving into a city tile with walls
-				// LOGGER.info("Army " + army + " can't retreat to tile " + tile.name + "
-				// because it has walls.");
-				continue;
-			}
-
-			pick.choiceList.add(subChoice);
+			checkToAddRetreatChoice(attacker, army, retreatingPlayer, pick, retreatingPlayerCanBreachWalls, tile);
 		}
 
 		return pick;
+	}
+
+	public void checkToAddRetreatChoice(boolean attacker, Army army, Player retreatingPlayer, PlayerChoicePick pick,
+			boolean retreatingPlayerCanBreachWalls, Tile tile) {
+		if (tile.getArmy() != null) {
+			return;
+		}
+
+		ArmyRetreatTileMoveChoice subChoice = new ArmyRetreatTileMoveChoice(game, pick.player);
+		subChoice.army = army;
+		subChoice.destinationTile = tile;
+		subChoice.attacker = attacker;
+
+		if (!retreatingPlayerCanBreachWalls && tile.isWalledByEnemy(retreatingPlayer)) {
+			return;
+		}
+
+		pick.choiceList.add(subChoice);
+		return;
 	}
 
 	private void checkToResolveBattle() {
@@ -1340,6 +1337,9 @@ public class BattleAction implements Action {
 				return nextPlayerChoicePick;
 			}
 		}
+
+		// DI cards may force an army to recall by recruiting on existing tiles.
+		checkForForcedRecall();
 
 		if (!attackerRetreatPicked) {
 			return pickRecallOption(true).validate();
@@ -1441,6 +1441,10 @@ public class BattleAction implements Action {
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 
 		attackingArmy.owningPlayer.setCanonicalState(cannonicalForm, BoardInventory.STATE_BATTLE, playerIndex);
+
+		int attackerCanonicalPlayerIndex = attackingArmy.owningPlayer.getCanonicalPlayerIndex(playerIndex);
+		int defenderCanonicalPlayerIndex = defendingArmy.owningPlayer.getCanonicalPlayerIndex(playerIndex);
+
 		// cannonicalForm.set(BoardInventory.STATE_BATTLE,
 		// attackingArmy.owningPlayer.getState(playerIndex));
 		tile.setCanonicalSelected(cannonicalForm, attackingArmy.owningPlayer, playerIndex);
@@ -1448,17 +1452,22 @@ public class BattleAction implements Action {
 		boolean isAttackerBeastIgnored = isAttackerBeastIgnored();
 		boolean isDefenderBeastIgnored = isDefenderBeastIgnored();
 
-		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_STRENGTH,
+		cannonicalForm.set(BoardInventory.BATTLE_PLAYER_STRENGTH + attackerCanonicalPlayerIndex,
 				attackingArmy.getAttackStrength(isAttackerBeastIgnored));
-		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_SHIELD,
-				attackingArmy.getAttackShield(isAttackerBeastIgnored));
-		cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_DAMAGE,
-				attackingArmy.getAttackDamage(isAttackerBeastIgnored));
-		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_STRENGTH,
+
+		cannonicalForm.set(BoardInventory.BATTLE_PLAYER_STRENGTH + defenderCanonicalPlayerIndex,
 				defendingArmy.getDefendingStrength(isDefenderBeastIgnored));
-		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_SHIELD,
+
+		cannonicalForm.set(BoardInventory.BATTLE_PLAYER_SHIELD + attackerCanonicalPlayerIndex,
+				attackingArmy.getAttackShield(isAttackerBeastIgnored));
+
+		cannonicalForm.set(BoardInventory.BATTLE_PLAYER_SHIELD + defenderCanonicalPlayerIndex,
 				defendingArmy.getDefendingShield(isDefenderBeastIgnored));
-		cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_DAMAGE,
+
+		cannonicalForm.set(BoardInventory.BATTLE_PLAYER_DAMAGE + attackerCanonicalPlayerIndex,
+				attackingArmy.getAttackDamage(isAttackerBeastIgnored));
+
+		cannonicalForm.set(BoardInventory.BATTLE_PLAYER_DAMAGE + defenderCanonicalPlayerIndex,
 				defendingArmy.getDefendingDamage(isDefenderBeastIgnored));
 
 		if (playerIndex == attackingArmy.owningPlayer.getIndex()) {
@@ -1471,9 +1480,9 @@ public class BattleAction implements Action {
 
 		if (battleResolved) {
 			if (attackerWins) {
-				cannonicalForm.set(BoardInventory.BATTLE_ATTACKER_WON, (byte) 1);
+				cannonicalForm.set(BoardInventory.BATTLE_PLAYER_WON + attackerCanonicalPlayerIndex, (byte) 1);
 			} else {
-				cannonicalForm.set(BoardInventory.BATTLE_DEFENDER_WON, (byte) 1);
+				cannonicalForm.set(BoardInventory.BATTLE_PLAYER_WON + defenderCanonicalPlayerIndex, (byte) 1);
 			}
 		}
 
@@ -1631,13 +1640,9 @@ public class BattleAction implements Action {
 
 			moveWinnerToTile();
 
-			// discardUsedDiCards();
-
 			addReinforcementsDiCardActions();
 
 			battleResolved = true;
-
-			checkForForcedRecall();
 		}
 	}
 
@@ -1707,6 +1712,11 @@ public class BattleAction implements Action {
 
 			PlayerChoicePick retreatTilePick = addArmyTileRetreatMoveChoice(true, tile);
 			if (!attackerWins && retreatTilePick.choiceList.size() == 0) {
+
+				if (game.printActivations) {
+					game.printEvent("No valid tile to retreat. Forced Recall of army : " + attackingArmy);
+				}
+
 				// force a recall
 				addRecruitBeastFromRemovedArmy(attackingArmy);
 				attackingArmy.recall();
@@ -1720,6 +1730,11 @@ public class BattleAction implements Action {
 			PlayerChoicePick retreatTilePick = addArmyTileRetreatMoveChoice(false, tile);
 
 			if (attackerWins && !attackerDestroyed && retreatTilePick.choiceList.size() == 0) {
+
+				if (game.printActivations) {
+					game.printEvent("No valid tile to retreat. Forced Recall of army : " + defendingArmy);
+				}
+
 				// force a recall
 				addRecruitBeastFromRemovedArmy(defendingArmy);
 				defendingArmy.recall();

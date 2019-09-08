@@ -26,75 +26,78 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 	public float[] getFloatCanonicalForm() {
 		float[] floatCanonicalForm = super.getFloatCanonicalForm();
 
-		// rectify some values to be on a scale of -1 to 1
+		if (Options.CANONICAL_FLATTEN_TO_ONE) {
 
-		floatCanonicalForm[BoardInventory.ROUND_NUMBER] = floatCanonicalForm[BoardInventory.ROUND_NUMBER]
-				/ Options.GAME_TURN_LIMIT;
+			// rectify some values to be on a scale of -1 to 1
 
-		floatCanonicalForm[BoardInventory.PICKED_SIZE] = floatCanonicalForm[BoardInventory.PICKED_SIZE]
-				/ MAX_ARMY_SIZE_PICK;
+			floatCanonicalForm[BoardInventory.ROUND_NUMBER] = floatCanonicalForm[BoardInventory.ROUND_NUMBER]
+					/ Options.GAME_TURN_LIMIT;
 
-		floatCanonicalForm[BoardInventory.FREE_RECRUIT_LEFT] = floatCanonicalForm[BoardInventory.FREE_RECRUIT_LEFT]
-				/ MAX_ARMY_SIZE_PICK;
+			floatCanonicalForm[BoardInventory.PICKED_SIZE] = floatCanonicalForm[BoardInventory.PICKED_SIZE]
+					/ MAX_ARMY_SIZE_PICK;
 
-		floatCanonicalForm[BoardInventory.PICKED_LEVEL] = floatCanonicalForm[BoardInventory.PICKED_LEVEL] / MAX_LEVEL;
+			floatCanonicalForm[BoardInventory.FREE_RECRUIT_LEFT] = floatCanonicalForm[BoardInventory.FREE_RECRUIT_LEFT]
+					/ MAX_ARMY_SIZE_PICK;
 
-		floatCanonicalForm[BoardInventory.MOVES_LEFT] = floatCanonicalForm[BoardInventory.MOVES_LEFT] / 5;
+			floatCanonicalForm[BoardInventory.PICKED_LEVEL] = floatCanonicalForm[BoardInventory.PICKED_LEVEL]
+					/ MAX_LEVEL;
 
-		floatCanonicalForm[BoardInventory.BATTLE_ATTACKER_STRENGTH] = floatCanonicalForm[BoardInventory.BATTLE_ATTACKER_STRENGTH]
-				/ MAX_BATTLE_TOTAL_STRENGTH;
-		floatCanonicalForm[BoardInventory.BATTLE_ATTACKER_SHIELD] = floatCanonicalForm[BoardInventory.BATTLE_ATTACKER_SHIELD]
-				/ MAX_BATTLE_SHIELD;
-		floatCanonicalForm[BoardInventory.BATTLE_ATTACKER_DAMAGE] = floatCanonicalForm[BoardInventory.BATTLE_ATTACKER_DAMAGE]
-				/ MAX_BATTLE_DAMAGE;
-		floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_STRENGTH] = floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_STRENGTH]
-				/ MAX_BATTLE_TOTAL_STRENGTH;
-		floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_SHIELD] = floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_SHIELD]
-				/ MAX_BATTLE_SHIELD;
-		floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_DAMAGE] = floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_DAMAGE]
-				/ MAX_BATTLE_DAMAGE;
+			floatCanonicalForm[BoardInventory.MOVES_LEFT] = floatCanonicalForm[BoardInventory.MOVES_LEFT] / 5;
 
-		floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_SHIELD] = floatCanonicalForm[BoardInventory.BATTLE_DEFENDER_SHIELD]
-				/ 5;
+			adjustRange(floatCanonicalForm, BoardInventory.BATTLE_PLAYER_STRENGTH, BoardInventory.PLAYER_COUNT,
+					MAX_BATTLE_TOTAL_STRENGTH);
+			adjustRange(floatCanonicalForm, BoardInventory.BATTLE_PLAYER_SHIELD, BoardInventory.PLAYER_COUNT,
+					MAX_BATTLE_SHIELD);
+			adjustRange(floatCanonicalForm, BoardInventory.BATTLE_PLAYER_DAMAGE, BoardInventory.PLAYER_COUNT,
+					MAX_BATTLE_DAMAGE);
 
-		adjustRange(floatCanonicalForm, BoardInventory.TILE_PLAYER_ARMY_SIZE,
-				BoardInventory.PLAYER_COUNT * BoardInventory.TILE_COUNT, MAX_ARMY_SIZE_PICK);
+			adjustRange(floatCanonicalForm, BoardInventory.TILE_PLAYER_ARMY_SIZE,
+					BoardInventory.PLAYER_COUNT * BoardInventory.TILE_COUNT, MAX_ARMY_SIZE_PICK);
 
-		adjustRange(floatCanonicalForm, BoardInventory.TILE_BLACK_PYRAMID_LEVEL, BoardInventory.TILE_COUNT, MAX_LEVEL);
-		adjustRange(floatCanonicalForm, BoardInventory.TILE_RED_PYRAMID_LEVEL, BoardInventory.TILE_COUNT, MAX_LEVEL);
-		adjustRange(floatCanonicalForm, BoardInventory.TILE_BLUE_PYRAMID_LEVEL, BoardInventory.TILE_COUNT, MAX_LEVEL);
-		adjustRange(floatCanonicalForm, BoardInventory.TILE_WHITE_PYRAMID_LEVEL, BoardInventory.TILE_COUNT, MAX_LEVEL);
+			adjustRange(floatCanonicalForm, BoardInventory.TILE_BLACK_PYRAMID_LEVEL, BoardInventory.TILE_COUNT,
+					MAX_LEVEL);
+			adjustRange(floatCanonicalForm, BoardInventory.TILE_RED_PYRAMID_LEVEL, BoardInventory.TILE_COUNT,
+					MAX_LEVEL);
+			adjustRange(floatCanonicalForm, BoardInventory.TILE_BLUE_PYRAMID_LEVEL, BoardInventory.TILE_COUNT,
+					MAX_LEVEL);
+			adjustRange(floatCanonicalForm, BoardInventory.TILE_WHITE_PYRAMID_LEVEL, BoardInventory.TILE_COUNT,
+					MAX_LEVEL);
 
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_VICTORY_POINTS, BoardInventory.PLAYER_COUNT,
-				KemetGame.VICTORY_POINTS_OBJECTIVE);
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_BATTLE_POINTS, BoardInventory.PLAYER_COUNT,
-				KemetGame.VICTORY_POINTS_OBJECTIVE);
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_PRAYER_POINTS, BoardInventory.PLAYER_COUNT,
-				Player.MAXIMUM_PRAYER_POINTS);
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_AVAILABLE_ARMY_TOKENS, BoardInventory.PLAYER_COUNT,
-				MAXIMUM_ARMY_TOKENS);
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_ACTION_TOKEN_LEFT, BoardInventory.PLAYER_COUNT,
-				Player.ACTION_TOKEN_COUNT);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_VICTORY_POINTS, BoardInventory.PLAYER_COUNT,
+					KemetGame.VICTORY_POINTS_OBJECTIVE);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_BATTLE_POINTS, BoardInventory.PLAYER_COUNT,
+					KemetGame.VICTORY_POINTS_OBJECTIVE);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_PRAYER_POINTS, BoardInventory.PLAYER_COUNT,
+					Player.MAXIMUM_PRAYER_POINTS);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_AVAILABLE_ARMY_TOKENS, BoardInventory.PLAYER_COUNT,
+					MAXIMUM_ARMY_TOKENS);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_ACTION_TOKEN_LEFT, BoardInventory.PLAYER_COUNT,
+					Player.ACTION_TOKEN_COUNT);
 
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_TEMPLE_COUNT, BoardInventory.PLAYER_COUNT,
-				MAXIMUM_TEMPLE_COUNT);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_TEMPLE_COUNT, BoardInventory.PLAYER_COUNT,
+					MAXIMUM_TEMPLE_COUNT);
 
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_TOKEN, BoardInventory.PLAYER_COUNT,
-				BoardInventory.MAX_DAWN_TOKEN);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_TOKEN, BoardInventory.PLAYER_COUNT,
+					BoardInventory.MAX_DAWN_TOKEN);
 
-		adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_STRENGTH, BoardInventory.PLAYER_COUNT,
-				BoardInventory.MAX_DAWN_BATTLE_STRENGTH_TOKEN);
+			adjustRange(floatCanonicalForm, BoardInventory.PLAYER_DAWN_STRENGTH, BoardInventory.PLAYER_COUNT,
+					BoardInventory.MAX_DAWN_BATTLE_STRENGTH_TOKEN);
 
-		adjustRange(floatCanonicalForm, BoardInventory.DI_DISCARD, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
-				DiCardList.MAX_DI_CARD_COUNT);
-		adjustRange(floatCanonicalForm, BoardInventory.CURRENT_PLAYER_DI, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
-				DiCardList.MAX_DI_CARD_COUNT);
-		adjustRange(floatCanonicalForm, BoardInventory.CURRENT_PLAYER_ACTIVATED_DI,
-				DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT, DiCardList.MAX_DI_CARD_COUNT);
+			adjustRange(floatCanonicalForm, BoardInventory.DI_DISCARD, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
+					DiCardList.MAX_DI_CARD_COUNT);
+			adjustRange(floatCanonicalForm, BoardInventory.CURRENT_PLAYER_DI, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
+					DiCardList.MAX_DI_CARD_COUNT);
+			adjustRange(floatCanonicalForm, BoardInventory.CURRENT_PLAYER_ACTIVATED_DI,
+					DiCardList.TOTAL_BATTLE_DI_CARD_TYPE_COUNT, DiCardList.MAX_DI_CARD_COUNT);
 
-		adjustRange(floatCanonicalForm, BoardInventory.DI_CARD_PER_PLAYER, BoardInventory.PLAYER_COUNT,
-				DiCardList.TOTAL_DI_COUNT);
+			adjustRange(floatCanonicalForm, BoardInventory.DI_CARD_PER_PLAYER, BoardInventory.PLAYER_COUNT,
+					DiCardList.TOTAL_DI_COUNT);
 
+			adjustRange(floatCanonicalForm, BoardInventory.AVAILABLE_DI, DiCardList.TOTAL_DI_CARD_TYPE_COUNT,
+					DiCardList.MAX_DI_CARD_COUNT);
+
+		}
+		
 		return floatCanonicalForm;
 	}
 
@@ -136,13 +139,11 @@ public class KemetByteCanonicalForm extends ByteCanonicalForm {
 		printValue(board, build, BoardInventory.PICKED_LEVEL, " PICKED_LEVEL ", 1);
 		printValue(board, build, BoardInventory.MOVES_LEFT, " MOVES_LEFT ", 1);
 		printValue(board, build, BoardInventory.IS_FIRST_MOVE, " IS_FIRST_MOVE ", 1);
-		printValue(board, build, BoardInventory.BATTLE_ATTACKER_STRENGTH, " BATTLE_ATTACKER_STRENGTH ", 1);
-		printValue(board, build, BoardInventory.BATTLE_ATTACKER_SHIELD, " BATTLE_ATTACKER_SHIELD ", 1);
-		printValue(board, build, BoardInventory.BATTLE_ATTACKER_DAMAGE, " BATTLE_ATTACKER_DAMAGE ", 1);
-		printValue(board, build, BoardInventory.BATTLE_DEFENDER_STRENGTH, " BATTLE_DEFENDER_STRENGTH ", 1);
-		printValue(board, build, BoardInventory.BATTLE_DEFENDER_SHIELD, " BATTLE_DEFENDER_SHIELD ", 1);
-		printValue(board, build, BoardInventory.BATTLE_DEFENDER_DAMAGE, " BATTLE_DEFENDER_DAMAGE ", 1);
-		printValue(board, build, BoardInventory.BATTLE_ATTACKER_WON, " BATTLE_ATTACKER_WON ", 1);
+		printPlayerValue(board, build, BoardInventory.BATTLE_PLAYER_STRENGTH, " BATTLE_ATTACKER_STRENGTH ", 1);
+		printPlayerValue(board, build, BoardInventory.BATTLE_PLAYER_SHIELD, " BATTLE_ATTACKER_SHIELD ", 1);
+		printPlayerValue(board, build, BoardInventory.BATTLE_PLAYER_DAMAGE, " BATTLE_ATTACKER_DAMAGE ", 1);
+		printPlayerValue(board, build, BoardInventory.BATTLE_PLAYER_WON, " BATTLE_PLAYER_WON ", 1);
+
 		printValue(board, build, BoardInventory.FREE_RECRUIT_LEFT, " FREE_RECRUIT_LEFT ", 1);
 
 		printTilePlayerValue(board, build, BoardInventory.TILE_PLAYER_ARMY_SIZE, " TILE_PLAYER_ARMY_SIZE ", 1);

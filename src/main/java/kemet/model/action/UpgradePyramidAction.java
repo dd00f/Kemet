@@ -33,35 +33,36 @@ public class UpgradePyramidAction extends DiCardAction {
 	@Override
 	public void fillCanonicalForm(ByteCanonicalForm cannonicalForm, int playerIndex) {
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
-		
-		// cannonicalForm.set(BoardInventory.STATE_UPGRADE_PYRAMID, player.getState(playerIndex));
-		
+
+		// cannonicalForm.set(BoardInventory.STATE_UPGRADE_PYRAMID,
+		// player.getState(playerIndex));
+
 		player.setCanonicalState(cannonicalForm, BoardInventory.STATE_UPGRADE_PYRAMID, playerIndex);
-		
+
 		if (tile == null) {
-			//cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
-			
+			// cannonicalForm.set(BoardInventory.STATE_PICK_TILE,
+			// player.getState(playerIndex));
+
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_TILE, playerIndex);
-			
-			
+
 		} else if (endLevel == -1) {
-			//cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_LEVEL, player.getState(playerIndex));
-			
+			// cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_LEVEL,
+			// player.getState(playerIndex));
+
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_PYRAMID_LEVEL, playerIndex);
-			
-			
+
 			// tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
-			
+
 			tile.setCanonicalSelected(cannonicalForm, player, playerIndex);
-			
-			
+
 		} else if (color == Color.NONE) {
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_PYRAMID_COLOR, playerIndex);
-			
+
 			cannonicalForm.set(BoardInventory.PICKED_LEVEL, endLevel);
 
-			// cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_COLOR, player.getState(playerIndex));
-			
+			// cannonicalForm.set(BoardInventory.STATE_PICK_PYRAMID_COLOR,
+			// player.getState(playerIndex));
+
 			tile.setCanonicalSelected(cannonicalForm, player, playerIndex);
 			// tile.setSelected(cannonicalForm, playerIndex, player.getState(playerIndex));
 		}
@@ -290,12 +291,12 @@ public class UpgradePyramidAction extends DiCardAction {
 
 	@Override
 	public PlayerChoicePick getNextPlayerChoicePick() {
-		
+
 		PlayerChoicePick nextPlayerChoicePick = super.getNextPlayerChoicePick();
 		if (nextPlayerChoicePick != null) {
 			return nextPlayerChoicePick;
 		}
-		
+
 		if (isEnded()) {
 			return null;
 		}
@@ -313,11 +314,12 @@ public class UpgradePyramidAction extends DiCardAction {
 			for (Army army : player.armyList) {
 				// all other city districts currently controlled
 				Tile armyTile = army.tile;
-				if (armyTile.owningPlayer != null && armyTile.owningPlayer != player && armyTile.canUpgradePyramid()) {
+				if (armyTile != null && armyTile.owningPlayer != null && armyTile.owningPlayer != player
+						&& armyTile.canUpgradePyramid()) {
 					pick.choiceList.add(new UpgradePyramidPickTileChoice(game, player, armyTile));
 				}
 			}
-			
+
 			// only allow DI card selection before picking a tile to upgrade
 			addGenericDiCardChoice(pick.choiceList);
 
@@ -329,7 +331,7 @@ public class UpgradePyramidAction extends DiCardAction {
 			PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
 
 			createAllPyramidLevelChoices(tile.getPyramidLevel(), pick.choiceList);
-			
+
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();
@@ -350,7 +352,7 @@ public class UpgradePyramidAction extends DiCardAction {
 			if (!player.hasPyramid(Color.RED)) {
 				pick.choiceList.add(new UpgradePyramidPickColorChoice(game, player, Color.RED));
 			}
-			
+
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.UPGRADE_NOTHING);
 
 			return pick.validate();

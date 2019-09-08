@@ -51,11 +51,11 @@ public class BeastTest extends TwoPlayerGameTest {
 //		prayRowTwo();
 //
 //		startRowOneMove();
-//		moveFirstTile(redPlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
+//		moveFirstTile(redPlayer.cityTiles.get(0), getTileByName(TwoPlayerGame.MEDIUM_TEMPLE), 5);
 //		endMove();
 //
 //		startRowOneMove();
-//		moveFirstTile(bluePlayer.cityTiles.get(0), game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
+//		moveFirstTile(bluePlayer.cityTiles.get(0), getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5);
 //
 //		moveRowTwoZeroArmy();
 //		moveRowTwoZeroArmy();
@@ -108,7 +108,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		recruitBeastToTile(startTile);
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(startTile, game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4, true);
+		moveRowTwoArmy(startTile, getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 4, true);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		// attack strength : 4 army + 2 beast + 1 card = 7
@@ -116,7 +116,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 
 		recruitBeastToTile(nextTile);
 
@@ -239,7 +239,7 @@ public class BeastTest extends TwoPlayerGameTest {
 
 		Tile blue1Tile = bluePlayer.cityTiles.get(1);
 		Tile blue0Tile = bluePlayer.cityTiles.get(0);
-		Tile middleObelisk = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile middleObelisk = getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
 
 		// red
 		buyPowerTile(PowerList.BLACK_3_DEADLY_TRAP);
@@ -282,7 +282,7 @@ public class BeastTest extends TwoPlayerGameTest {
 
 		Tile blue1Tile = bluePlayer.cityTiles.get(1);
 		Tile blue0Tile = bluePlayer.cityTiles.get(0);
-		Tile middleObelisk = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile middleObelisk = getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
 
 		// red
 		buyPowerTile(PowerList.RED_4_INITIATIVE);
@@ -363,7 +363,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		recruitBeastToTile(startTile);
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
-		moveRowTwoArmy(startTile, game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5, true);
+		moveRowTwoArmy(startTile, getTileByName(TwoPlayerGame.ISLAND_TEMPLE), 5, true);
 
 		assertEquals(3, redPlayer.victoryPoints);
 		// attack strength : 5 army + 2 beast + 1 card = 8
@@ -371,7 +371,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		assertEquals(5, redPlayer.victoryPoints);
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
@@ -406,7 +406,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 
@@ -418,7 +418,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 		// 1+2 damage
 		assertEquals(5, bluePlayer.getPrayerPoints());
@@ -456,7 +456,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
 		// +1 move
-		moveRowTwoArmy(startTile, game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5, true);
+		moveRowTwoArmy(startTile, getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5, true);
 		moveNextTile(bluePlayer.cityFront, 5, true);
 		// try to bypass wall and fail
 		try {
@@ -481,7 +481,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 
 		// +1 move
-		moveRowTwoArmy(startTile, game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5, true);
+		moveRowTwoArmy(startTile, getTileByName(TwoPlayerGame.MIDDLE_OBELISK), 5, true);
 		moveNextTile(bluePlayer.cityFront, 5, true);
 		// bypass wall
 		moveNextTile(bluePlayer.cityTiles.get(2), 5, true);
@@ -499,7 +499,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 
@@ -511,7 +511,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 		// 1 damage
 		assertEquals(7, bluePlayer.getPrayerPoints());
@@ -530,7 +530,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 
@@ -542,22 +542,22 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 		// 1 damage
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
 		assertEquals(5, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_BLACK_4_DEVOURER_immuneToDeadlyTrap() {
-		
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
 
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_3_DEADLY_TRAP);
-		
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_3_DEADLY_TRAP);
+
 		Tile startTile = redPlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -566,7 +566,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 
@@ -578,7 +578,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 		// 1 damage
 		assertEquals(7, bluePlayer.getPrayerPoints());
@@ -589,8 +589,8 @@ public class BeastTest extends TwoPlayerGameTest {
 	@Test
 	public void test_BLACK_4_DEVOURER_win_with2damage() {
 
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
 		Tile startTile = redPlayer.cityTiles.get(1);
 
@@ -600,7 +600,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 
@@ -612,7 +612,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.MIXED_TACTICS_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 		// 2 damage
 		assertEquals(6, bluePlayer.getPrayerPoints());
@@ -623,8 +623,8 @@ public class BeastTest extends TwoPlayerGameTest {
 	@Test
 	public void test_BLACK_4_DEVOURER_lose_with2damage() {
 
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
 		Tile startTile = redPlayer.cityTiles.get(1);
 
@@ -634,7 +634,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(3, tileByName.getArmy().armySize);
 
@@ -646,7 +646,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.MIXED_TACTICS_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		recruitBeastToTile(redPlayer.cityTiles.get(1));
 		moveRowTwoZeroArmy();
 		// 1 damage
@@ -657,16 +657,16 @@ public class BeastTest extends TwoPlayerGameTest {
 
 	@Test
 	public void test_BLACK_4_DEVOURER_win_sub2damage_defensive() {
-		game.movePowerToPlayer(redPlayer, PowerList.BLUE_3_DEFENSIVE_VICTORY);
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		movePowerToPlayer(redPlayer, PowerList.BLUE_3_DEFENSIVE_VICTORY);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_4_DEVOURER);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, false);
 
 		assertEquals(3, redPlayer.victoryPoints);
@@ -675,29 +675,29 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+
 		prayRowThree();
-		
+
 		assertEquals(4, redPlayer.victoryPoints);
 	}
 
 	@Test
 	public void test_BLACK_4_DEVOURER_win_with2damage_defensive() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
-		game.movePowerToPlayer(redPlayer, PowerList.BLUE_3_DEFENSIVE_VICTORY);
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(redPlayer, PowerList.BLUE_3_DEFENSIVE_VICTORY);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_4_DEVOURER);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, false);
 
 		assertEquals(3, redPlayer.victoryPoints);
@@ -706,29 +706,29 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.MIXED_TACTICS_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+
 		prayRowThree();
-		
+
 		assertEquals(5, redPlayer.victoryPoints);
 	}
 
 	@Test
 	public void test_BLACK_4_DEVOURER_lose_with2damage_defensive() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
-		game.movePowerToPlayer(redPlayer, PowerList.BLUE_3_DEFENSIVE_VICTORY);
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(redPlayer, PowerList.BLUE_3_DEFENSIVE_VICTORY);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_4_DEVOURER);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, false);
 
 		assertEquals(3, redPlayer.victoryPoints);
@@ -737,35 +737,34 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.SACRIFICIAL_CHARGE_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.MIXED_TACTICS_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
 		skipRecruitBeast();
-		
+
 		prayRowThree();
-		
+
 		// 5 army size - 2 damage from mixed tactic - 2 damage from sacrificial charge
 		assertEquals(1, tileByName.getArmy().armySize);
-		
+
 		// -1 points : lost 1 temple
 		assertEquals(2, redPlayer.victoryPoints);
 	}
 
-	
 	@Test
 	public void test_BLACK_4_DEVOURER_immuneToInitiative() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
-		game.movePowerToPlayer(bluePlayer, PowerList.RED_4_INITIATIVE);
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(bluePlayer, PowerList.RED_4_INITIATIVE);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_4_DEVOURER);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, false);
 
 		assertEquals(3, redPlayer.victoryPoints);
@@ -774,50 +773,48 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.MIXED_TACTICS_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+
 		prayRowThree();
-		
+
 		assertEquals(3, redPlayer.victoryPoints);
 		assertEquals(5, tileByName.getArmy().armySize);
 	}
-	
-	
 
 	@Test
 	public void test_BLACK_2_KHNUM_SPHINX_movementCost() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_2_KHNUM_SPHINX);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
 		assertEquals(5, redPlayer.getPrayerPoints());
-		
+
 		assertEquals(9, bluePlayer.getPrayerPoints());
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, false);
 
 		// 2 for teleport + 2 for sphinx
 		assertEquals(5, bluePlayer.getPrayerPoints());
-		
+
 		assertEquals(3, redPlayer.victoryPoints);
 		// attack strength : 5 army + 0 beast + 4 card = 9
 		// defense strength : 5 army + 1 beast + 3 card = 9
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.FERVENT_PURGE_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+
 		prayRowThree();
-		
+
 		assertEquals(3, redPlayer.victoryPoints);
 	}
 
@@ -831,8 +828,8 @@ public class BeastTest extends TwoPlayerGameTest {
 		buyPowerTile(PowerList.WHITE_4_PRIEST_OF_AMON);
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
-		Tile islandTile = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
-		Tile middleObeliskTile = game.getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
+		Tile islandTile = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile middleObeliskTile = getTileByName(TwoPlayerGame.MIDDLE_OBELISK);
 
 		assertEquals(3, islandTile.getArmy().armySize);
 
@@ -845,30 +842,28 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 		// 1 damage
 		assertEquals(7, bluePlayer.getPrayerPoints());
 
 		assertEquals(5, redPlayer.victoryPoints);
 	}
-	
 
 	@Test
 	public void test_BLUE_2_DEEP_DESERT_SNAKE_noExtraVPforDevourer() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = redPlayer.cityTiles.get(1);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_4_DEVOURER);
 		recruitBeastToTile(startTile);
 		buyPowerTile(PowerList.BLUE_2_DEEP_DESERT_SNAKE);
 		recruitBeastToTile(tileByName);
-
 
 		assertEquals(3, tileByName.getArmy().armySize);
 		assertEquals(7, bluePlayer.getPrayerPoints());
@@ -881,7 +876,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.FERVENT_PURGE_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		skipRecruitBeast();
 		moveRowTwoZeroArmy();
 		// 2 damage
@@ -890,27 +885,27 @@ public class BeastTest extends TwoPlayerGameTest {
 		// missing 1 VP from devourer due to deep desert snake
 		assertEquals(5, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_BLUE_2_DEEP_DESERT_SNAKE_devourerGetsDamageFromInitiative() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
-		game.movePowerToPlayer(bluePlayer, PowerList.RED_4_INITIATIVE);
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(bluePlayer, PowerList.RED_4_INITIATIVE);
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_4_DEVOURER);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
-		
+
 		buyPowerTile(PowerList.BLUE_2_DEEP_DESERT_SNAKE);
 		recruitBeastToTile(startTile);
-		
+
 		prayRowTwo();
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, true);
 
 		assertEquals(3, redPlayer.victoryPoints);
@@ -919,24 +914,24 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.MIXED_TACTICS_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
 		skipRecruitBeast();
-		
+
 		prayRowThree();
-		
+
 		assertEquals(2, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_BLUE_2_DEEP_DESERT_SNAKE_devourerGetsDamageFromDeadlyTrap() {
 
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
 
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_3_DEADLY_TRAP);
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
-		
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_3_DEADLY_TRAP);
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+
 		Tile startTile = redPlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
@@ -944,7 +939,7 @@ public class BeastTest extends TwoPlayerGameTest {
 		recruitBeastToTile(startTile);
 		buyPowerTile(PowerList.BLUE_2_DEEP_DESERT_SNAKE);
 
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 		recruitBeastToTile(tileByName);
 
 		assertEquals(3, tileByName.getArmy().armySize);
@@ -957,60 +952,59 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.PHALANX_DEFENSE_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
 		moveRowTwoZeroArmy();
 
 		assertEquals(3, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_BLUE_2_DEEP_DESERT_SNAKE_ignoreKhnumSphinxMoveCost() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
-		game.movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
+		movePowerToPlayer(redPlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
 
 		Tile startTile = bluePlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLACK_2_KHNUM_SPHINX);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
+		Tile tileByName = getTileByName(TwoPlayerGame.MEDIUM_TEMPLE);
 		recruitBeastToTile(tileByName);
 		assertEquals(5, redPlayer.getPrayerPoints());
-		
+
 		assertEquals(9, bluePlayer.getPrayerPoints());
 		buyPowerTile(PowerList.BLUE_2_DEEP_DESERT_SNAKE);
 		recruitBeastToTile(startTile);
 		assertEquals(7, bluePlayer.getPrayerPoints());
-		
+
 		prayRowThree();
-		
+
 		moveRowTwoArmy(startTile, tileByName, 5, true);
 
 		// 2 for teleport, no + 2 for sphinx
 		assertEquals(5, bluePlayer.getPrayerPoints());
-		
+
 		assertEquals(3, redPlayer.victoryPoints);
 		// attack strength : 5 army + 0 beast + 4 card = 9
 		// defense strength : 5 army + 0 beast + 3 card = 8
 		battlePick(BattleCard.CAVALRY_BLITZ_CARD, BattleCard.PHALANX_DEFENSE_CARD, BattleCard.FERVENT_PURGE_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
-		
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.PASS_RECALL_CHOICE_INDEX);
+
 		prayRowTwo();
-		
+
 		assertEquals(2, redPlayer.victoryPoints);
 	}
-	
 
 	@Test
 	public void test_BLUE_2_ANCESTRAL_ELEPHANT() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		Tile startTile = redPlayer.cityTiles.get(1);
 
@@ -1031,36 +1025,36 @@ public class BeastTest extends TwoPlayerGameTest {
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.CAVALRY_BLITZ_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
 
-		game.activateAction(game.getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.RECALL_CHOICE);
 		skipRecruitBeast();
-		
+
 		moveRowTwoZeroArmy();
 		// 1+1 damage
 		assertEquals(8, bluePlayer.getPrayerPoints());
 
 		assertEquals(3, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_BLUE_4_SPHINX() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		Tile startTile = redPlayer.cityTiles.get(1);
 
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_4_GIANT_SCORPION);
 		recruitBeastToTile(startTile);
-		
+
 		assertEquals(3, bluePlayer.victoryPoints);
-		
+
 		buyPowerTile(PowerList.BLUE_4_SPHINX);
 		recruitBeastToTile(tileByName);
-		
+
 		assertEquals(4, bluePlayer.victoryPoints);
-		
+
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
 		assertEquals(3, tileByName.getArmy().armySize);
@@ -1074,20 +1068,19 @@ public class BeastTest extends TwoPlayerGameTest {
 				BattleCard.PHALANX_DEFENSE_CARD);
 
 		skipRecruitBeast();
-		
+
 		moveRowTwoZeroArmy();
 		// 1+2 damage
 		assertEquals(5, bluePlayer.getPrayerPoints());
 
 		assertEquals(3, redPlayer.victoryPoints);
 	}
-	
+
 	@Test
 	public void test_WHITE_4_MUMMY() {
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		game.movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
-		Tile tileByName = game.getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
+		recuperateAllBattleCards();
+		movePowerToPlayer(bluePlayer, PowerList.BLACK_1_ENFORCED_RECRUITMENT);
+		Tile tileByName = getTileByName(TwoPlayerGame.ISLAND_TEMPLE);
 
 		Tile startTile = redPlayer.cityTiles.get(1);
 
@@ -1095,6 +1088,23 @@ public class BeastTest extends TwoPlayerGameTest {
 		assertEquals(7, redPlayer.getPrayerPoints());
 		buyPowerTile(PowerList.RED_4_GIANT_SCORPION);
 		recruitBeastToTile(startTile);
+
+		assertEquals(redPlayer.cityTiles.get(0).getTileCanonicalIndex(0),
+				bluePlayer.cityTiles.get(0).getTileCanonicalIndex(1));
+		assertEquals(redPlayer.cityTiles.get(0).getTileCanonicalIndex(1),
+				bluePlayer.cityTiles.get(0).getTileCanonicalIndex(0));
+		assertEquals(redPlayer.cityTiles.get(1).getTileCanonicalIndex(0),
+				bluePlayer.cityTiles.get(1).getTileCanonicalIndex(1));
+		assertEquals(redPlayer.cityTiles.get(1).getTileCanonicalIndex(1),
+				bluePlayer.cityTiles.get(1).getTileCanonicalIndex(0));
+		assertEquals(redPlayer.cityTiles.get(2).getTileCanonicalIndex(0),
+				bluePlayer.cityTiles.get(2).getTileCanonicalIndex(1));
+		assertEquals(redPlayer.cityTiles.get(2).getTileCanonicalIndex(1),
+				bluePlayer.cityTiles.get(2).getTileCanonicalIndex(0));
+		assertEquals(redPlayer.cityFront.getTileCanonicalIndex(0),
+				bluePlayer.cityFront.getTileCanonicalIndex(1));
+		assertEquals(redPlayer.cityFront.getTileCanonicalIndex(1),
+				bluePlayer.cityFront.getTileCanonicalIndex(0));
 
 		// blue action 1
 		assertEquals(3, bluePlayer.victoryPoints);
@@ -1119,30 +1129,30 @@ public class BeastTest extends TwoPlayerGameTest {
 		// 1+2 damage
 		assertEquals(5, bluePlayer.getPrayerPoints());
 		assertEquals(3, redPlayer.victoryPoints);
-		
-		redPlayer.recuperateAllBattleCards();
-		bluePlayer.recuperateAllBattleCards();
-		
+
+		recuperateAllBattleCards();
+		recuperateAllBattleCards();
+
 		// action 3
 		prayRowTwo();
 		prayRowTwo();
-		
+
 		// action 4
 		prayRowThree();
 		prayRowThree();
 
-		assertEquals( 3, bluePlayer.getDiCardCount());
+		assertEquals(0, bluePlayer.getDiCardCount());
 
 		// action 5
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
-		
+
 		// trigger night phase
 		battlePick(BattleCard.DEFENSIVE_RETREAT_CARD, BattleCard.CAVALRY_BLITZ_CARD, BattleCard.FERVENT_PURGE_CARD,
 				BattleCard.PHALANX_DEFENSE_CARD);
-		
-		assertEquals( 5, bluePlayer.getDiCardCount());
-		
+
+		assertEquals(2, bluePlayer.getDiCardCount());
+
 	}
 
 }

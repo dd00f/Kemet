@@ -619,21 +619,38 @@ public class Player implements Model {
 	}
 
 	public void describePlayer(StringBuilder builder) {
-		builder.append("Player : " + name);
+		builder.append("Player : ");
+		builder.append(name);
+		builder.append(", index : ");
+		builder.append(index);
 		builder.append("\n");
-		builder.append("\t" + prayerPoints + " prayer points.");
+		builder.append("\t");
+		builder.append(prayerPoints);
+		builder.append(" prayer points.");
 		builder.append("\n");
-		builder.append("\t" + victoryPoints + " victory points.");
+		builder.append("\t");
+		builder.append(victoryPoints);
+		builder.append(" victory points.");
 		builder.append("\n");
-		builder.append("\t" + templeOccupationPoints + " temple occupation points.");
+		builder.append("\t");
+		builder.append(templeOccupationPoints);
+		builder.append(" temple occupation points.");
 		builder.append("\n");
-		builder.append("\t" + templePermanentPoints + " temple permanent points.");
+		builder.append("\t");
+		builder.append(templePermanentPoints);
+		builder.append(" temple permanent points.");
 		builder.append("\n");
-		builder.append("\t" + battlePoints + " battle points.");
+		builder.append("\t");
+		builder.append(battlePoints);
+		builder.append(" battle points.");
 		builder.append("\n");
-		builder.append("\t" + highLevelPyramidOccupationPoints + " high level pyramid occupation points.");
+		builder.append("\t");
+		builder.append(highLevelPyramidOccupationPoints);
+		builder.append(" high level pyramid occupation points.");
 		builder.append("\n");
-		builder.append("\t" + initiativeTokens + " initiative tokens.");
+		builder.append("\t");
+		builder.append(initiativeTokens);
+		builder.append(" initiative tokens.");
 		builder.append("\n");
 
 		builder.append("\tPyramids : ");
@@ -765,17 +782,6 @@ public class Player implements Model {
 		return null;
 	}
 
-	static {
-		int todoDeleteMe;
-	}
-//	@Deprecated
-//	public byte getState(int playerIndex) {
-//		if (playerIndex == getIndex()) {
-//			return 1;
-//		}
-//		return -1;
-//	}
-
 	/**
 	 * 
 	 * @param targetPlayerIndex index of the player for who the canonical form is
@@ -867,7 +873,7 @@ public class Player implements Model {
 			for (BattleCard card : availableBattleCards) {
 				canonicalForm.set(getCardAvailableIndex(card), (byte) 1);
 			}
-			
+
 			// Fill DI cards only if we are the current player, hide for other players
 			DiCardList.fillCanonicalForm(diCards, canonicalForm, BoardInventory.CURRENT_PLAYER_DI);
 		}
@@ -875,12 +881,11 @@ public class Player implements Model {
 		for (BattleCard card : availableBattleCards) {
 			canonicalForm.set(getCardVisibleIndex(canonicalPlayerIndex, card), (byte) 1);
 		}
-		
-		
+
 		for (BattleCard card : discardedBattleCards) {
 			canonicalForm.set(getCardVisibleIndex(canonicalPlayerIndex, card), (byte) 1);
 		}
-		
+
 //		for (BattleCard card : usedBattleCards) {
 //			canonicalForm.set(getCardStatusIndex(canonicalPlayerIndex, card), (byte) -1);
 //		}
@@ -898,7 +903,7 @@ public class Player implements Model {
 //			discardCardStatus = 1;
 		} else {
 			// Fill DI cards only if we are the current player, hide for other players
-			
+
 		}
 
 //		for (BattleCard card : discardedBattleCards) {
@@ -920,7 +925,7 @@ public class Player implements Model {
 //		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + canonicalPlayerIndex * BattleCard.INDEXER + card.index;
 //	}
 
-	public static int getCardAvailableIndex( BattleCard card) {
+	public static int getCardAvailableIndex(BattleCard card) {
 		return BoardInventory.PLAYER_BATTLE_CARD_AVALIABLE + card.index;
 	}
 

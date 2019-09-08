@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import org.junit.jupiter.api.BeforeEach;
 
+import kemet.Options;
 import kemet.data.TwoPlayerGame;
 import kemet.model.BattleCard;
 import kemet.model.Beast;
@@ -18,6 +19,7 @@ import kemet.model.Tile;
 import kemet.model.action.choice.ChoiceInventory;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.CopyableRandom;
+import kemet.util.StackingMCTS;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2
@@ -25,7 +27,8 @@ public class TwoPlayerGameTest {
 
 	TwoPlayerGame tpg = new TwoPlayerGame();
 
-	public KemetGame game;
+	private KemetGame game;
+	public KemetGame reversedGame;
 	public Player redPlayer;
 	public Player bluePlayer;
 
@@ -39,10 +42,18 @@ public class TwoPlayerGameTest {
 
 		game = tpg.game;
 		game.setInitialSeed(CopyableRandom.generateSeed(12341234));
+
 		// game.setPrintActivations(false);
 
 		redPlayer = game.playerByInitiativeList.get(0);
 		bluePlayer = game.playerByInitiativeList.get(1);
+
+		reversedGame = game.deepCacheClone();
+		Player reversedRedPlayer = reversedGame.playerByInitiativeList.get(0);
+		Player reversedBluePlayer = reversedGame.playerByInitiativeList.get(1);
+		reversedGame.playerByInitiativeList.clear();
+		reversedGame.playerByInitiativeList.add(reversedBluePlayer);
+		reversedGame.playerByInitiativeList.add(reversedRedPlayer);
 
 		// initialize a game so that
 		// red has level 4 pyramid red & black
@@ -145,7 +156,7 @@ public class TwoPlayerGameTest {
 
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
-		
+
 		activateTemple(true);
 
 		// turn two
@@ -154,14 +165,24 @@ public class TwoPlayerGameTest {
 		pickPlayerOrder(1);
 		prayRowThree();
 		prayRowThree();
+
+		endDiCardSelection();
+
 		prayRowTwo();
 		prayRowTwo();
+		endDiCardSelection();
+
 		upgradePyramid(4, redPlayer.cityTiles.get(1));
 		upgradePyramid(4, bluePlayer.cityTiles.get(1));
+
+		endDiCardSelection();
 		moveRowOneZeroArmy();
 		moveRowOneZeroArmy();
+
+		endDiCardSelection();
 		moveRowTwoZeroArmy();
 		moveRowTwoZeroArmy();
+		endDiCardSelection();
 
 		activateTemple(true);
 
@@ -170,13 +191,36 @@ public class TwoPlayerGameTest {
 				BattleCard.SHIELD_PUSH_CARD);
 		pickPlayerOrder(1);
 
+		resetDiCards();
+
+	}
+
+	public void giveDiCardToPlayer(DiCard diCard, Player player) {
+		game.giveDiCardToPlayer(diCard, player);
+		reversedGame.giveDiCardToPlayer(diCard, getReversedPlayer(player));
+	}
+
+	public Player getReversedPlayer(Player player) {
+		Player reversedPlayerZero = reversedGame.playerByInitiativeList.get(0);
+		if (reversedPlayerZero.getIndex() == player.getIndex()) {
+			return reversedGame.playerByInitiativeList.get(1);
+		}
+		return reversedPlayerZero;
+	}
+
+	public void resetDiCards() {
+		game.resetDiCards();
+		reversedGame.resetDiCards();
+	}
+
+	private void endDiCardSelection() {
+		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.STOP_PICKING_DI_CARDS);
 	}
 
 	public void activateTemple(boolean activated) {
-		if( activated ) {
+		if (activated) {
 			activateActionOnGame(game.getNextPlayer(), ChoiceInventory.ACTIVATE_OPTIONAL_TEMPLE);
-		}
-		else {
+		} else {
 			activateActionOnGame(game.getNextPlayer(), ChoiceInventory.DONT_ACTIVATE_OPTIONAL_TEMPLE);
 		}
 	}
@@ -279,13 +323,25 @@ public class TwoPlayerGameTest {
 
 	public static boolean CANNONICAL_ON_ALL_MOVES = true;
 
+	public static boolean COMPARE_REVERSED_GAME = true;
+
 	@SuppressWarnings("null")
 	public void activateActionOnGame(int nextPlayer, int pickIndex) {
 		KemetGame deepCacheClone = null;
-		
+
 		game.resetCachedChoices();
 		PlayerChoicePick nextPlayerChoicePick = game.getNextPlayerChoicePick();
 		ByteCanonicalForm originalCanonicalForm = game.getCanonicalForm(nextPlayer);
+
+		if (COMPARE_REVERSED_GAME) {
+			int reversedNextPlayer = reversedGame.getNextPlayer();
+			assertTrue(reversedNextPlayer != nextPlayer, "Current player index must be reversed.");
+			ByteCanonicalForm reversedCanonicalForm = reversedGame.getCanonicalForm(reversedNextPlayer);
+			validateCanonicalFormEquals(reversedCanonicalForm, originalCanonicalForm);
+
+			reversedGame.validate();
+			reversedGame.activateAction(reversedNextPlayer, pickIndex);
+		}
 
 		int size = nextPlayerChoicePick.choiceList.size();
 		if (size <= 1) {
@@ -305,7 +361,7 @@ public class TwoPlayerGameTest {
 				validateCanonicalFormEquals(game.getCanonicalForm(nextPlayer),
 						deepCacheClone.getCanonicalForm(nextPlayer));
 			}
-			
+
 			deepCacheClone.activateAction(nextPlayer, pickIndex);
 			deepCacheClone.validate();
 			if (CANNONICAL_ON_ALL_MOVES) {
@@ -345,24 +401,23 @@ public class TwoPlayerGameTest {
 
 		if (CANNONICAL_ON_ALL_MOVES) {
 			validateCanonicalForm(game.getCanonicalForm(nextPlayer));
-			
+
 			ByteCanonicalForm postCloneMoveCanonicalForm = game.getCanonicalForm(nextPlayer);
 			validateCanonicalFormEquals(originalCanonicalForm, postCloneMoveCanonicalForm);
 
-			
 		}
 		game.activateAction(nextPlayer, pickIndex);
-		
+
 		PlayerChoicePick nextPlayerChoicePick2 = game.getNextPlayerChoicePick();
-		ByteCanonicalForm newForm1 =game.getCanonicalForm(game.getNextPlayer());
+		ByteCanonicalForm newForm1 = game.getCanonicalForm(game.getNextPlayer());
 		game.resetCachedChoices();
 		PlayerChoicePick nextPlayerChoicePick3 = game.getNextPlayerChoicePick();
-		ByteCanonicalForm newForm2 =game.getCanonicalForm(game.getNextPlayer());
-		
-		assertEquals( nextPlayerChoicePick2.player.getIndex(), nextPlayerChoicePick3.player.getIndex());
-		assertEquals( nextPlayerChoicePick2.choiceList.size(), nextPlayerChoicePick3.choiceList.size());
-		assertTrue( newForm1.equals(newForm2));
-		
+		ByteCanonicalForm newForm2 = game.getCanonicalForm(game.getNextPlayer());
+
+		assertEquals(nextPlayerChoicePick2.player.getIndex(), nextPlayerChoicePick3.player.getIndex());
+		assertEquals(nextPlayerChoicePick2.choiceList.size(), nextPlayerChoicePick3.choiceList.size());
+		assertTrue(newForm1.equals(newForm2));
+
 		game.validate();
 
 		if (CANNONICAL_ON_ALL_MOVES) {
@@ -380,13 +435,20 @@ public class TwoPlayerGameTest {
 		// TODO Auto-generated method stub
 		byte[] canonicalForm3 = canonicalForm.getCanonicalForm();
 		byte[] canonicalForm4 = canonicalForm2.getCanonicalForm();
+		StringBuilder build = new StringBuilder();
+		boolean failed = false;
 		for (int i = 0; i < canonicalForm3.length; i++) {
 			byte b1 = canonicalForm3[i];
 			byte b2 = canonicalForm4[i];
 			if (b1 != b2) {
-				fail("Clone has different canonical value at index : " + i + ", original : " + b1 + ", clone : " + b2);
+				build.append("Clone has different canonical value at index : " + i + ", original : " + b1 + ", clone : " + b2 + "\n");
+				failed = true;
 			}
-
+		}
+		
+		if( failed ) {
+			
+			fail( build.toString());
 		}
 
 	}
@@ -396,8 +458,10 @@ public class TwoPlayerGameTest {
 		for (int i = 0; i < floatCanonicalForm.length; i++) {
 			float f = floatCanonicalForm[i];
 
-			if (f > 1) {
-				fail("Float canonical value bigger than 1 : " + f + " at index " + i);
+			if (Options.CANONICAL_FLATTEN_TO_ONE) {
+				if (f > 1) {
+					fail("Float canonical value bigger than 1 : " + f + " at index " + i);
+				}
 			}
 
 			// TODO enable once all negative states are eliminated.
@@ -408,9 +472,9 @@ public class TwoPlayerGameTest {
 			if (f < -1) {
 				fail("Float canonical value smaller than -1 : " + f + " at index " + i);
 			}
-			
+
 			if (f < 0) {
-				fail("Float canonical value smaller than -1 : " + f + " at index " + i);
+				fail("Float canonical value smaller than 0 : " + f + " at index " + i);
 			}
 		}
 	}
@@ -551,14 +615,14 @@ public class TwoPlayerGameTest {
 		activateActionOnGame(game.getNextPlayer(), ChoiceInventory.PICK_GOLD_MOVE);
 
 	}
-	
+
 	public void replayMultipleActions(int[] actions) {
 		for (int i = 0; i < actions.length; i++) {
 			int actionIndex = actions[i];
-			
+
 			activateActionOnGame(game.getNextPlayer(), actionIndex);
 		}
-		
+
 	}
 
 	public byte getCanonicalValue(int canonicalIndex) {
@@ -566,7 +630,69 @@ public class TwoPlayerGameTest {
 		int nextPlayer = game.getNextPlayer();
 		ByteCanonicalForm canonicalForm = game.getCanonicalForm(nextPlayer);
 		byte[] canonicalForm2 = canonicalForm.getCanonicalForm();
-		byte returnValue = canonicalForm2[canonicalIndex ];
+		byte returnValue = canonicalForm2[canonicalIndex];
 		return returnValue;
+	}
+
+	public PlayerChoicePick getNextPlayerChoicePick() {
+		return game.getNextPlayerChoicePick();
+	}
+
+	public int getNextPlayer() {
+		return game.getNextPlayer();
+	}
+
+	public Tile getTileByName(String tileName) {
+
+		return game.getTileByName(tileName);
+	}
+
+	public void movePowerToPlayer(Player player, Power power) {
+
+		game.movePowerToPlayer(player, power);
+		reversedGame.movePowerToPlayer(getReversedPlayer(player), power);
+
+	}
+
+	public void enterSimulationMode(int playerIndex, StackingMCTS mcts, long newSeed) {
+
+		game.enterSimulationMode(playerIndex, mcts, newSeed);
+		reversedGame.enterSimulationMode(getReversedPlayer(playerIndex), mcts, newSeed);
+	}
+
+	public int getReversedPlayer(int playerIndex) {
+		if (playerIndex == 0) {
+			return 1;
+		}
+		return 0;
+	}
+
+	public void resetCachedChoices() {
+		game.resetCachedChoices();
+	}
+
+	public byte[] getDiscardedDiCardList() {
+		return game.discardedDiCardList;
+	}
+
+	public byte[] getVisionDiCardList() {
+		return game.visionDiCardList;
+	}
+
+	public byte[] getAvailableDiCardList() {
+		return game.availableDiCardList;
+	}
+
+	public void recuperateAllBattleCards() {
+		bluePlayer.recuperateAllBattleCards();
+		redPlayer.recuperateAllBattleCards();
+
+		reversedGame.playerByInitiativeList.get(0).recuperateAllBattleCards();
+		reversedGame.playerByInitiativeList.get(1).recuperateAllBattleCards();
+	}
+
+	public void endTurnSkipDiCard() {
+		activateActionOnGame(getNextPlayer(), ChoiceInventory.STOP_PICKING_DI_CARDS);
+
 	}
 }

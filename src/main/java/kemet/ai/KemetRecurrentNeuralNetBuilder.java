@@ -34,20 +34,12 @@ public class KemetRecurrentNeuralNetBuilder {
 	public static int INPUT_SIZE = BoardInventory.TOTAL_STATE_COUNT;
 	public static int OUTPUT_SIZE = ChoiceInventory.TOTAL_CHOICE;
 	
-	static {
-		int TODO_RESET = 0;
-	}
-	//public static int LAYER_SIZE = INPUT_SIZE * 2;
-	public static int LAYER_SIZE = INPUT_SIZE;
+
+	public static int LAYER_SIZE = 2048;
 	
 	public static boolean VALUE_OUTPUT = true;
 	
-	// TODO reset back to 10 or 20
-	static {
-		int TODO_RESET = 0;
-	}
-	// public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 5;
-	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 0;
+	public static int NEURAL_NETWORK_RESIDUAL_BLOCK_COUNT = 1;
 
 	private ComputationGraph apply(int blocks) {
 

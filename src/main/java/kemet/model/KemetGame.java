@@ -266,6 +266,8 @@ public class KemetGame implements Model, Game {
 
 		builder.append("Game turn ");
 		builder.append(this.roundNumber);
+		builder.append(" moves ");
+		builder.append(this.actions.length);
 		builder.append("\n");
 		builder.append("Replay : \n");
 		builder.append("\tgame.setInitialSeed(");
@@ -328,6 +330,11 @@ public class KemetGame implements Model, Game {
 
 		for (Player player : playerByInitiativeList) {
 			player.describePlayer(builder);
+		}
+
+		if (canonicalForm != null) {
+			builder.append("\n");
+			BoardInventory.describeCanonicalFormat(canonicalForm, builder);
 		}
 	}
 
@@ -691,8 +698,7 @@ public class KemetGame implements Model, Game {
 		}
 
 		String message = "Unable to find action that matches index : " + actionIndex + "\n" + "Choice List :"
-				+ printChoiceList(currentPlayerChoicePick) + "\nPlayer :\n"
-				+ currentPlayerChoicePick.player.describePlayer();
+				+ printChoiceList(currentPlayerChoicePick);
 		LOGGER.error(message);
 
 		this.canonicalForm = null;

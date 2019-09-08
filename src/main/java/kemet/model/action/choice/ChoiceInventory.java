@@ -138,6 +138,7 @@ public class ChoiceInventory {
 
 	public static final int ACTIVATE_OPTIONAL_TEMPLE = INDEXER++;
 	public static final int DONT_ACTIVATE_OPTIONAL_TEMPLE = INDEXER++;
+	public static final int STOP_PICKING_DI_CARDS = INDEXER++;
 
 	public static final int TOTAL_CHOICE = INDEXER;
 
@@ -188,7 +189,8 @@ public class ChoiceInventory {
 		System.out.println("END_DIVINE_WOUND " + END_DIVINE_WOUND);
 		System.out.println("ACTIVATE_OPTIONAL_TEMPLE " + ACTIVATE_OPTIONAL_TEMPLE);
 		System.out.println("DONT_ACTIVATE_OPTIONAL_TEMPLE " + DONT_ACTIVATE_OPTIONAL_TEMPLE);
-		
+		System.out.println("STOP_PICKING_DI_CARDS " + STOP_PICKING_DI_CARDS);
+			
 		System.out.println("LAST_INDEX " + (INDEXER - 1));
 
 //		Choice Index List

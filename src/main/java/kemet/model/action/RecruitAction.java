@@ -48,16 +48,17 @@ public class RecruitAction extends DiCardAction {
 		super.fillCanonicalForm(cannonicalForm, playerIndex);
 
 		if (allowPaidRecruit) {
-			//cannonicalForm.set(BoardInventory.STATE_RECRUIT, player.getState(playerIndex));
-			
+			// cannonicalForm.set(BoardInventory.STATE_RECRUIT,
+			// player.getState(playerIndex));
+
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_RECRUIT, playerIndex);
 
-			
 		} else {
-			// cannonicalForm.set(BoardInventory.STATE_FREE_RECRUIT, player.getState(playerIndex));
-			
+			// cannonicalForm.set(BoardInventory.STATE_FREE_RECRUIT,
+			// player.getState(playerIndex));
+
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_FREE_RECRUIT, playerIndex);
-			
+
 		}
 
 		cannonicalForm.set(BoardInventory.FREE_RECRUIT_LEFT, freeRecruitLeft);
@@ -65,35 +66,44 @@ public class RecruitAction extends DiCardAction {
 		if (isEnded()) {
 			// trigger battle actions
 			// battles.fillCanonicalForm(cannonicalForm, playerIndex);
-			throw new IllegalStateException("Should not be able to fill a canonical form on a recruit action that's ended");
+			throw new IllegalStateException(
+					"Should not be able to fill a canonical form on a recruit action that's ended");
 		}
 
 		for (Tile tile : pickedTiles) {
 			// reverse selection for tiles that were already picked
-			// tile.setSelectedSource(cannonicalForm, playerIndex, (byte) -player.getState(playerIndex));
-			
-			tile.setCanonicalSelectedSource(cannonicalForm, player, playerIndex);
+			// tile.setSelectedSource(cannonicalForm, playerIndex, (byte)
+			// -player.getState(playerIndex));
+
+			// tile.setCanonicalSelected(cannonicalForm, player, playerIndex);
+			int tileCanonicalIndex = BoardInventory.TILE_SELECTION_DONE + tile.getTileCanonicalIndex(playerIndex);
+			cannonicalForm.set(tileCanonicalIndex, (byte) 1);
 		}
 
 		if (tile == null) {
 			// pick tile
-			// cannonicalForm.set(BoardInventory.STATE_PICK_TILE, player.getState(playerIndex));
-			
+			// cannonicalForm.set(BoardInventory.STATE_PICK_TILE,
+			// player.getState(playerIndex));
+
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_TILE, playerIndex);
-			
+
 		} else if (recruitSize < 0) {
 			// pick size
-			// cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.STATE_PICK_ARMY_SIZE,
+			// player.getState(playerIndex));
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_ARMY_SIZE, playerIndex);
-			
-			// tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+
+			// tile.setSelectedSource(cannonicalForm, playerIndex,
+			// player.getState(playerIndex));
 			tile.setCanonicalSelectedSource(cannonicalForm, player, playerIndex);
 
 		} else if (playerHasBeastAvailable()) {
-			// cannonicalForm.set(BoardInventory.STATE_PICK_BEAST, player.getState(playerIndex));
+			// cannonicalForm.set(BoardInventory.STATE_PICK_BEAST,
+			// player.getState(playerIndex));
 			player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_BEAST, playerIndex);
 			cannonicalForm.set(BoardInventory.PICKED_SIZE, recruitSize);
-			// tile.setSelectedSource(cannonicalForm, playerIndex, player.getState(playerIndex));
+			// tile.setSelectedSource(cannonicalForm, playerIndex,
+			// player.getState(playerIndex));
 			tile.setCanonicalSelectedSource(cannonicalForm, player, playerIndex);
 		}
 
@@ -354,9 +364,9 @@ public class RecruitAction extends DiCardAction {
 		Army army = createArmy();
 
 		if (resultsInCombat()) {
-			
+
 			army.moveToBattleTile(tile);
-			
+
 			BattleAction battle = BattleAction.create(game, battles);
 			battle.attackingArmy = army;
 			battle.defendingArmy = tile.getArmy();
@@ -401,7 +411,7 @@ public class RecruitAction extends DiCardAction {
 		if (isEnded()) {
 			// trigger battle actions
 //			return battles.getNextPlayerChoicePick();
-			
+
 			moveAllBattledToParent();
 			return null;
 		}
@@ -417,7 +427,6 @@ public class RecruitAction extends DiCardAction {
 
 //				addGenericDiCardChoice(pick.choiceList);
 //				addDiCardChoice(pick.choiceList, DiCardList.ENLISTMENT.index);
-
 
 				EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 				return pick.validate();
@@ -456,8 +465,7 @@ public class RecruitAction extends DiCardAction {
 			EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.END_RECRUIT);
 			return pick.validate();
 		}
-		
-		
+
 		moveAllBattledToParent();
 		return null;
 
@@ -468,7 +476,7 @@ public class RecruitAction extends DiCardAction {
 		for (Action action : actionChain) {
 			parent.stackPendingActionOnParent(action);
 		}
-		
+
 		battles.clear();
 	}
 

@@ -41,7 +41,7 @@ public class VetoAction extends EndableAction {
 
 		for (int i = 0; i < playerVetoDone.length; i++) {
 			if (playerVetoDone[i]) {
-				int vetoDonePlayerIndex = game.playerByInitiativeList.get(i).getCanonicalPlayerIndex(playerIndex);
+				int vetoDonePlayerIndex = game.getPlayerByIndex(i).getCanonicalPlayerIndex(playerIndex);
 				cannonicalForm.set(BoardInventory.STATE_PLAYER_VETO_DONE + vetoDonePlayerIndex, (byte) 1);
 			}
 		}
@@ -296,7 +296,6 @@ public class VetoAction extends EndableAction {
 
 						// give player a choice to veto the veto
 
-						// pick tile
 						PlayerChoicePick pick = new PlayerChoicePick(game, currentPlayer, this);
 
 						pick.choiceList.add(new ApplyVetoChoice(game, currentPlayer, true));

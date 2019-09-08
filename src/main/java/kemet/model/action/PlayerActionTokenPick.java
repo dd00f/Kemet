@@ -14,6 +14,7 @@ import kemet.model.PowerList;
 import kemet.model.Validation;
 import kemet.model.action.choice.Choice;
 import kemet.model.action.choice.ChoiceInventory;
+import kemet.model.action.choice.EndTurnChoice;
 import kemet.model.action.choice.PlayerChoice;
 import kemet.util.ByteCanonicalForm;
 import kemet.util.Cache;
@@ -82,15 +83,10 @@ public class PlayerActionTokenPick extends DiCardAction {
 			canonicalPendingActionIndex2 = actionIndex3;
 		} else if (offset == 2) {
 			canonicalPendingActionIndex1 = actionIndex3;
-		} else {
-			if (overridingAction == null || overridingAction.size() == 0) {
-				throw new IllegalStateException(
-						"How can the offset be bigger than 2 when there can only be 3 actions ? Offset " + offset);
-			}
 		}
 
-		int baseOffset = BoardInventory.PICKED_ACTION_IN_ORDER
-				+ ActionList.TOTAL_ACTION_COUNT * BoardInventory.MAX_ACTION_PER_TURN * player.getCanonicalPlayerIndex(playerIndex);
+		int baseOffset = BoardInventory.PICKED_ACTION_IN_ORDER + ActionList.TOTAL_ACTION_COUNT
+				* BoardInventory.MAX_ACTION_PER_TURN * player.getCanonicalPlayerIndex(playerIndex);
 
 		if (canonicalPendingActionIndex1 >= 0) {
 			int offset1 = baseOffset + canonicalPendingActionIndex1;
@@ -108,8 +104,14 @@ public class PlayerActionTokenPick extends DiCardAction {
 		if (overridingAction != null && overridingAction.size() > 0) {
 			overridingAction.fillCanonicalForm(cannonicalForm, playerIndex);
 		} else if (donePicking) {
-			if (nextAction != null) {
+			if (nextAction != null && nextAction.size() > 0) {
 				nextAction.fillCanonicalForm(cannonicalForm, playerIndex);
+			}
+			else {
+				if( isEnded() ) {
+					throw new IllegalStateException("Can't fill canonical form on ended player token pick");
+				}
+				player.setCanonicalState(cannonicalForm, BoardInventory.STATE_PICK_FINAL_DI_CARDS, playerIndex);
 			}
 		}
 	}
@@ -310,6 +312,23 @@ public class PlayerActionTokenPick extends DiCardAction {
 					nextPlayerChoicePick = overridingAction.getNextPlayerChoicePick();
 					if (nextPlayerChoicePick != null) {
 						return nextPlayerChoicePick.validate();
+					}
+				}
+				
+				// return final option for DI card pick
+				if( ! isEnded() ) {
+					
+					PlayerChoicePick pick = new PlayerChoicePick(game, player, this);
+
+					List<Choice> choiceList = pick.choiceList;
+
+					addGenericDiCardChoice(choiceList);
+
+					addDiCardChoice(choiceList, DiCardList.ENLISTMENT.index);
+					
+					if( choiceList.size() > 0 ) {
+						EndTurnChoice.addEndTurnChoice(game, player, pick.choiceList, this, ChoiceInventory.STOP_PICKING_DI_CARDS);
+						return pick;
 					}
 				}
 			}

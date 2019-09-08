@@ -2,8 +2,11 @@ package kemet;
 
 public class Options {
 
-	// TODO set to false
-	public static final boolean COACH_VALIDATE_ALL_NNET_PREDICTION_USED = true;
+	// learn from every training cycle, regardless of outcome
+	public static boolean COACH_BLIND_LEARN = false;
+
+	
+	public static boolean COACH_VALIDATE_ALL_NNET_PREDICTION_USED = false;
 
 	public static boolean COACH_PRINT_GAME_AFTER_SELF_TRAINING = false;
 
@@ -23,6 +26,7 @@ public class Options {
 	
 	public static boolean USE_RECURRENT_NEURAL_NET = true;
 
+	public static boolean CANONICAL_FLATTEN_TO_ONE = false;
 
 	static {
 		// keep this as long as there are TODO notice.
@@ -34,7 +38,7 @@ public class Options {
 	 * try to explore more options. Used to end games quickly if there is a clear
 	 * winner after X moves on average.
 	 */
-	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 400;
+	public static int COACH_HIGH_EXPLORATION_MOVE_COUNT = 600;
 
 	/**
 	 * Number of iterations to coach. In each iteration, games are played and then
@@ -47,20 +51,16 @@ public class Options {
 	public static int GAME_TURN_LIMIT = 15;
 
 	// Number of matches used to compare 2 generations of the neural network
-	// TODO reset to 50
-	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 10;
+	public static int COACH_ARENA_COMPARE_MATCH_COUNT = 30;
 
 	// number of games to play when training the neural network
-	// TODO reset to 100
 	public static int COACH_NEURAL_NETWORK_TRAIN_GAME_COUNT = 100;
 
 	// number of move simulations to do in MCTS between moves while coaching a
 	// neural network
-	// TODO reset to 1000
-	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 10;
+	public static int COACH_MCTS_SIMULATION_COUNT_PER_MOVE = 1000;
 	
 	// number of times to run the test data to fit the neural network
-	// TODO reset to 30
 	public static int NEURAL_NET_TRAIN_EPOCH = 10;
 
 	// number of actions to remember in the game
@@ -138,6 +138,8 @@ public class Options {
 
 
 	public static boolean PRINT_ARENA_GAME_EVENTS = false;
+	
+	public static boolean PRINT_ARENA_GAME_SIMULATIONS = false;
 
 	public static boolean PRINT_ARENA_GAME_END = false;
 

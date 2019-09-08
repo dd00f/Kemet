@@ -1,19 +1,11 @@
 
+AI Doesn't converge... potential theories
+
+
 DEVELOPMENT
 	- BUG : 
 		- Recruit on top of an existing army doesn't trigger attack start powers, night/day
 	
-	
-	
-	- Battle : current player should always be in the same place ( flag to switch between attack & defense )
-	
-	- enable DI card reinforcements at the end of turns
-	
-	
-	- Disable canonical form locking + checks on set for speeeeed
-	
-	- Scan for TODO, unused variables
-
 
 
 QUESTIONS
